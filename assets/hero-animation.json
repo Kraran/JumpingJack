@@ -1,0 +1,10 @@
+{
+  "description": "Fixed cell scale and registered body roots; anchors in normalized source-cell coordinates.",
+  "run_pivot": [0.53, 0.96],
+  "float_pivot": [0.59, 0.96],
+  "action_pivots": [
+    [0.54, 0.96], [0.54, 0.96], [0.54, 0.96], [0.54, 0.96],
+    [0.49, 0.96], [0.53, 0.96], [0.58, 0.96], [0.64, 0.96],
+    [0.49, 0.96], [0.53, 0.96], [0.57, 0.96], [0.54, 0.96]
+  ]
+}

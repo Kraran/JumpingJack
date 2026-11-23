@@ -1,0 +1,6 @@
+{
+  "gpu": true,
+  "turn_poses_seen": 16,
+  "hero_poses": 58,
+  "turn_textures_cached": true
+}

@@ -1,0 +1,70 @@
+{
+  "window": {
+    "display": {
+      "refresh_hz": 60,
+      "refresh_known": true,
+      "vsync": true,
+      "integer_scaling": true,
+      "renderer": "direct3d11",
+      "desktop_bounds": [
+        -1920,
+        84,
+        1920,
+        1080
+      ]
+    },
+    "fullscreen": false,
+    "frames_measured": 120,
+    "fps": 48.02,
+    "median_frame_ms": 16.88,
+    "p95_frame_ms": 33.15,
+    "max_frame_ms": 33.77,
+    "late_frames": 30
+  },
+  "fullscreen": {
+    "display": {
+      "refresh_hz": 60,
+      "refresh_known": true,
+      "vsync": true,
+      "integer_scaling": true,
+      "renderer": "direct3d11",
+      "desktop_bounds": [
+        -1920,
+        84,
+        1920,
+        1080
+      ]
+    },
+    "fullscreen": true,
+    "frames_measured": 120,
+    "fps": 58.08,
+    "median_frame_ms": 16.63,
+    "p95_frame_ms": 18.06,
+    "max_frame_ms": 34.02,
+    "late_frames": 4
+  },
+  "returned_window": {
+    "display": {
+      "refresh_hz": 60,
+      "refresh_known": true,
+      "vsync": true,
+      "integer_scaling": true,
+      "renderer": "direct3d11",
+      "desktop_bounds": [
+        -1920,
+        84,
+        1920,
+        1080
+      ]
+    },
+    "fullscreen": false,
+    "frames_measured": 120,
+    "fps": 59.54,
+    "median_frame_ms": 16.68,
+    "p95_frame_ms": 17.91,
+    "max_frame_ms": 32.34,
+    "late_frames": 1
+  },
+  "fullscreen_toggles_passed": 10,
+  "note": "SDL status and measured CPU presentation intervals; no physical scanout measurement."
+}

@@ -1,0 +1,5 @@
+{
+  "render_cpu_dummy_ms_median": 2.0,
+  "render_cpu_dummy_ms_p95": 5.27,
+  "note": "Sans affichage réel ni synchronisation verticale ; ne mesure pas les FPS sur écran."
+}

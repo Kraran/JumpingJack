@@ -1,0 +1,9 @@
+{
+  "fps": 47.96,
+  "p95_ms": 34.15,
+  "samples": 239,
+  "gpu": true,
+  "turn_poses_seen": 16,
+  "turn_textures_cached": true,
+  "deaths": 0
+}

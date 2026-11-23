@@ -1,0 +1,14 @@
+{
+  "without_crocodiles": {
+    "fps": 59.98,
+    "p95_ms": 18.08,
+    "late_frames": 0,
+    "cpu_median_ms": 1.389
+  },
+  "with_crocodiles": {
+    "fps": 58.28,
+    "p95_ms": 19.25,
+    "late_frames": 6,
+    "cpu_median_ms": 1.123
+  }
+}

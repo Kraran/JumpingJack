@@ -1,0 +1,32 @@
+{
+  "display": {
+    "refresh_hz": 60,
+    "refresh_known": true,
+    "vsync": true,
+    "integer_scaling": true,
+    "renderer": "direct3d11",
+    "desktop_bounds": [
+      0,
+      0,
+      2560,
+      1080
+    ],
+    "accelerated": true
+  },
+  "render_size": [
+    1920,
+    1080
+  ],
+  "gpu": true,
+  "samples": 359,
+  "fps": 59.98,
+  "p95_ms": 17.0,
+  "late_frames": 0,
+  "cpu_median_ms": 1.459,
+  "crocodile_poses": 24,
+  "crocodile_textures_cached": true,
+  "first_attempt_deaths": [
+    1
+  ],
+  "jump_attempt_deaths": 0
+}

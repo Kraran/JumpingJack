@@ -1,0 +1,37 @@
+{
+  "fullscreen": {
+    "display": {
+      "refresh_hz": 60,
+      "refresh_known": true,
+      "vsync": true,
+      "integer_scaling": true,
+      "renderer": "direct3d11",
+      "desktop_bounds": [
+        0,
+        0,
+        2560,
+        1080
+      ],
+      "accelerated": true
+    },
+    "fullscreen": true,
+    "render_size": [
+      1920,
+      1080
+    ],
+    "gpu_composition": true,
+    "texture_uploads": 157,
+    "hero_pose_count": 42,
+    "hero_animation_state": "run",
+    "hero_textures_cached": true,
+    "cpu_submission_median_ms": 1.773,
+    "frames_measured": 360,
+    "fps": 59.97,
+    "median_frame_ms": 16.63,
+    "p95_frame_ms": 17.92,
+    "max_frame_ms": 18.55,
+    "late_frames": 0
+  },
+  "fullscreen_toggles_passed": 10,
+  "note": "SDL status and measured CPU presentation intervals; no physical scanout measurement."
+}

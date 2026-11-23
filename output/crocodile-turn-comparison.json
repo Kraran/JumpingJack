@@ -1,0 +1,12 @@
+{
+  "instant_turn_control": {
+    "fps": 59.7,
+    "p95_ms": 17.38,
+    "cpu_median_ms": 1.298
+  },
+  "animated_turn": {
+    "fps": 59.13,
+    "p95_ms": 17.53,
+    "cpu_median_ms": 1.268
+  }
+}

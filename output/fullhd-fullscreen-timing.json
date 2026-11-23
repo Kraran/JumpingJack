@@ -1,0 +1,28 @@
+{
+  "render_size": [
+    1920,
+    1080
+  ],
+  "display": {
+    "refresh_hz": 60,
+    "refresh_known": true,
+    "vsync": true,
+    "integer_scaling": true,
+    "renderer": "direct3d11",
+    "desktop_bounds": [
+      0,
+      0,
+      2560,
+      1080
+    ],
+    "accelerated": true
+  },
+  "fullscreen": true,
+  "gpu": true,
+  "samples": 359,
+  "fps": 59.97,
+  "median_ms": 16.71,
+  "p95_ms": 17.72,
+  "late_frames": 0,
+  "cpu_median_ms": 2.671
+}

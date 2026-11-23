@@ -1,0 +1,30 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store
+
+# Références fournies, conservées localement.
+/MightyBombJack.mp4
+/HollowKnight.mp4
+/reference/
+/assets/crocodile-reference.webp
+
+# Conserver seulement les mesures et les aperçus documentés.
+/output/*
+!/output/*.json
+!/output/hero-animation-game.png
+!/output/hero-course-compare.mp4
+!/output/hero-turn-demo.mp4
+!/output/crocodile-demo.mp4
+!/output/crocodile-turn-demo.mp4
+/capture.png
