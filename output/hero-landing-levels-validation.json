@@ -1,0 +1,20 @@
+{
+  "gpu": true,
+  "hero_poses": 85,
+  "landing_poses_seen": {
+    "land": 8,
+    "land_medium": 8,
+    "land_heavy": 12
+  },
+  "contact_states": [
+    "land",
+    "land_medium",
+    "land_heavy",
+    "idle",
+    "land",
+    "land_medium",
+    "land_heavy",
+    "idle"
+  ],
+  "landing_textures_cached": true
+}

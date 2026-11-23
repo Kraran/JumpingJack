@@ -1,0 +1,12 @@
+{
+  "gpu": true,
+  "landing_poses_seen": 8,
+  "contact_states": [
+    "land",
+    "land",
+    "idle",
+    "idle"
+  ],
+  "hero_poses": 65,
+  "landing_textures_cached": true
+}

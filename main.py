@@ -11,7 +11,7 @@ from pathlib import Path
 from dataclasses import dataclass
 import pygame as pg
 from gpu_render import NativeCanvas, DesignCanvas, DESIGN, SCALE, draw
-from hero_animation import load_bank, HeroAnimator
+from hero_animation import load_bank, HeroAnimator, landing_clip, LAND_DURATIONS
 from crocodile import CrocodileSprites, create_crocodiles
 from rendering import DisplayStatus, FramePacer, ParallaxLayer, configure_display, pixel
 
@@ -65,12 +65,30 @@ class Hero:
         self.grounded = False
         self.coyote = self.buffer = 0.
         self.floating = False
+        self.impact_vy = 0.
+        self.landed_gliding = False
+        self.fall_origin_y = self.y
+        self.landed_height = 0.
+        self.landing_kind = 'land'
+        self.recovery = 0.
 
     @property
     def rect(self):
         return pg.Rect(round(self.x-15), round(self.y-54), 30, 54)
 
     def update(self, dt, axis, held, pressed, platforms):
+        self.impact_vy = 0.
+        self.landed_gliding = False
+        self.landed_height = 0.
+        was_grounded = self.grounded
+        # Measure the uninterrupted descent from its apex, resetting after glide.
+        if self.grounded or self.floating:self.fall_origin_y = self.y
+        self.fall_origin_y = min(self.fall_origin_y,self.y)
+        if self.recovery>0:
+            self.recovery=max(0.,self.recovery-dt)
+            if self.recovery<1e-9:self.recovery=0.
+            axis=0;held=False;pressed=False
+            self.vx=0.;self.buffer=0.;self.coyote=0.
         self.px, self.py = self.x, self.y
         self.coyote = .10 if self.grounded else max(0, self.coyote-dt)
         self.buffer = .12 if pressed else max(0, self.buffer-dt)
@@ -96,11 +114,20 @@ class Hero:
                 self.vx = 0
         old_bottom = self.y
         self.y += self.vy*dt
+        self.fall_origin_y = min(self.fall_origin_y,self.y)
         self.grounded = False
         if self.vy >= 0:
             for p in platforms:
                 if self.x+13>p.x and self.x-13<p.x+p.w and old_bottom<=p.y+1 and self.y>=p.y:
                     self.y = p.y
+                    self.impact_vy = self.vy
+                    self.landed_gliding = self.floating
+                    self.landed_height = 0. if self.floating else max(0.,p.y-self.fall_origin_y)
+                    if not was_grounded:
+                        self.landing_kind=landing_clip(self.landed_height)
+                        if not self.floating and self.impact_vy>100 and self.landing_kind=='land_heavy':
+                            self.recovery=LAND_DURATIONS['land_heavy']
+                            self.vx=0.;self.buffer=0.;self.coyote=0.
                     self.vy = 0
                     self.grounded = True
                     self.floating = False

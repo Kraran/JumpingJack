@@ -8,6 +8,16 @@ import pygame as pg
 CELL=120
 STRIDE=136.0  # world units per complete left/right cycle: 0.4 s at full speed
 TURN_TIME=.16
+LAND_TIME=.24
+MEDIUM_FALL_HEIGHT=160.
+HEAVY_FALL_HEIGHT=280.
+LAND_DURATIONS={'land':LAND_TIME,'land_medium':.32,'land_heavy':.60}
+
+
+def landing_clip(height):
+    if height>=HEAVY_FALL_HEIGHT:return 'land_heavy'
+    if height>=MEDIUM_FALL_HEIGHT:return 'land_medium'
+    return 'land'
 
 
 @dataclass(frozen=True)
@@ -35,7 +45,7 @@ class AnimationBank:
     def pose_count(self):return sum(len(clip) for clip in self.clips.values())
 
 
-def load_sheet(path,columns,rows,pivot=(.53,.96),pivots=None):
+def load_sheet(path,columns,rows,pivot=(.53,.96),pivots=None,align_floor=False):
     image=pg.image.load(str(path)).convert_alpha()
     if image.get_at((0,0)).a>8:raise ValueError(f'{path.name}: fond non transparent')
     poses=[]
@@ -52,8 +62,9 @@ def load_sheet(path,columns,rows,pivot=(.53,.96),pivots=None):
         # the head grow/shrink and the character slide as the cape changes shape.
         frame=pg.transform.smoothscale(cell,(CELL,CELL))
         anchor=pivots[i] if pivots is not None else pivot
+        floor=frame.get_bounding_rect(min_alpha=32).bottom-1 if align_floor else round(anchor[1]*CELL)
         poses.append(Pose((frame,pg.transform.flip(frame,True,False)),
-                          (round(anchor[0]*CELL),round(anchor[1]*CELL))))
+                          (round(anchor[0]*CELL),floor)))
     return poses
 
 
@@ -69,6 +80,13 @@ def load_bank(directory: Path):
     clips={'run':running,'idle':actions[:4],
                           'rise':actions[4:8],'float':hovering,
                           'fall':actions[10:11],'land':actions[11:12]}
+    landing=directory/'hero-land-v1.png'
+    if landing.exists():clips['land']=load_sheet(landing,4,2,pivot=(.54,.96),align_floor=True)
+    for name,filename,rows in (
+        ('land_medium','hero-land-medium-v2.png',2),
+        ('land_heavy','hero-land-heavy-v1.png',3)):
+        path=directory/filename
+        if path.exists():clips[name]=load_sheet(path,4,rows,pivot=(.54,.96),align_floor=True)
     pivots=[(.5+.04*math.cos(math.pi*i/7),.96) for i in range(8)]
     for mode in ('ground','air'):
         path=directory/f'hero-turn-{mode}.png'
@@ -85,7 +103,9 @@ class HeroAnimator:
         self.elapsed=self.previous_elapsed=0.
         self.rise=self.previous_rise=0.
         self.landing=0.
+        self.landing_clip='land'
         self.last_vy=0.
+        self.last_floating=False
         self.turn=self.previous_turn=0.
         self.grounded=True
 
@@ -98,13 +118,19 @@ class HeroAnimator:
         self.previous_phase=self.phase
         if hero.grounded or was_grounded:self.phase+=abs(hero.x-hero.px)/STRIDE
         self.landing=max(0.,self.landing-dt)
+        if self.landing<1e-9:self.landing=0.
         if hero.grounded:
-            if not was_grounded and self.last_vy>100:self.landing=.065
-            state='land' if self.landing else ('run' if abs(hero.vx)>20 else 'idle')
+            impact=getattr(hero,'impact_vy',self.last_vy)
+            gliding=getattr(hero,'landed_gliding',self.last_floating)
+            if not was_grounded and impact>100 and not gliding:
+                self.landing_clip=getattr(hero,'landing_kind','land')
+                self.landing=LAND_DURATIONS[self.landing_clip]
+            state=self.landing_clip if self.landing else ('run' if abs(hero.vx)>20 else 'idle')
         elif hero.floating:state='float'
         elif hero.vy< -80:state='rise'
         elif hero.vy<=80:state='apex'
         else:state='fall'
+        if not hero.grounded:self.landing=0.
         changed=state!=self.state
         if changed:
             self.state=state
@@ -116,22 +142,27 @@ class HeroAnimator:
         self.rise=max(0.,min(1.,1+hero.vy/790))
         if state=='rise' and changed:self.previous_rise=self.rise
         self.last_vy=hero.vy
+        self.last_floating=hero.floating
 
     def turn_progress(self,alpha=1):
         return self.previous_turn+(self.turn-self.previous_turn)*max(0.,min(1.,alpha))
 
     def render_facing(self,alpha=1):
+        if self.state in LAND_DURATIONS:return -1 if self.turn_progress(alpha)>=.5 else 1
         # Turn sprites already rotate from right to left; do not mirror midway.
         return -1 if self.turn_progress(alpha)>=1-1e-9 else 1
 
     def sample(self,bank,alpha=1):
         alpha=max(0.,min(1.,alpha))
+        t=self.previous_elapsed+(self.elapsed-self.previous_elapsed)*alpha
+        if self.state in LAND_DURATIONS:
+            clip=bank.clips.get(self.state,bank.clips['land'])
+            return clip[min(len(clip)-1,int(t/LAND_DURATIONS[self.state]*len(clip)))]
         rotation=self.turn_progress(alpha)
         key='turn_ground' if self.grounded else 'turn_air'
         if 1e-9<rotation<1-1e-9 and key in bank.clips:
             clip=bank.clips[key]
             return clip[min(len(clip)-1,int(rotation*len(clip)))]
-        t=self.previous_elapsed+(self.elapsed-self.previous_elapsed)*alpha
         state=self.state
         if state=='run':
             clip=bank.clips['run']

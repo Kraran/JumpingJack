@@ -42,7 +42,7 @@ Trois obélisques servent de points de reprise lorsqu’on les approche au sol. 
 
 ## Animation du héros
 
-Le héros utilise **58 poses actives**, avec leur miroir pour la direction opposée :
+Le héros utilise **85 poses actives**, avec leur miroir pour la direction opposée :
 
 | Mouvement | Poses |
 | --- | --- |
@@ -53,11 +53,27 @@ Le héros utilise **58 poses actives**, avec leur miroir pour la direction oppos
 | Montée du saut / arrivée au sommet | 4 |
 | Vol plané / mouvement de la cape | 8, contre une pose fixe auparavant |
 | Chute | 1 |
-| Réception | 1, brièvement avant la reprise de la course ou du repos |
+| Réception légère | 8, flexion douce des genoux |
+| Réception moyenne | 8, flexion plus marquée |
+| Réception lourde | 12, une main et un genou au sol puis redressement |
 
 La course avance selon la **distance réellement parcourue** : un cycle complet tous les 136 unités de niveau, soit 0,4 seconde à vitesse maximale. Ses 24 poses peuvent donc se succéder à 60 poses par seconde à pleine vitesse. La phase de l’animation est interpolée entre les mêmes pas de simulation que la position du héros ; ralentir ralentit aussi la cadence des jambes. Le vol plané possède une boucle indépendante de huit poses à 16 poses par seconde. Le repos utilise une respiration lente en aller-retour.
 
-Toutes les cellules gardent une échelle commune et un ancrage explicite du corps, également respecté après inversion gauche/droite. Les poses sont préparées et préchargées en textures GPU avant de jouer. Il n’y a ni calcul d’image intermédiaire ni chargement de sprite dans la boucle d’affichage. La réception n’empêche pas de sauter immédiatement et la pause fige le cycle. Recommencer ou réapparaître remet l’animation à zéro.
+Toutes les cellules gardent une échelle commune et un ancrage explicite du corps, également respecté après inversion gauche/droite. Les poses sont préparées et préchargées en textures GPU avant de jouer. Il n’y a ni calcul d’image intermédiaire ni chargement de sprite dans la boucle d’affichage. Les réceptions légère et moyenne n’empêchent pas de sauter immédiatement et la pause fige le cycle. Recommencer ou réapparaître remet l’animation à zéro.
+
+Après une chute, le héros amortit le contact avec le sol ou une plateforme en fléchissant naturellement les genoux, puis se redresse en **0,24 seconde pour une petite chute**. Une arrivée en vol plané ne déclenche pas cette réception. La détection conserve le type de descente et la vitesse au moment exact du contact, avant leur remise à zéro par la physique. Courir reste possible pendant les réceptions légère et moyenne et un nouveau saut les interrompt immédiatement. Les huit dessins et leur prompt sont décrits dans [assets/HERO-LANDING-PROMPT.md](assets/HERO-LANDING-PROMPT.md).
+
+Deux niveaux supplémentaires dépendent de la hauteur réellement descendue depuis le sommet du saut ou le dernier passage en vol plané :
+
+| Hauteur de chute (unités du niveau) | Réception | Durée | Commandes |
+| --- | --- | --- | --- |
+| Moins de 160 | Flexion légère | 0,24 s | Déplacement et saut disponibles |
+| De 160 à moins de 280 | Flexion plus profonde | 0,32 s | Déplacement et saut disponibles |
+| 280 et plus | Une main et un genou au sol, vue de côté | 0,60 s | Immobilisation et saut suspendu pendant la récupération |
+
+La plus haute plateforme est à 320 unités au-dessus du sol. La mesure s’arrête au support réellement atteint : tomber sur une plateforme intermédiaire réduit donc la réception. Le vol plané remet la mesure à zéro ; se poser en planant ne déclenche aucune flexion. La pause fige aussi la récupération. Les paramètres se trouvent dans `hero_animation.py`, les dessins et prompts dans [assets/HERO-LANDING-LEVELS-PROMPTS.md](assets/HERO-LANDING-LEVELS-PROMPTS.md). Comparaison des trois hauteurs et du vol plané : [aperçu vidéo](output/hero-landing-levels-demo.mp4), régénérable avec `python preview_landing_levels.py`.
+
+L’aperçu [réception après chute / arrivée en planant](output/hero-landing-demo.mp4) compare les deux cas sur le sol et sur une plateforme. Pour le régénérer : `python preview_landing.py` (dépendances développeur optionnelles).
 
 Le héros dispose aussi d’un demi-tour rapide d’environ **0,16 seconde**, avec des poses dédiées au sol et en l’air. Une nouvelle inversion de commande fait repartir la rotation en sens inverse, sans saut d’image. Les déplacements, le saut et le vol plané restent immédiatement disponibles. La phase de course continue pendant le pivot, puis reprend à la pose correspondant à la distance parcourue. L’aperçu est `output/hero-turn-demo.mp4` ; le contrôle natif des 16 nouvelles poses et de leur cache GPU est enregistré dans `output/hero-turn-validation.json`.
 
@@ -119,7 +135,7 @@ Le panorama et les textures sont préchargés avant la partie. Les textures sont
 
 `python -m unittest discover -s tests -v`
 
-Les 70 tests couvrent la physique, la collecte, les ennemis, les reprises, la victoire, le plein écran et ses replis, les rapports de parallaxe, l’absence de dérive et de trous de raccord, l’interpolation commune, les coordonnées Full HD, la transparence des plans, l’agrandissement entier et la cadence à 60/75/120/144/165/240/360 Hz sans double limiteur. Ils vérifient aussi la réutilisation et le préchauffage hors écran des textures, l’absence de transfert d’image complète ou de lecture GPU dans la boucle de composition, le cycle complet de 24 poses à 60 Hz, la phase indépendante de la cadence de simulation, les transitions aériennes et les ancrages des sprites. Pour les crocodiles : patrouille, déclenchement, charge engagée, limites de sol, récupération, collision continue, saut, protection de réapparition, placements, retournement stationnaire, abandon d’une attaque devenue hors de portée, contact pendant la rotation et 32 poses graphiques.
+Les 85 tests couvrent la physique, la collecte, les ennemis, les reprises, la victoire, le plein écran et ses replis, les rapports de parallaxe, l’absence de dérive et de trous de raccord, l’interpolation commune, les coordonnées Full HD, la transparence des plans, l’agrandissement entier et la cadence à 60/75/120/144/165/240/360 Hz sans double limiteur. Ils vérifient aussi la réutilisation et le préchauffage hors écran des textures, l’absence de transfert d’image complète ou de lecture GPU dans la boucle de composition, le cycle complet de 24 poses à 60 Hz, la phase indépendante de la cadence de simulation, les transitions aériennes et les ancrages des sprites. Pour les crocodiles : patrouille, déclenchement, charge engagée, limites de sol, récupération, collision continue, saut, protection de réapparition, placements, retournement stationnaire, abandon d’une attaque devenue hors de portée, contact pendant la rotation et 32 poses graphiques.
 
 `python verify_display.py` ouvre une vraie fenêtre, mesure le défilement en fenêtre, en plein écran et après retour en fenêtre, puis vérifie dix bascules. Échap permet d’interrompre la vérification. Les mesures sont enregistrées dans `output/fullhd-gpu-timing.json`. Le test rapporte aussi les images dont l’intervalle dépasse 1,5 fois la période de l’écran ; il ne masque pas les retards de présentation.
 

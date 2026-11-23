@@ -5,13 +5,13 @@ import unittest
 from unittest.mock import MagicMock
 from types import SimpleNamespace
 import pygame as pg
-from hero_animation import AnimationBank, HeroAnimator, Pose, load_bank, CELL, STRIDE
+from hero_animation import AnimationBank, HeroAnimator, Pose, load_bank, CELL, STRIDE, LAND_TIME
 from main import ROOT, Hero, Platform
 
 
 def bank():
     return AnimationBank({name:list(range(n)) for name,n in
-        [('run',24),('idle',4),('rise',4),('float',8),('fall',1),('land',1)]})
+        [('run',24),('idle',4),('rise',4),('float',8),('fall',1),('land',8)]})
 
 
 class AnimationTimingTests(unittest.TestCase):
@@ -72,6 +72,64 @@ class AnimationTimingTests(unittest.TestCase):
         animation.reset()
         self.assertEqual((animation.phase,animation.elapsed,animation.landing),(0.,0.,0.))
         self.assertEqual(animation.state,'idle')
+
+    def test_fall_lands_on_ground_and_platform_but_gliding_does_not_bend(self):
+        for ground in (True,False):
+            for gliding in (False,True):
+                with self.subTest(ground=ground,gliding=gliding):
+                    hero=Hero(500,619.5);hero.vy=600 if not gliding else 105
+                    animation=HeroAnimator()
+                    floor=[Platform(400,620,200,100 if ground else 32,ground)]
+                    hero.update(1/120,0,gliding,False,floor)
+                    animation.update(1/120,hero,False)
+                    self.assertTrue(hero.grounded)
+                    self.assertFalse(hero.floating)
+                    self.assertEqual(hero.landed_gliding,gliding)
+                    self.assertEqual(animation.state,'idle' if gliding else 'land')
+
+    def test_landing_plays_all_eight_poses_once_then_returns_to_idle(self):
+        hero=self.hero();hero.vx=0;hero.impact_vy=600;hero.landed_gliding=False
+        animation=HeroAnimator();animation.update(1/120,hero,False)
+        seen=[]
+        for _ in range(35):
+            seen.append(animation.sample(bank()))
+            animation.update(1/120,hero,True)
+        self.assertEqual(sorted(set(seen[:28])),list(range(8)))
+        self.assertEqual(animation.state,'idle')
+
+    def test_landing_can_be_interrupted_by_jump_and_does_not_delay_running(self):
+        hero=Hero(500,619);hero.vy=600
+        animation=HeroAnimator();floor=[Platform(0,620,2000,100,True)]
+        hero.update(1/120,1,False,False,floor)
+        animation.update(1/120,hero,False)
+        self.assertEqual(animation.state,'land')
+        start=hero.x
+        hero.update(1/120,1,False,False,floor)
+        animation.update(1/120,hero,True)
+        self.assertGreater(hero.x,start)
+        hero.update(1/120,1,True,True,floor)
+        animation.update(1/120,hero,True)
+        self.assertLess(hero.vy,0)
+        self.assertEqual(animation.state,'rise')
+        self.assertEqual(animation.landing,0)
+
+    def test_landing_takes_priority_over_turn_and_uses_correct_mirror(self):
+        animation=HeroAnimator();animation.state='land'
+        animation.previous_turn=animation.turn=.75
+        b=bank();b.clips['turn_ground']=['turn']*8
+        self.assertEqual(animation.sample(b),0)
+        self.assertEqual(animation.render_facing(),-1)
+        animation.previous_elapsed=animation.elapsed=LAND_TIME
+        self.assertEqual(animation.sample(b),7)
+
+    def test_contact_flags_clear_on_next_step(self):
+        hero=Hero(500,619);hero.vy=600
+        floor=[Platform(0,620,2000,100,True)]
+        hero.update(1/120,0,False,False,floor)
+        self.assertGreater(hero.impact_vy,100)
+        hero.update(1/120,0,True,True,floor)
+        self.assertEqual(hero.impact_vy,0)
+        self.assertFalse(hero.landed_gliding)
 
     def test_coyote_jump_starts_at_first_pose_instead_of_old_fall_progress(self):
         hero=self.hero();hero.grounded=False;hero.vy=-780
@@ -140,8 +198,11 @@ class SpriteTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):pg.quit()
 
-    def test_all_58_active_poses_are_present_and_share_canvas_scale(self):
-        self.assertEqual(self.bank.pose_count,58)
+    def test_all_85_active_poses_are_present_and_share_canvas_scale(self):
+        self.assertEqual(self.bank.pose_count,85)
+        self.assertEqual(len(self.bank.clips['land']),8)
+        self.assertEqual(len(self.bank.clips['land_medium']),8)
+        self.assertEqual(len(self.bank.clips['land_heavy']),12)
         self.assertEqual(len(self.bank.clips['run']),24)
         self.assertEqual(len(self.bank.clips['float']),8)
         self.assertEqual(len(self.bank.clips['turn_ground']),8)
