@@ -1,3 +1,6 @@
 -r requirements.txt
 # Optionnel : encodage des vidéos des scripts preview_*.py.
 imageio-ffmpeg>=0.6,<1
+# Reconstruction optionnelle de l'atlas du plasma solaire.
+numpy>=1.26,<3
+Pillow>=10,<13

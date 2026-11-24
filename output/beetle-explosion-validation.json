@@ -1,0 +1,11 @@
+{
+  "gpu": true,
+  "variants": 328,
+  "explosion_frames_seen": 16,
+  "metal_frames_seen": 8,
+  "smoke_outlasts_breakup": true,
+  "effects_cleared": true,
+  "robot_destroyed": true,
+  "hero_deaths": 0,
+  "same_preloaded_texture": true
+}

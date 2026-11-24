@@ -31,18 +31,86 @@ Si Python et les dépendances sont déjà installés, `python main.py` ou **Lanc
 | F11 | Plein écran / fenêtre |
 | F3 | FPS, cadence P95, écran, VSync et rapports des trois plans |
 | M | Activer / couper les effets sonores |
+| F | Tirer le rayon solaire |
+| Bas ou S maintenu | S’accroupir ; F tire plus bas dans cette position |
 
-Le héros peut traverser les petites plateformes par dessous et se poser dessus. Maintenir Espace ne déclenche pas de sauts automatiques à l’atterrissage.
+Une manette reconnue par SDL (Xbox, PlayStation, Switch Pro et la plupart des manettes génériques) peut être branchée avant ou pendant la partie. Le stick gauche et la croix se combinent avec le clavier. Le bouton du bas suit le nom SDL **A** : A sur Xbox, Croix sur PlayStation.
+
+| Manette | Action |
+| --- | --- |
+| Stick gauche, croix gauche / droite | Courir ; diriger le héros en l’air |
+| A ou croix haut | Grand saut ; un nouvel appui freine en l’air |
+| Stick ou croix vers le bas + nouvel appui sur le saut | Poser la main et descendre à travers une plateforme |
+| Maintenir A ou la croix haut en descente | Planer lentement |
+| Start (Options) | Démarrer, pause / reprise, rejouer |
+| A sur l’accueil, la pause ou l’écran final | Démarrer, reprendre ou rejouer |
+| View / Back (Share, Create) | Recommencer le niveau |
+| RB (R1) | Activer / couper les effets sonores |
+| Gâchette droite RT (R2) ou B (Cercle sur PlayStation) | Tirer le rayon solaire |
+| Stick ou croix vers le bas maintenu | S’accroupir ; RT / B tire plus bas dans cette position |
+
+Une manette absente de la base SDL utilise la disposition Xbox habituelle : axe horizontal 0, croix, bouton 0 pour le saut, 7 ou 9 pour Start, 6 ou 8 pour View, 5 pour le son. La zone morte du stick est de 28 %. Maintenir le saut ne relance pas un saut à l’atterrissage.
+
+### Vibrations
+
+Les manettes compatibles reçoivent une impulsion de **170 ms à la réception d’une grande chute** (réception lourde dès 280 unités), avec une intensité de 55 % sur le moteur grave et 25 % sur le moteur aigu. La mort du héros, par chute ou contact avec un ennemi, déclenche une vibration plus forte : **400 ms à 100 % sur les deux moteurs**. La mort prend la priorité si elle coïncide avec une réception lourde. Les petites et moyennes réceptions ainsi que les arrivées en planant ne vibrent pas. Un choc de tête sous une plateforme déclenche une impulsion de 110 ms (35 % grave, 60 % aigu), indépendante du son ; les chocs latéraux ne vibrent pas. La vibration de mort reste prioritaire en cas de simultanéité.
+
+Les vibrations s’arrêtent à la pause, à la perte de focus, lors d’un redémarrage, d’un débranchement ou de la fermeture du jeu. Elles sont indépendantes du réglage du son. Une manette sans vibrations continue de fonctionner normalement. Les valeurs sont réglables dans `RUMBLE_EFFECTS` de `gamepad.py`. API : [Pygame Controller.rumble](https://www.pygame.org/docs/ref/sdl2_controller.html#pygame._sdl2.controller.Controller.rumble) et [Joystick.rumble](https://www.pygame.org/docs/ref/joystick.html#pygame.joystick.Joystick.rumble).
+
+Les plateformes sont solides sur toutes leurs faces. Un choc de tête sous une plateforme produit un son métallique « bong » et une brève vibration de 110 ms (35 % grave, 60 % aigu). Les chocs latéraux sont silencieux et ne vibrent pas. Un choc de tête, ou un choc latéral pendant le vol plané, annule immédiatement le planage et force la chute normale ; maintenir, relâcher ou réappuyer sur le saut ne permet pas de planer ni de freiner en l’air avant le prochain atterrissage. Un même contact ne répète pas le son ni la vibration en boucle. Depuis une plateforme, maintenir le stick gauche ou la croix vers le bas puis appuyer sur le saut déclenche une descente volontaire. Au clavier : flèche bas ou S + saut. Le héros fléchit les genoux et pose une main pendant 0,18 seconde, puis passe vers le bas ; le geste complet compte douze poses sur 0,36 seconde. Le déplacement horizontal reprend dès le départ vers le bas. Seule la plateforme quittée est traversée, jusqu’à ce que le corps soit entièrement dégagé, pas les supports inférieurs ni le sol. Maintenir la combinaison ne fait pas traverser plusieurs plateformes successives et ne déclenche pas automatiquement le vol plané ; relâcher puis réappuyer sur le saut permet de freiner ou planer. Les réceptions et vibrations suivent ensuite la hauteur réellement descendue. La descente volontaire est indisponible sur le sol et pendant la récupération d’une réception lourde.
 
 ## Premier niveau
 
-Un parcours de 9 600 unités dans un désert égyptien, avec pyramides, sphinx et temple. Ramasser les **52 reliques**, éviter les scarabées volants et les crocodiles du Nil, puis atteindre le sanctuaire à droite. Les reliques sont facultatives pour terminer : l’écran final indique le bilan, le temps et les morts.
+Un parcours de 9 600 unités dans un désert égyptien, avec pyramides, sphinx et temple. Ramasser les **52 éclats solaires**, éviter les scarabées volants, les crocodiles du Nil et les gardiens solaires de la seconde moitié, puis sortir par le bord droit de l’écran. La caméra termine son défilement à la limite du niveau ; le héros poursuit son mouvement et quitte entièrement l’écran avant l’affichage du bilan. La porte de fin a été retirée. Le sol se prolonge hors champ pour permettre une sortie en courant sans chute. Les éclats sont facultatifs pour terminer : l’écran final indique le bilan, le temps et les morts.
 
-Trois obélisques servent de points de reprise lorsqu’on les approche au sol. Une chute ou un contact avec un ennemi renvoie au dernier point activé, en conservant les reliques collectées. Une brève protection suit la réapparition. Les reprises ne sont conservées que pendant la partie en cours.
+Un seul **obélisque SF** sert de point de reprise, exactement au milieu du niveau (x = 4 800). Les trois anciens points ont été retirés. S’en approcher au sol lance une lumière qui monte du socle jusqu’au pyramidion en **1,2 seconde**, puis crépite en permanence. La reprise est acquise dès le début de l’activation ; une mort conserve l’obélisque allumé et les éclats collectés. Le héros réapparaît légèrement à sa gauche (x = 4 740), sur le sol avant la fosse, avec une brève protection. Recommencer le niveau réinitialise le point de reprise.
+
+Les **21 plateformes suspendues** utilisent cinq largeurs fixes, toutes présentes dans chaque moitié du niveau : très petite **120**, petite **180**, moyenne **240**, grande **300** et très grande **360 unités**. La moyenne correspond à la largeur médiane des anciennes plateformes. Leur épaisseur reste de 32 unités. La disposition horizontale est adaptée à ces largeurs ; chaque plateforme porte deux éclats, pour un total conservé de 52 éclats dans le niveau.
+
+Le dessin retenu est **« Pierre sacrée »** : grès sculpté, disque solaire ailé, hiéroglyphes et embouts de bronze ornés de faucons. Les cinq variantes sont préchargées dans un seul atlas Full HD ; chaque sprite occupe exactement le rectangle de collision de sa plateforme. Source et prompt : [assets/SACRED-PLATFORMS-PROMPT.md](assets/SACRED-PLATFORMS-PROMPT.md).
+
+Quatre plateformes de la seconde moitié portent des **pics de bronze tournés vers le bas** (x = 5 220, 6 040, 6 900 et 8 190). Ils sont mortels uniquement lorsque le héros les heurte en remontant par dessous. Les contacts latéraux, une chute et la descente Bas + A ne tuent pas. Les pointes dépassent de 26 unités et laissent libre le passage au sol. Les rangées comptent une lame de moins que le remplissage complet et sont centrées pour dégager les bords biseautés (au moins 14 unités de marge de chaque côté). Une mort déclenche les deux moteurs à 100 % pendant 400 ms et renvoie au point de reprise, sans « bong ». [Dessin et prompt](assets/PLATFORM-SPIKES-PROMPT.md) · [Aperçu des trois cas](output/platform-spikes-demo.mp4), régénérable avec `python preview_spikes.py` (`--native-check` pour le GPU).
+
+`python tools/verify_level_layout.py` recherche des sauts avec la vraie physique et les plateformes solides. La vérification rejette les sauts heurtant les pics et atteint les 28 supports (21 plateformes et 7 portions de sol) depuis le départ, avec une approche en course et des sauts normaux ou planés. Elle vérifie la géométrie sans simuler les ennemis ni garantir la difficulté pour un joueur. Les trajets trouvés sont enregistrés dans `output/level-layout-validation.json`.
+
+Le corps métallique et les deux textures de l’obélisque sont préchargés sur le GPU. L’animation comporte 72 poses d’allumage et 48 poses de crépitement sur 2,4 secondes (20 poses/s) ; son horloge suit la simulation et se fige en pause. Dessin et prompt : [assets/SOLAR-OBELISK-PROMPT.md](assets/SOLAR-OBELISK-PROMPT.md). Aperçu : [activation de l’obélisque](output/obelisk-demo.mp4), régénérable avec `python preview_obelisk.py` ; ajouter `--native-check` pour vérifier le rendu GPU.
+
+## Vies et Game Over
+
+Une nouvelle partie commence avec **trois vies**, représentées en haut à gauche par le **faucon doré de la poitrine du héros**, extrait du sprite frontal. Chaque mort par ennemi, chute ou pics retire exactement une vie et conserve la vibration de mort. Tant qu’il reste une vie, le héros reprend au point de réapparition habituel avec sa protection temporaire.
+
+À zéro vie — donc à la **troisième mort sans bonus** — le monde se fige et **GAME OVER** apparaît. **Entrée, Start ou A** lancent une nouvelle partie avec trois vies, un niveau neuf et zéro médaillon. Recommencer le niveau par **R ou View** pendant la partie conserve les vies restantes et les médaillons : cela ne rend pas de vie. Rejouer après une victoire commence également une nouvelle partie. Trois médaillons accordent automatiquement une vie supplémentaire et sont consommés ; les niveaux déjà récompensés restent mémorisés pour empêcher un double ramassage.
+
+Les symboles et l’écran de Game Over sont préparés avant la partie pour éviter un chargement lors de la troisième mort. Un Game Over interrompt également l’animation de tir du héros ; le rendu accepte un rayon annulé entre la simulation et l’affichage, au sol, en l’air ou accroupi. [Démonstration des trois morts et du redémarrage](output/lives-demo.mp4), régénérable avec `python preview_lives.py --native-check`.
+
+## Médaillon de Rê
+
+Un seul **Fragment de Rê** se trouve à **x = 6 540, y = 185**, vers les deux tiers du niveau. Ce médaillon doré au relief de faucon mesure deux fois la taille d’un éclat solaire. Il faut atteindre le sommet d’un saut depuis la plateforme voisine (x = 6 510, y = 455) pour le ramasser. Son flottement, ses scintillements et ses quatre particules suivent la simulation ; les 48 poses sur 2,4 secondes sont préparées dans un atlas GPU avant la partie.
+
+Le HUD affiche la progression sur **trois médaillons**. Le troisième accorde immédiatement **une vie supplémentaire**, remet le compteur à zéro et affiche **« VIE +1 OBTENUE »** pendant trois secondes. Chaque niveau ne peut fournir son médaillon qu’une seule fois par partie : une mort ou un redémarrage du niveau conserve le compteur et ne fait pas réapparaître le médaillon. Une nouvelle partie ou la fermeture du jeu réinitialise cet inventaire. Ce collectible ne recharge pas l’énergie et ne modifie pas les 52 éclats solaires.
+
+Le ramassage joue une courte mélodie ascendante de quatre notes, qui respecte le réglage du son. [Dessin et prompt](assets/RA-MEDALLION-PROMPT.md) · [Animation avec mélodie](output/ra-medallion-demo.mp4), régénérable avec `python preview_medallion.py --native-check` pour le GPU. Les tests vérifient l’accessibilité avec la physique réelle, le plafond, la conservation, l’unicité du ramassage, le HUD et le son.
+
+## Jauge solaire
+
+Les 52 objets à ramasser utilisent le dessin **« Cristal solaire »** : ambre facettée, lumière intérieure, halo et braises discrètes. Les 48 poses sur 1,6 seconde sont préparées dans un atlas GPU unique avant la partie. Chaque cristal flotte et pulse avec une phase différente ; la pause fige l’animation. Le HUD utilise le même cristal. [Sprite et prompt](assets/SOLAR-CRYSTAL-PROMPT.md) · [Aperçu animé et recharge](output/solar-crystal-demo.mp4), régénérable avec `python preview_crystal.py` (`--native-check` pour le GPU).
+
+Le héros démarre avec **100 points d’énergie solaire**, affichés dans la barre dorée en haut de l’écran. Chaque éclat ramassé recharge **10 points**, sans dépasser 100. Il n’y a pas de recharge passive.
+
+| Action | Énergie |
+| --- | --- |
+| Vol plané | −4 points par seconde, uniquement pendant le vol plané |
+| Rayon solaire, F, RT ou B | −30 points au début du geste |
+| Éclat ramassé | +10 points |
+| Réapparition ou nouveau départ | Réserve pleine |
+
+Le coût du rayon est prélevé une seule fois, dès le début de sa préparation. Un tir refusé ou un appui pendant le délai entre deux tirs ne consomme rien. En dessous de 30 points, le héros effectue le geste complet de tir, au sol comme en l’air, mais aucun rayon ni lueur ne sort de ses mains et aucun ennemi ne subit de dégâts. Cet essai à vide ne consomme rien, conserve le délai habituel entre deux tirs et affiche « ÉNERGIE INSUFFISANTE ». Ramasser un éclat pendant ce geste ne déclenche pas de tir automatique : il faut un nouvel appui. À zéro, le vol plané s’arrête et la chute normale reprend. Le saut, la course et le freinage aérien restent gratuits.
+
+La réserve de jeu est indépendante de la valeur affichée : la barre suit chaque variation en douceur, avec une baisse très rapide lors d’un tir (environ un dixième de seconde). Sa progression est interpolée entre les pas de simulation, comme le héros et la caméra. Les petits repères indiquent les seuils de 30, 60 et 90 points ; la barre devient orange lorsqu’il reste moins d’un tir. La pause fige la consommation et l’animation de la jauge. Les paramètres sont regroupés dans `energy.py`.
 
 ## Animation du héros
 
-Le héros utilise **85 poses actives**, avec leur miroir pour la direction opposée :
+Le héros utilise **177 poses actives**, avec leur miroir pour la direction opposée :
 
 | Mouvement | Poses |
 | --- | --- |
@@ -50,6 +118,12 @@ Le héros utilise **85 poses actives**, avec leur miroir pour la direction oppos
 | Repos / respiration | 4 |
 | Retournement au sol | 8 |
 | Retournement en l’air | 8 |
+| Descente volontaire, main posée puis chute | 12 |
+| Rayon solaire au sol | 8 |
+| Rayon solaire en saut / chute | 8 |
+| Accroupissement / relevé | 8, relues en sens inverse au relevé |
+| Rayon solaire accroupi | 8 |
+| Repos en tailleur / relevé | 48, relues en sens inverse au réveil |
 | Montée du saut / arrivée au sommet | 4 |
 | Vol plané / mouvement de la cape | 8, contre une pose fixe auparavant |
 | Chute | 1 |
@@ -81,9 +155,57 @@ Un aperçu avant/après à 60 FPS est disponible dans `output/hero-course-compar
 
 Vérification native de la course animée : `python verify_display.py --fullscreen-only --frames 360 --output output/hero-animation-gpu-timing.json`. Sur l’écran principal à 60 Hz : **59,97 FPS, P95 17,92 ms, maximum 18,55 ms et aucun intervalle supérieur à 25 ms sur 360 mesures**, dans la version à 42 poses, toutes présentes et toujours en cache GPU. La préparation CPU médiane était de 1,77 ms ; les dix bascules plein écran ont aussi réussi. Ces chiffres décrivent cet essai, pas une garantie pour toute charge système.
 
+## Accroupissement et tir bas
+
+Maintenir le stick ou la croix vers le bas sur un support fait s’accroupir le héros en **0,24 seconde** ; relâcher le fait se relever avec les mêmes poses en sens inverse. Au clavier : Bas ou S. Le héros reste sur place ; gauche/droite change le côté visé. Cette posture réduit progressivement sa hauteur de collision de 54 à 32 unités. Elle n’est pas disponible en l’air, pendant une descente de plateforme ou une récupération lourde. Bas + saut conserve la descente volontaire depuis une plateforme.
+
+**RT / R2, B ou F** permettent de tirer accroupi : le héros joint ses mains et le rayon horizontal part à 28 unités au-dessus des pieds, contre 54 debout. Le coût reste de 30 points. À énergie insuffisante, le geste s’effectue sans rayon. Un appui au début de l’accroupissement attend la fin de la descente avant de lancer le geste ; relâcher Bas pendant cette préparation l’annule. Une fois le tir lancé, la posture reste basse jusqu’à la fin du geste, même si Bas est relâché. Sauter interrompt le tir accroupi. Le réveil depuis le repos consomme la commande Bas comme les autres commandes, sans accroupissement immédiat.
+
+Les seize nouvelles poses et leurs miroirs sont préchargés. [Dessins et prompts](assets/HERO-CROUCH-PROMPTS.md). [Aperçu animé](output/hero-crouch-demo.mp4), régénérable avec `python preview_crouch.py` ; ajouter `--native-check` pour le rendu GPU.
+
+## Repos en tailleur
+
+Après **six secondes sans commande**, le héros s’assoit en tailleur, uniquement s’il est immobile sur le sol ou une plateforme, hors saut, tir, descente volontaire et réception. La descente utilise **48 poses sur 0,8 seconde**, puis le héros reste assis jusqu’à une nouvelle commande.
+
+Une touche du clavier, un bouton ou une direction de la manette déclenche un relevé de 0,8 seconde. Une interruption de la descente inverse le geste depuis la pose actuelle. L’appui de réveil sert uniquement au relevé : aucun saut, tir, déplacement ou autre action n’est mis en attente. Les commandes reçues pendant le relevé sont également consommées. Une fois debout, relâcher les commandes puis effectuer un nouvel appui permet de reprendre le jeu. Les commandes maintenues empêchent de se rasseoir, avec une zone morte pour les sticks et une prise en compte des gâchettes au repos. La pause fige le délai et la pose ; la mort et le redémarrage effacent cet état. Les ennemis continuent d’agir pendant le repos.
+
+Les poses et leurs miroirs sont préchargés, avec un ancrage commun et un échantillonnage sur l’horloge de simulation interpolée. Paramètres : `rest.py`. [Dessins et prompts](assets/HERO-REST-PROMPTS.md). [Aperçu vidéo](output/hero-rest-demo.mp4), régénérable avec `python preview_rest.py`.
+
+## Rayon solaire
+
+**F au clavier ou RT (R2) / B à la manette** déclenche le rayon solaire. Le héros joint les mains devant lui, prépare son tir pendant 0,15 seconde puis émet un rayon horizontal doré pendant 0,15 seconde. Le geste complet dure 0,40 seconde ; deux départs de tir sont espacés d’au moins 0,64 seconde. Le maintien du bouton ne répète pas l’attaque et un appui pendant la récupération ne met pas de tir en attente.
+
+Le héros peut tirer au sol, pendant la montée du saut ou la chute, avec une animation adaptée. Le tir conserve sa direction de départ et suit la position du héros ; les déplacements et le saut restent disponibles. **Le vol plané interdit le tir et interrompt un tir déjà commencé.** La descente volontaire avec main posée et la récupération d’une grande chute sont également incompatibles avec l’attaque.
+
+Le rayon porte sur 700 unités depuis les mains, s’arrête sur le terrain et les plateformes, et élimine les crocodiles comme les scarabées qui le traversent. Les ennemis derrière le héros ou hors de la hauteur du rayon ne sont pas touchés. Les ennemis éliminés ne causent plus de collision : les scarabées explosent avec des fragments métalliques, tandis que les crocodiles brûlent et laissent des cendres ; les ennemis tués restent éliminés entre les vies. Seul un redémarrage du niveau ou une nouvelle partie les rétablit. La pause fige le geste, le rayon et son délai de récupération.
+
+Le rayon et ses impacts sont calculés à 120 Hz ; le rendu se cale sur la position interpolée du héros. Le style retenu est le **plasma solaire de la proposition 2** : filaments dorés qui s’écoulent depuis les mains, canal lumineux irrégulier, étincelles et halo qui se dissipe après le tir. Les 76 images sont préparées à 120 images/s dans un atlas Full HD ; le jeu charge uniquement deux textures GPU, une par direction. Aucun calcul de turbulence, flou, redimensionnement ou transfert d’image complète n’est nécessaire pendant un tir. Le découpage à l’obstacle conserve la longueur réelle du rayon, sans étirer le plasma. Le halo final reste à la dernière position du tir et ne cause aucun dégât ; le vol plané, la mort ou le redémarrage l’annulent. Le rendu logiciel conserve le même mélange lumineux additif. Les seize poses et leurs miroirs sont préchargés comme les autres sprites. Paramètres : `solar.py` et `plasma_fx.py`. [Reconstruction de l’atlas](assets/SOLAR-PLASMA.md). Dessins et prompts : [assets/HERO-SOLAR-PROMPTS.md](assets/HERO-SOLAR-PROMPTS.md). [Aperçu au sol, en saut et en vol plané](output/solar-ray-demo.mp4), régénérable avec `python preview_solar.py` et les dépendances développeur optionnelles.
+
+## Scarabées robotiques
+
+Les six ennemis volants adoptent la **proposition 2** : titane argenté, mécanique sombre, visière et réacteur cyan. Leur vol possède 16 poses d’ailes et de pattes, un demi-tour en huit poses passant par une vue de face, ainsi qu’une légère inclinaison selon la montée ou la descente. Chaque ennemi utilise une phase d’ailes différente.
+
+En patrouille, leurs trajectoires restent sinusoïdales. Ils détectent le héros à 460 unités dans un cône avant d’environ 112°, uniquement hors demi-tour et si aucune plateforme ne masque la vue. Un héros derrière eux ne déclenche pas de poursuite. Dès la détection, ils accélèrent vers lui à une vitesse maximale de 300 unités/s et peuvent ensuite le suivre même s’il passe derrière eux. La poursuite n’a aucune limite de temps : ils abandonnent uniquement lorsque le héros s’éloigne à plus de 720 unités, puis regagnent progressivement leur patrouille. La protection de réapparition interrompt également une poursuite. Un délai de 1,5 seconde évite une reprise immédiate de la poursuite. Pendant la poursuite et le retour, ils glissent le long des obstacles au lieu de traverser la pierre. La protection de réapparition empêche la poursuite. Le contact demeure mortel. Le rayon solaire les neutralise immédiatement : la carapace se disloque en huit poses, avec éclat du réacteur, fragments métalliques et étincelles cyan. Une explosion en seize images ajoute des flammes orangées, puis un peu de fumée et des braises. La dislocation conserve sa durée de 0,34 seconde ; la fumée se dissipe sur une durée totale de 0,60 seconde. Les fragments, flammes et fumées sont purement visuels. Le vol, les demi-tours et la destruction suivent l’horloge de simulation et se figent en pause ; les positions sont interpolées pour le rendu.
+
+Les miroirs, les inclinaisons et les poses sont préparés au chargement dans **un seul atlas GPU partagé**. Le jeu ne calcule aucune rotation et ne charge aucun sprite pendant le vol. Les collisions et la neutralisation par le rayon restent celles des ennemis existants. [Dessins et prompts](assets/ROBOT-BEETLE-PROMPTS.md). [Aperçu animé](output/robot-beetle-demo.mp4), régénérable avec `python preview_robot_beetle.py`. [Explosion à vitesse normale et au ralenti](output/beetle-explosion-demo.mp4), régénérable avec `python preview_beetle_explosion.py`.
+
+## Gardien solaire — vautour fauve robotique
+
+Trois vautours de la **proposition 3** survolent uniquement la seconde moitié du niveau, autour de x = 5 950, 7 520 et 9 000 : titane argenté, ornements égyptiens dorés, collerette mécanique blanche et réacteur cyan.
+
+Ils repèrent le héros devant eux et en contrebas à **650 unités**, si les plateformes ne masquent pas la vue. Une préparation visible de **0,40 seconde** précède le piqué à **780 unités/s**. La visée suit le héros encore visible pendant les 0,28 premières secondes de préparation, puis se verrouille pour les 0,12 dernières secondes et tout le piqué : une esquive tardive reste possible. Le robot freine et remonte, puis rejoint progressivement sa patrouille. Il respecte les obstacles, les contourne lors du retour et attend au moins trois secondes avant une nouvelle acquisition. La protection de réapparition empêche ses attaques.
+
+Le contact avec le corps est mortel, avec une détection continue même pendant le piqué rapide. Le rayon solaire le détruit immédiatement : dislocation métallique, flammes, fumée et débris inoffensifs. Les vautours détruits restent éliminés après une mort du héros ; un redémarrage du niveau ou une nouvelle partie rétablit les trois vautours.
+
+**72 poses dessinées** : vol plané 24, préparation 8, piqué 8, remontée 8, demi-tour 8, destruction 16. Leurs miroirs et six angles de piqué sont préparés au chargement, soit 216 variantes dans un seul atlas GPU. Les positions et animations sont interpolées sur l’horloge de simulation, sans chargement, rotation ni miroir pendant le jeu ; la pause les fige.
+
+[Dessins et prompts](assets/SOLAR-GUARDIAN-PROMPTS.md) · [Aperçu animé](output/solar-guardian-demo.mp4), régénérable avec `python preview_vulture.py` (`--native-check` pour le rendu GPU).
+
 ## Crocodile du Nil
 
-Premier ennemi terrestre, dessiné d’après l’illustration fournie : longue queue recourbée, écailles cuirassées et silhouette basse. Il dispose de **16 poses de marche, 8 poses d’attaque/récupération et 8 poses de retournement**, dans les deux directions, préchargées sur le GPU.
+Premier ennemi terrestre, dessiné d’après l’illustration fournie : longue queue recourbée, écailles cuirassées et silhouette basse. Il dispose de **16 poses de marche, 8 poses d’attaque/récupération, 8 poses de retournement et 24 poses de combustion**, dans les deux directions, préchargées sur le GPU.
+
+Touché par le rayon solaire, le crocodile s’enflamme, s’affaisse et se réduit progressivement en cendres en **1,2 seconde**, sans explosion ni morceaux projetés. Il cesse immédiatement de se déplacer et de blesser le héros. Les flammes et la fumée se dissipent, puis un petit tas de cendres reste au sol jusqu’au redémarrage du niveau ou à une nouvelle partie, y compris après une mort du héros. La pause fige cette animation. [Dessin et prompt](assets/CROCODILE-BURN-PROMPT.md). [Aperçu normal et au ralenti](output/crocodile-burn-demo.mp4), régénérable avec `python preview_crocodile_burn.py`.
 
 Le demi-tour dure environ **0,16 seconde** : le crocodile pivote sur place par une vue de face avant de repartir. Il se déclenche aux limites de patrouille, lorsqu’il doit revenir dans sa zone après une charge et avant de viser un héros situé derrière lui. Le sens de déplacement change à la fin du pivot ; la zone de contact suit le raccourcissement de la silhouette pendant la rotation. Si le héros s’éloigne ou saute hors de portée pendant le demi-tour, l’attaque est annulée. `output/crocodile-turn-demo.mp4` présente la rotation à vitesse normale puis au ralenti ×4.
 
@@ -101,7 +223,7 @@ Trois crocodiles gardent des portions de sol continues. Le premier se trouve ava
 | Charge | 1 050 unités/s pendant au plus 0,24 s |
 | Récupération | 0,85 s |
 
-Un contact avec le corps ou la charge est mortel et renvoie au dernier point de reprise. La protection temporaire de réapparition reste valable. Sauter assez haut et planer permet de le dépasser. Les collisions sont vérifiées sur le trajet relatif complet du joueur et du crocodile, même si une charge passe entre deux positions affichées. Les crocodiles reviennent à leur position initiale après la mort du héros.
+Un contact avec le corps ou la charge est mortel et renvoie au dernier point de reprise. La protection temporaire de réapparition reste valable. Sauter assez haut et planer permet de le dépasser. Les collisions sont vérifiées sur le trajet relatif complet du joueur et du crocodile, même si une charge passe entre deux positions affichées. Seuls les crocodiles encore vivants reviennent à leur position initiale après la mort du héros ; les crocodiles tués restent en cendres.
 
 `output/crocodile-demo.mp4` montre une approche mortelle suivie d’un passage réussi par saut et vol plané. Pour la régénérer : `python preview_crocodile.py` (encodeur développeur optionnel `imageio-ffmpeg`). La vérification en plein écran se lance avec `python preview_crocodile.py --native-check` ; les données sont enregistrées dans `output/crocodile-gpu-timing.json`. L’essai sur l’écran principal à 60 Hz a mesuré **59,98 FPS, un P95 de 17,00 ms et aucun intervalle supérieur à 25 ms sur 359 mesures**, avec toutes les textures du crocodile présentes en cache. Les deux scénarios de collision ont également réussi dans cette vérification GPU.
 
@@ -129,13 +251,19 @@ F3 indique les FPS mesurés, le 95e percentile des intervalles entre présentati
 
 F11 conserve le moteur de rendu existant pendant la bascule. Si le pilote refuse cette opération, le jeu recrée proprement l’affichage et peut utiliser un mode logiciel de secours. Si aucun mode plein écran n’est accepté, il revient en fenêtre.
 
+Avant la première image jouable, le jeu prépare aussi hors écran l’accueil, le HUD, l’aide et la pause, toutes les valeurs du compteur d’éclats, les avertissements de la jauge, les ombres et les formes courantes des particules. Ces préparations ne font pas avancer la simulation, ne présentent aucune image à l’écran et ne lisent pas les pixels GPU. Elles sont réappliquées après une recréation du moteur de rendu. Un ramasse-miettes est exécuté une fois après le chargement ; il reste actif normalement pendant le jeu.
+
 Le panorama et les textures sont préchargés avant la partie. Les textures sont également utilisées une fois dans la cible GPU hors écran pour préparer leur première apparition, sans présentation parasite ni lecture de pixels vers le CPU. Les sons sont synthétisés localement, sans téléchargement. Il n’y a aucune dépendance réseau pendant le jeu.
+
+La descente volontaire est montrée dans [cet aperçu](output/hero-drop-demo.mp4), régénérable avec `python preview_drop.py`. Les dessins et leur prompt sont conservés dans [assets/HERO-DROP-PROMPT.md](assets/HERO-DROP-PROMPT.md).
 
 ## Vérification
 
 `python -m unittest discover -s tests -v`
 
-Les 85 tests couvrent la physique, la collecte, les ennemis, les reprises, la victoire, le plein écran et ses replis, les rapports de parallaxe, l’absence de dérive et de trous de raccord, l’interpolation commune, les coordonnées Full HD, la transparence des plans, l’agrandissement entier et la cadence à 60/75/120/144/165/240/360 Hz sans double limiteur. Ils vérifient aussi la réutilisation et le préchauffage hors écran des textures, l’absence de transfert d’image complète ou de lecture GPU dans la boucle de composition, le cycle complet de 24 poses à 60 Hz, la phase indépendante de la cadence de simulation, les transitions aériennes et les ancrages des sprites. Pour les crocodiles : patrouille, déclenchement, charge engagée, limites de sol, récupération, collision continue, saut, protection de réapparition, placements, retournement stationnaire, abandon d’une attaque devenue hors de portée, contact pendant la rotation et 32 poses graphiques.
+Les 296 tests couvrent la physique, la collecte, les ennemis, les reprises, la victoire, les manettes, le plein écran et ses replis, les rapports de parallaxe, l’absence de dérive et de trous de raccord, l’interpolation commune, les coordonnées Full HD, la transparence des plans, l’agrandissement entier et la cadence à 60/75/120/144/165/240/360 Hz sans double limiteur. Ils vérifient aussi la réutilisation et le préchauffage hors écran des textures, l’absence de transfert d’image complète ou de lecture GPU dans la boucle de composition, le cycle complet de 24 poses à 60 Hz, la phase indépendante de la cadence de simulation, les transitions aériennes et les ancrages des sprites. La jauge solaire est vérifiée pour la consommation indépendante de la cadence, le coût unique du tir, les réserves insuffisantes, la recharge, la fluidité de la barre, la pause et les commandes de réveil. Pour les crocodiles : patrouille, déclenchement, charge engagée, limites de sol, récupération, collision continue, saut, protection de réapparition, placements, retournement stationnaire, abandon d’une attaque devenue hors de portée, contact pendant la rotation, combustion biologique, cendres persistantes et 56 poses graphiques.
+
+`python tools/profile_startup.py --output output/startup-profile.json` mesure les toutes premières images, sans retirer une période de chauffe. Le rapport distingue mise à jour, composition, présentation synchronisée, créations de textes, formes et transferts de textures ; il compare le premier parcours à une reprise identique. Les mesures de présentation dépendent aussi du système et ne constituent pas une mesure physique du balayage.
 
 `python verify_display.py` ouvre une vraie fenêtre, mesure le défilement en fenêtre, en plein écran et après retour en fenêtre, puis vérifie dix bascules. Échap permet d’interrompre la vérification. Les mesures sont enregistrées dans `output/fullhd-gpu-timing.json`. Le test rapporte aussi les images dont l’intervalle dépasse 1,5 fois la période de l’écran ; il ne masque pas les retards de présentation.
 
@@ -149,4 +277,4 @@ Les vidéos et illustrations de référence fournies restent locales et ne sont 
 
 Références techniques : [Pygame — affichage et VSync](https://www.pygame.org/docs/ref/display.html), [Pygame 2.6.1 — textures et cibles du moteur SDL2](https://github.com/pygame/pygame/blob/2.6.1/src_c/cython/pygame/_sdl2/video.pyx), [SDL — indicateurs du moteur de rendu](https://wiki.libsdl.org/SDL2/SDL_RendererFlags), [SDL — fréquence du moniteur](https://wiki.libsdl.org/SDL2/SDL_GetCurrentDisplayMode).
 
-Les scarabées utilisent encore des animations de prototype. Le parcours sert de base pour régler ensemble le ressenti des sauts, la vitesse et la caméra avant de développer d’autres niveaux.
+Les scarabées utilisent désormais les animations robotiques décrites ci-dessus. Le parcours sert de base pour régler ensemble le ressenti des sauts, la vitesse et la caméra avant de développer d’autres niveaux.

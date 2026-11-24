@@ -1,6 +1,6 @@
 # Poses supplémentaires du héros
 
-Aux 42 poses de base décrites ici s’ajoutent les 16 poses de retournement de [HERO-TURN-PROMPTS.md](HERO-TURN-PROMPTS.md). La pose unique de réception est remplacée par les huit poses de [HERO-LANDING-PROMPT.md](HERO-LANDING-PROMPT.md), auxquelles s’ajoutent les huit poses moyennes et les douze poses lourdes de [HERO-LANDING-LEVELS-PROMPTS.md](HERO-LANDING-LEVELS-PROMPTS.md), soit 85 poses actives au total.
+Aux 42 poses de base décrites ici s’ajoutent les 16 poses de retournement de [HERO-TURN-PROMPTS.md](HERO-TURN-PROMPTS.md). La pose unique de réception est remplacée par les huit poses de [HERO-LANDING-PROMPT.md](HERO-LANDING-PROMPT.md), auxquelles s’ajoutent les huit poses moyennes et les douze poses lourdes de [HERO-LANDING-LEVELS-PROMPTS.md](HERO-LANDING-LEVELS-PROMPTS.md), ainsi que les douze poses de descente volontaire de [HERO-DROP-PROMPT.md](HERO-DROP-PROMPT.md), ainsi que seize poses de tir de [HERO-SOLAR-PROMPTS.md](HERO-SOLAR-PROMPTS.md), ainsi que les 48 poses de repos de [HERO-REST-PROMPTS.md](HERO-REST-PROMPTS.md), soit 161 poses actives au total.
 
 Création et extraction de fond avec l’outil intégré **image_gen**. Référence : `hero-atlas-v2.png` pour la course et les actions ; `hero-actions-v3.png` pour le nouveau vol plané. Aucun appel API par script.
 

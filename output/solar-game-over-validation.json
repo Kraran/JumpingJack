@@ -1,0 +1,25 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "cases": [
+    {
+      "stance": "ground",
+      "state": "game_over",
+      "lives": 0,
+      "rendered": true
+    },
+    {
+      "stance": "air",
+      "state": "game_over",
+      "lives": 0,
+      "rendered": true
+    },
+    {
+      "stance": "crouch",
+      "state": "game_over",
+      "lives": 0,
+      "rendered": true
+    }
+  ],
+  "new_texture_uploads": 0
+}

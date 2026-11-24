@@ -1,0 +1,37 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_texture_uploads": 0,
+  "observations": [
+    {
+      "frame": 30,
+      "lives": 3,
+      "deaths": 0,
+      "state": "play"
+    },
+    {
+      "frame": 90,
+      "lives": 2,
+      "deaths": 1,
+      "state": "play"
+    },
+    {
+      "frame": 150,
+      "lives": 1,
+      "deaths": 2,
+      "state": "play"
+    },
+    {
+      "frame": 210,
+      "lives": 0,
+      "deaths": 3,
+      "state": "game_over"
+    },
+    {
+      "frame": 270,
+      "lives": 3,
+      "deaths": 0,
+      "state": "play"
+    }
+  ]
+}

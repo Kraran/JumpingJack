@@ -1,0 +1,13 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "sizes_visible": [
+    120,
+    180,
+    240,
+    300,
+    360
+  ],
+  "shared_atlas_cached": true,
+  "new_uploads_during_30_static_frames": 0
+}

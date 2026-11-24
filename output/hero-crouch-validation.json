@@ -1,0 +1,14 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "hero_poses": 177,
+  "directions": [
+    -1,
+    1
+  ],
+  "standing_muzzle_height": 54,
+  "crouch_muzzle_height": 28,
+  "dry_fire_checked": true,
+  "energy_cost": 30,
+  "frames": 360
+}

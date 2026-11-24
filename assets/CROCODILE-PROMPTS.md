@@ -1,5 +1,7 @@
 # Crocodile du Nil — dessin et animation
 
+La combustion biologique et la réduction en cendres sont décrites dans [CROCODILE-BURN-PROMPT.md](CROCODILE-BURN-PROMPT.md).
+
 Créé avec l’outil intégré **image_gen**, en prenant comme référence l’illustration fournie par l’utilisateur, conservée localement dans `crocodile-reference.webp` et exclue du dépôt. Le dessin est réinterprété en couleur pour le décor égyptien du jeu. L’illustration de référence n’est pas nécessaire au lancement.
 
 Fichiers utilisés : `crocodile-walk.png` (16 poses, grille 4 × 4), `crocodile-attack.png` (8 poses, grille 2 × 4) et `crocodile-turn.png` (8 poses de demi-tour, grille 2 × 4). Chaque cellule est préparée une fois en 384 × 128 pixels natifs, avec un ancrage du corps et un alignement des pieds sur le sol. Pour le demi-tour, l’ancrage horizontal suit la projection du corps pendant la rotation. Les deux orientations sont préchargées sur le GPU.

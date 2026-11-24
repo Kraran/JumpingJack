@@ -1,0 +1,206 @@
+{
+  "widths": [
+    120,
+    180,
+    240,
+    300,
+    360
+  ],
+  "platforms": 21,
+  "shards": 52,
+  "reachable_supports": 28,
+  "total_supports": 28,
+  "missing_supports": [],
+  "jumps": {
+    "7": {
+      "from": 0,
+      "start": 18,
+      "direction": 1,
+      "glide": true,
+      "ticks": 157
+    },
+    "9": {
+      "from": 0,
+      "start": 840,
+      "direction": 1,
+      "glide": false,
+      "ticks": 89
+    },
+    "8": {
+      "from": 7,
+      "start": 408,
+      "direction": 1,
+      "glide": true,
+      "ticks": 147
+    },
+    "1": {
+      "from": 9,
+      "start": 1118,
+      "direction": 1,
+      "glide": false,
+      "ticks": 143
+    },
+    "10": {
+      "from": 9,
+      "start": 1220,
+      "direction": 1,
+      "glide": false,
+      "ticks": 115
+    },
+    "12": {
+      "from": 1,
+      "start": 1970,
+      "direction": 1,
+      "glide": false,
+      "ticks": 73
+    },
+    "11": {
+      "from": 10,
+      "start": 1548,
+      "direction": 1,
+      "glide": true,
+      "ticks": 160
+    },
+    "2": {
+      "from": 12,
+      "start": 2210,
+      "direction": 1,
+      "glide": false,
+      "ticks": 147
+    },
+    "13": {
+      "from": 12,
+      "start": 2300,
+      "direction": 1,
+      "glide": false,
+      "ticks": 130
+    },
+    "14": {
+      "from": 12,
+      "start": 2390,
+      "direction": 1,
+      "glide": true,
+      "ticks": 212
+    },
+    "15": {
+      "from": 2,
+      "start": 3210,
+      "direction": 1,
+      "glide": false,
+      "ticks": 86
+    },
+    "3": {
+      "from": 15,
+      "start": 3438,
+      "direction": 1,
+      "glide": false,
+      "ticks": 144
+    },
+    "16": {
+      "from": 15,
+      "start": 3540.0,
+      "direction": 1,
+      "glide": false,
+      "ticks": 124
+    },
+    "18": {
+      "from": 3,
+      "start": 4415,
+      "direction": 1,
+      "glide": true,
+      "ticks": 97
+    },
+    "4": {
+      "from": 3,
+      "start": 4820,
+      "direction": 1,
+      "glide": false,
+      "ticks": 122
+    },
+    "19": {
+      "from": 3,
+      "start": 4832,
+      "direction": 1,
+      "glide": true,
+      "ticks": 132
+    },
+    "17": {
+      "from": 16,
+      "start": 3975,
+      "direction": 1,
+      "glide": true,
+      "ticks": 126
+    },
+    "21": {
+      "from": 4,
+      "start": 5730,
+      "direction": 1,
+      "glide": true,
+      "ticks": 115
+    },
+    "5": {
+      "from": 4,
+      "start": 5910,
+      "direction": 1,
+      "glide": true,
+      "ticks": 239
+    },
+    "22": {
+      "from": 4,
+      "start": 6172,
+      "direction": 1,
+      "glide": true,
+      "ticks": 115
+    },
+    "20": {
+      "from": 19,
+      "start": 5238,
+      "direction": 1,
+      "glide": true,
+      "ticks": 143
+    },
+    "24": {
+      "from": 5,
+      "start": 7060,
+      "direction": 1,
+      "glide": true,
+      "ticks": 97
+    },
+    "23": {
+      "from": 22,
+      "start": 6540,
+      "direction": 1,
+      "glide": true,
+      "ticks": 126
+    },
+    "6": {
+      "from": 24,
+      "start": 7385,
+      "direction": 1,
+      "glide": false,
+      "ticks": 146
+    },
+    "25": {
+      "from": 24,
+      "start": 7565,
+      "direction": 1,
+      "glide": false,
+      "ticks": 126
+    },
+    "27": {
+      "from": 6,
+      "start": 8395,
+      "direction": 1,
+      "glide": false,
+      "ticks": 84
+    },
+    "26": {
+      "from": 25,
+      "start": 7918,
+      "direction": 1,
+      "glide": false,
+      "ticks": 94
+    }
+  },
+  "scope": "Geometry only; running approaches, no enemies; normal jump or glide."
+}

@@ -13,6 +13,7 @@ RECOVERY=.85
 TRIGGER_DISTANCE=250.
 STRIDE=36.
 TURN_TIME=.16
+BURN_TIME=1.2
 
 
 def segment_box(point,delta,bounds):
@@ -42,6 +43,8 @@ class Crocodile:
     def __post_init__(self):self.reset()
 
     def reset(self):
+        self.alive=True
+        self.death_timer=self.previous_death_timer=0.
         self.x=self.px=float(self.spawn_x)
         self.facing=self.previous_facing=self.initial_facing
         self.state=self.previous_state='patrol'
@@ -56,6 +59,11 @@ class Crocodile:
         self.state='turn';self.timer=0.
 
     def update(self,dt,hero,can_attack=True):
+        if not self.alive:
+            self.px=self.x
+            self.previous_death_timer=self.death_timer
+            self.death_timer=min(BURN_TIME,self.death_timer+dt)
+            return None
         self.px=self.x
         self.previous_state=self.state
         self.previous_facing=self.facing
@@ -100,7 +108,15 @@ class Crocodile:
             self.state='patrol';self.timer=0.
         return event
 
+    def ignite(self):
+        if not self.alive:return False
+        self.alive=False;self.px=self.x
+        self.state=self.previous_state='burn'
+        self.death_timer=self.previous_death_timer=0.
+        return True
+
     def hits(self,hero):
+        if not self.alive:return False
         # Relative motion catches both a fast lunge and a player crossing the body.
         height=62 if 'lunge' in (self.state,self.previous_state) else 46
         left,right=(-56.,104.) if self.facing>0 else (-104.,56.)
@@ -108,10 +124,17 @@ class Crocodile:
             orientation=self.facing*math.cos(math.pi*min(1,self.timer/TURN_TIME))
             left=-56.-48*max(0,-orientation)
             right=56.+48*max(0,orientation)
-        bounds=(self.px+left-30,self.y-height-54,self.px+right,self.y)
-        start=(hero.px-15,hero.py-54)
+        player_height=max(getattr(hero,'body_height',54),round(54-22*getattr(hero,'previous_crouch',0)))
+        bounds=(self.px+left-30,self.y-height-player_height,self.px+right,self.y)
+        start=(hero.px-15,hero.py-player_height)
         delta=((hero.x-hero.px)-(self.x-self.px),hero.y-hero.py)
         return segment_box(start,delta,bounds)
+
+    @property
+    def hurtbox(self):
+        height=62 if self.state=='lunge' else 46
+        left=-56 if self.facing>0 else -104
+        return pg.Rect(round(self.x+left),round(self.y-height),160,height)
 
 
 def create_crocodiles():
@@ -121,10 +144,10 @@ def create_crocodiles():
 
 
 class CrocodileSprites:
-    def __init__(self,walk,attack,turn):self.walk,self.attack,self.turn=walk,attack,turn
+    def __init__(self,walk,attack,turn,burn=()):self.walk,self.attack,self.turn,self.burn=walk,attack,turn,burn
 
     @property
-    def images(self):return [image for pose in self.walk+self.attack+self.turn for image in pose.images]
+    def images(self):return [image for clip in (self.walk,self.attack,self.turn,self.burn) for pose in clip for image in pose.images]
 
     @classmethod
     def load(cls,directory: Path):
@@ -147,9 +170,14 @@ class CrocodileSprites:
                 pivot_x=round((.57,.563,.544,.516,.484,.456,.437,.43)[i]*384) if path==paths[2] else 219
                 poses.append(Pose((image,pg.transform.flip(image,True,False)),(pivot_x,foot)))
             clips.append(poses)
-        return cls(*clips)
+        burn_path=directory/'crocodile-burn-v1.png'
+        burn=load_burn(burn_path) if burn_path.exists() else []
+        return cls(*clips,burn)
 
     def sample(self,enemy,alpha):
+        if not enemy.alive and self.burn:
+            t=enemy.previous_death_timer+(enemy.death_timer-enemy.previous_death_timer)*max(0.,min(1.,alpha))
+            return self.burn[min(len(self.burn)-1,int(t/BURN_TIME*len(self.burn)))]
         t=enemy.timer
         if enemy.state==enemy.previous_state:
             t=enemy.previous_timer+(enemy.timer-enemy.previous_timer)*alpha
@@ -160,3 +188,22 @@ class CrocodileSprites:
         if enemy.state=='warning':return self.attack[min(1,int(t/WARNING*2))]
         if enemy.state=='lunge':return self.attack[2+min(3,int(t/LUNGE_TIME*4))]
         return self.attack[6 if t<.12 else 7]
+
+
+def load_burn(path):
+    """Keep a common anatomical scale despite the source's variable row gutters."""
+    sheet=pg.image.load(str(path)).convert_alpha()
+    if sheet.get_at((0,0)).a>8:raise ValueError(f'{path.name}: fond non transparent')
+    rows=(0,151,311,481,643,782,sheet.get_height())
+    scale=384/(sheet.get_width()/4);poses=[]
+    for i in range(24):
+        col,row=i%4,i//4
+        x0,x1=round(col*sheet.get_width()/4),round((col+1)*sheet.get_width()/4)
+        cell=sheet.subsurface((x0,rows[row],x1-x0,rows[row+1]-rows[row]))
+        image=pg.transform.smoothscale(cell,(384,round(cell.get_height()*scale)))
+        bounds=image.get_bounding_rect(min_alpha=32)
+        if not bounds.w:raise ValueError(f'{path.name}: pose de combustion vide {i}')
+        frame=pg.Surface((384,192),pg.SRCALPHA);pivot=(219,180)
+        frame.blit(image,(0,pivot[1]-bounds.bottom+1))
+        poses.append(Pose((frame,pg.transform.flip(frame,True,False)),pivot))
+    return poses

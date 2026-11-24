@@ -1,0 +1,16 @@
+{
+  "gpu": true,
+  "hero_poses": 97,
+  "drop_poses_seen_both_directions": 24,
+  "endings": [
+    {
+      "y": 620,
+      "grounded": true
+    },
+    {
+      "y": 620,
+      "grounded": true
+    }
+  ],
+  "drop_textures_cached": true
+}

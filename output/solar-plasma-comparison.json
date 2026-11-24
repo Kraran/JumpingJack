@@ -1,0 +1,26 @@
+[
+  {
+    "mode": "legacy",
+    "fps": 59.4,
+    "p95_ms": 17.94,
+    "cpu_median_ms": 1.63
+  },
+  {
+    "mode": "plasma",
+    "fps": 59.48,
+    "p95_ms": 18.42,
+    "cpu_median_ms": 1.9
+  },
+  {
+    "mode": "plasma",
+    "fps": 48.94,
+    "p95_ms": 33.47,
+    "cpu_median_ms": 2.34
+  },
+  {
+    "mode": "legacy",
+    "fps": 44.98,
+    "p95_ms": 39.77,
+    "cpu_median_ms": 2.25
+  }
+]

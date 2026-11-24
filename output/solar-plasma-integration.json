@@ -1,0 +1,15 @@
+{
+  "gpu": true,
+  "plasma_preloaded": true,
+  "same_plasma_textures_after_firing": true,
+  "ground_air_kills_both_directions": [
+    true,
+    true,
+    true,
+    true
+  ],
+  "frames": 360,
+  "fps": 45.46,
+  "interval_p95_ms": 34.89,
+  "cpu_median_ms": 2.61
+}

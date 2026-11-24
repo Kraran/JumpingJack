@@ -1,0 +1,15 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "position": [
+    6540.0,
+    185.0
+  ],
+  "pickup_frame": 85,
+  "pickup_seconds_after_jump": 0.4166666666666667,
+  "inventory_count": 1,
+  "frames_observed": 48,
+  "new_texture_uploads": 0,
+  "music_notes": 4,
+  "audio_note": "Video uses the same PCM tune as the game, synchronized to pickup."
+}

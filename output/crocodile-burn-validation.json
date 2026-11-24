@@ -1,0 +1,11 @@
+{
+  "gpu": true,
+  "burn_frames_seen_both_directions": 48,
+  "same_preloaded_burn_textures": true,
+  "ashes_persist": [
+    true,
+    true
+  ],
+  "hero_deaths": 0,
+  "no_robot_explosion": true
+}

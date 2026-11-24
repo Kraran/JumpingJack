@@ -4,10 +4,30 @@ os.environ['SDL_AUDIODRIVER']='dummy'
 import unittest
 from unittest.mock import patch
 import pygame as pg
-from main import Hero, Platform, Game, STEP, level, WORLD
+from main import Hero, Platform, Game, STEP, level, WORLD,EXIT_MARGIN,VIEW_W,PLATFORM_WIDTHS
 
 
 class PhysicsTests(unittest.TestCase):
+    def test_five_platform_sizes_are_distributed_across_the_level(self):
+        platforms,_=level();ledges=[p for p in platforms if not p.ground]
+        self.assertEqual(len(ledges),21)
+        self.assertEqual({p.w for p in ledges},set(PLATFORM_WIDTHS))
+        self.assertEqual(PLATFORM_WIDTHS[2],240)
+        for width in PLATFORM_WIDTHS:
+            self.assertGreaterEqual(sum(p.w==width for p in ledges),4)
+            self.assertTrue(any(p.w==width and p.x<WORLD/2 for p in ledges))
+            self.assertTrue(any(p.w==width and p.x>WORLD/2 for p in ledges))
+        self.assertTrue(all(p.h==32 and 0<=p.x<p.x+p.w<=WORLD for p in ledges))
+
+    def test_shards_remain_above_resized_platforms_and_do_not_overlap_stone(self):
+        platforms,gems=level();ledges=[p for p in platforms if not p.ground]
+        self.assertEqual(len(gems),52)
+        for p in ledges:
+            above=[(x,y) for x,y in gems if y==p.y-42 and p.x+15<x<p.x+p.w-15]
+            self.assertEqual(len(above),2)
+        for x,y in gems:
+            self.assertFalse(any(p.rect.collidepoint(x,y) for p in platforms))
+
     def ground_hero(self):
         h=Hero(160,620);h.grounded=True
         return h
@@ -44,10 +64,14 @@ class PhysicsTests(unittest.TestCase):
             self.assertGreater(h.x,b.x)
             self.assertLessEqual(h.y,620)
 
-    def test_one_way_platform_from_below(self):
+    def test_solid_platform_blocks_jump_from_below(self):
         h=Hero(100,610);h.grounded=True
-        for i in range(150):h.update(STEP,0,False,i==0,[Platform(0,500,220,30)])
-        self.assertEqual(h.y,500)
+        platform=Platform(0,500,220,30)
+        bumped=False
+        for i in range(30):
+            h.update(STEP,0,False,i==0,[platform]);bumped|=h.bump
+            self.assertGreaterEqual(h.y-h.body_height,530)
+        self.assertTrue(bumped);self.assertFalse(h.grounded)
 
     def test_buffered_jump(self):
         h=Hero(100,619);h.vy=100
@@ -65,7 +89,7 @@ class PhysicsTests(unittest.TestCase):
         self.assertEqual(h.x,16)
         h.x=WORLD-20
         for _ in range(120):h.update(STEP,1,False,False,[])
-        self.assertEqual(h.x,WORLD-16)
+        self.assertGreater(h.x,WORLD+EXIT_MARGIN)
 
 
 class IntegrationTests(unittest.TestCase):
@@ -83,10 +107,10 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(n,len(self.g.taken))
 
     def test_checkpoint_respawn(self):
-        self.g.hero=Hero(2800,620);self.g.update(STEP,0,False,False)
+        self.g.hero=Hero(4800,620);self.g.update(STEP,0,False,False)
         self.assertEqual(self.g.check_index,1)
         self.g.hero.y=900;self.g.update(STEP,0,False,False)
-        self.assertEqual(self.g.hero.x,2800)
+        self.assertEqual(self.g.hero.x,4740)
         self.assertEqual(self.g.deaths,1)
 
     def test_enemy_respawn_and_grace(self):
@@ -97,7 +121,20 @@ class IntegrationTests(unittest.TestCase):
 
     def test_victory(self):
         self.g.hero=Hero(9250,620);self.g.update(STEP,0,False,False)
+        self.assertEqual(self.g.state,'play')
+        self.g.hero=Hero(WORLD-80,620);self.g.hero.grounded=True;self.g.hero.vx=340
+        self.g.cam=self.g.prev_cam=WORLD-VIEW_W
+        for _ in range(120):
+            before=self.g.hero.x
+            self.g.update(STEP,1,False,False)
+            self.assertAlmostEqual(self.g.hero.x-before,340*STEP)
+            self.assertEqual(self.g.hero.y,620)
+            self.assertEqual(self.g.cam,WORLD-VIEW_W)
+            if self.g.hero.x<WORLD+EXIT_MARGIN:self.assertEqual(self.g.state,'play')
+            else:break
         self.assertEqual(self.g.state,'win')
+        self.assertGreaterEqual(self.g.hero.x-self.g.cam,VIEW_W+EXIT_MARGIN)
+        self.assertEqual(self.g.deaths,0)
 
     def test_render_states_and_mid_level(self):
         for state in ('title','play','pause','win'):

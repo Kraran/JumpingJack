@@ -1,0 +1,10 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "animation_frames_observed": 48,
+  "collected": 2,
+  "energy_before": 35,
+  "energy_after": 55.0,
+  "atlas_cached": true,
+  "new_texture_uploads_in_game": 0
+}

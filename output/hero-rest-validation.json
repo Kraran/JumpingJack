@@ -1,0 +1,9 @@
+{
+  "gpu": true,
+  "hero_poses": 161,
+  "poses_seen_both_directions": {
+    "sitting": 96,
+    "rising": 96
+  },
+  "rest_textures_cached": true
+}

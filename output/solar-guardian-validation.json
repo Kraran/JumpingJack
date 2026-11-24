@@ -1,0 +1,33 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "stage_deaths_alive": [
+    [
+      1,
+      true
+    ],
+    [
+      0,
+      true
+    ],
+    [
+      0,
+      false
+    ]
+  ],
+  "authored_poses": 72,
+  "cached_variants": 216,
+  "observed_animation_states": [
+    "death",
+    "dive",
+    "flight",
+    "pullup",
+    "turn",
+    "warning"
+  ],
+  "atlas_size": [
+    4096,
+    3584
+  ],
+  "atlas_cached": true
+}

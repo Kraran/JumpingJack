@@ -4,11 +4,15 @@ import json
 import math
 from pathlib import Path
 import pygame as pg
+from solar import SHOT_TIME
 
 CELL=120
 STRIDE=136.0  # world units per complete left/right cycle: 0.4 s at full speed
 TURN_TIME=.16
+CROUCH_TIME=.24
 LAND_TIME=.24
+DROP_TIME=.36
+DROP_RELEASE=.18
 MEDIUM_FALL_HEIGHT=160.
 HEAVY_FALL_HEIGHT=280.
 LAND_DURATIONS={'land':LAND_TIME,'land_medium':.32,'land_heavy':.60}
@@ -83,15 +87,53 @@ def load_bank(directory: Path):
     landing=directory/'hero-land-v1.png'
     if landing.exists():clips['land']=load_sheet(landing,4,2,pivot=(.54,.96),align_floor=True)
     for name,filename,rows in (
+        ('drop','hero-drop-v1.png',3),
+        ('solar_ground','hero-solar-ground-v1.png',2),
+        ('solar_air','hero-solar-air-v2.png',2),
+        ('crouch','hero-crouch-v1.png',2),
         ('land_medium','hero-land-medium-v2.png',2),
         ('land_heavy','hero-land-heavy-v1.png',3)):
         path=directory/filename
-        if path.exists():clips[name]=load_sheet(path,4,rows,pivot=(.54,.96),align_floor=True)
+        if path.exists():clips[name]=load_sheet(path,4,rows,pivot=(.54,.96),align_floor=name!='solar_air')
+    crouch_fire=directory/'hero-solar-crouch-v1.png'
+    if crouch_fire.exists():
+        # The authored crouch attack uses a larger common source scale.
+        # Correct the whole clip uniformly, never resize individual silhouettes.
+        poses=load_sheet(crouch_fire,4,2,pivot=(.54,.96),align_floor=True)
+        clips['solar_crouch']=[]
+        for pose in poses:
+            image=pg.transform.smoothscale(pose.images[0],(102,102))
+            frame=pg.Surface((CELL,CELL),pg.SRCALPHA)
+            pivot=(round(.54*CELL),CELL-1)
+            frame.blit(image,(pivot[0]-round(pose.pivot[0]*.85),pivot[1]-round(pose.pivot[1]*.85)))
+            clips['solar_crouch'].append(Pose((frame,pg.transform.flip(frame,True,False)),pivot))
     pivots=[(.5+.04*math.cos(math.pi*i/7),.96) for i in range(8)]
     for mode in ('ground','air'):
         path=directory/f'hero-turn-{mode}.png'
         if path.exists():clips[f'turn_{mode}']=load_sheet(path,4,2,pivots=pivots)
+    lower=directory/'hero-rest-lower-v2.png';seated=directory/'hero-rest-seated-v1.png'
+    if lower.exists() and seated.exists():
+        clips['rest']=load_rest_sheet(lower)+load_rest_sheet(seated,.8)
     return AnimationBank(clips)
+
+
+def load_rest_sheet(path,scale=1.):
+    """The authored row gutters vary; keep one common source scale per atlas."""
+    sheet=pg.image.load(str(path)).convert_alpha();poses=[]
+    rows=(0,304,586,840,sheet.get_height())
+    source_scale=CELL/(sheet.get_width()/6)*scale
+    for row in range(4):
+        for col in range(6):
+            x0,x1=round(col*sheet.get_width()/6),round((col+1)*sheet.get_width()/6)
+            cell=sheet.subsurface((x0,rows[row],x1-x0,rows[row+1]-rows[row]))
+            image=pg.transform.smoothscale(cell,(round(cell.get_width()*source_scale),round(cell.get_height()*source_scale)))
+            bounds=image.get_bounding_rect(min_alpha=32)
+            if not bounds.w:raise ValueError(f'{path.name}: pose de repos vide')
+            frame=pg.Surface((CELL,CELL),pg.SRCALPHA)
+            pivot=(round(.59*CELL),CELL-1)
+            frame.blit(image,(pivot[0]-round(.59*image.get_width()),pivot[1]-bounds.bottom+1))
+            poses.append(Pose((frame,pg.transform.flip(frame,True,False)),pivot))
+    return poses
 
 
 class HeroAnimator:
@@ -108,8 +150,14 @@ class HeroAnimator:
         self.last_floating=False
         self.turn=self.previous_turn=0.
         self.grounded=True
+        self.solar=None
+        self.rest=None
+        self.hero=None
 
-    def update(self,dt,hero,was_grounded):
+    def update(self,dt,hero,was_grounded,solar=None,rest=None):
+        self.hero=hero
+        self.solar=solar
+        self.rest=rest
         self.previous_turn=self.turn
         target=0. if getattr(hero,'face',1)>0 else 1.
         step=dt/TURN_TIME
@@ -119,7 +167,15 @@ class HeroAnimator:
         if hero.grounded or was_grounded:self.phase+=abs(hero.x-hero.px)/STRIDE
         self.landing=max(0.,self.landing-dt)
         if self.landing<1e-9:self.landing=0.
-        if hero.grounded:
+        if rest is not None and rest.active:
+            state='rest';self.landing=0.
+        elif solar is not None and solar.active:
+            state=('solar_crouch' if getattr(solar,'crouched',False) else 'solar_ground') if hero.grounded else 'solar_air'
+        elif getattr(hero,'drop_elapsed',None) is not None:
+            state='drop';self.landing=0.
+        elif hero.grounded and getattr(hero,'crouch',0)>0:
+            state='crouch';self.landing=0.
+        elif hero.grounded:
             impact=getattr(hero,'impact_vy',self.last_vy)
             gliding=getattr(hero,'landed_gliding',self.last_floating)
             if not was_grounded and impact>100 and not gliding:
@@ -148,13 +204,31 @@ class HeroAnimator:
         return self.previous_turn+(self.turn-self.previous_turn)*max(0.,min(1.,alpha))
 
     def render_facing(self,alpha=1):
-        if self.state in LAND_DURATIONS:return -1 if self.turn_progress(alpha)>=.5 else 1
+        if self.state=='rest' and self.rest is not None:return self.rest.facing
+        if self.state.startswith('solar_') and self.solar is not None and self.solar.active:return self.solar.facing
+        if self.state=='crouch':return self.hero.face
+        if self.state in LAND_DURATIONS or self.state=='drop':return -1 if self.turn_progress(alpha)>=.5 else 1
         # Turn sprites already rotate from right to left; do not mirror midway.
         return -1 if self.turn_progress(alpha)>=1-1e-9 else 1
 
     def sample(self,bank,alpha=1):
         alpha=max(0.,min(1.,alpha))
         t=self.previous_elapsed+(self.elapsed-self.previous_elapsed)*alpha
+        if self.state=='rest' and self.rest is not None:
+            return self.rest.sample(bank.clips.get('rest',bank.clips['idle']),alpha)
+        if self.state=='crouch':
+            progress=self.hero.previous_crouch+(self.hero.crouch-self.hero.previous_crouch)*alpha
+            clip=bank.clips.get('crouch',bank.clips['idle'])
+            return clip[min(len(clip)-1,round(progress*(len(clip)-1)))]
+        if self.state.startswith('solar_'):
+            if self.solar is None or not self.solar.active:
+                return bank.clips['idle' if self.grounded else 'fall'][0]
+            t=self.solar.previous_elapsed+(self.solar.elapsed-self.solar.previous_elapsed)*alpha
+            clip=bank.clips.get(self.state,bank.clips['fall'])
+            return clip[min(len(clip)-1,int(t/SHOT_TIME*len(clip)))]
+        if self.state=='drop':
+            clip=bank.clips.get('drop',bank.clips['fall'])
+            return clip[min(len(clip)-1,int(t/DROP_TIME*len(clip)))]
         if self.state in LAND_DURATIONS:
             clip=bank.clips.get(self.state,bank.clips['land'])
             return clip[min(len(clip)-1,int(t/LAND_DURATIONS[self.state]*len(clip)))]

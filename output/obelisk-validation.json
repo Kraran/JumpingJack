@@ -1,0 +1,12 @@
+{
+  "gpu": false,
+  "renderer": "logiciel",
+  "single_checkpoint_x": 4800.0,
+  "respawn": [
+    4740.0,
+    620.0
+  ],
+  "activation_complete": true,
+  "frames": 300,
+  "cached_obelisk_textures": 2
+}

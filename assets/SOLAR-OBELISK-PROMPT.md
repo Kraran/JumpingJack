@@ -1,0 +1,13 @@
+# Obélisque solaire SF
+
+Source : `solar-obelisk-v1.png`, créée avec l’outil intégré **imagegen**, à partir de la proposition 1 de la planche choisie par l’utilisateur. Image RGBA 1024 × 1536 ; fond réellement transparent. Le fichier source est conservé sans retouche. Le sprite du jeu est recadré et réduit au chargement ; le corps reste fixe pour éviter les variations de silhouette entre poses.
+
+## Prompt de génération
+
+Create a production game sprite based strictly on option 1 OBÉLISQUE in the previous concept board. Only that obelisk, one isolated object, truly transparent background, no scenery, no text, no comparison panels. Preserve black titanium faceted tapered obelisk, engraved gold Egyptian circuit inlays, layered wide bronze/black trapezoid pedestal, levitating detached pyramidion hovering over narrow shaft, elegant realistic physically rendered materials. Straight-on side elevation suitable for realistic 2D side-scrolling videogame, no isometric perspective, no ground plane, no floor or cast ground shadow. Symmetric silhouette, tall narrow design, floating pyramid tip centered exactly above shaft. INACTIVE state: the central vertical energy channel must be dark and unlit, no light beam or electric effects, no sparks, no bright glow. Tiny cyan pedestal indicator allowed but dim. High quality asset on transparent alpha. Entire object visible including floating cap and full base, generous 10 percent transparent margin all sides. Image portrait 2:3 or 1:2, subject about 2.6 times taller than broad. We will animate gold light separately along the center vertical shaft, so the recessed central groove must be a clearly visible thin straight dark line from pedestal center up to below the floating cap. Match chosen design 1 closely, not design 2 or 3.
+
+## Animation et implantation
+
+Un seul point à x = 4800, sur le sol à y = 620 ; reprise à (4740, 620), légèrement à gauche de la fosse. Les trois anciens points sont retirés. Activation unique à proximité au sol ; lumière révélée du socle au sommet pendant 1,2 seconde, puis crépitement permanent en boucle de 2,4 secondes (20 poses par seconde, trois fois plus lent). Les 72 poses d’allumage et 48 poses de crépitement sont préparées dans un atlas GPU unique au démarrage. Aucun bruit aléatoire ni création de texture dans la boucle d’affichage. L’horloge de simulation et son interpolation pilotent la sélection de pose ; la pause la fige. La mort conserve l’activation et sa progression ; recommencer le niveau l’éteint.
+
+Prévisualisation : `python preview_obelisk.py`. Vérification du rendu natif : `python preview_obelisk.py --native-check`. Ces scripts effectuent des captures explicites pour encoder la vidéo ; le jeu normal ne lit pas les pixels du GPU.

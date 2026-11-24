@@ -1,0 +1,13 @@
+{
+  "glide_after_two_seconds": 92.00000000000045,
+  "after_ray": 62.000000000000455,
+  "ray_display_monotonic": true,
+  "after_shard": 77.00000000000045,
+  "gpu": true,
+  "renderer": "direct3d11",
+  "insufficient_ray_blocked": true,
+  "fullscreen_size": [
+    1920,
+    1080
+  ]
+}

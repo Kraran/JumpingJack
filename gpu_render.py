@@ -97,6 +97,22 @@ class NativeCanvas:
                     self.renderer.draw_rect(rect.inflate(-2*i,-2*i))
         else:pg.draw.rect(self.surface,color,rect,width)
 
+    def blit_additive(self,image,dest,area=None):
+        """Composite preloaded light without uploading or reading a frame."""
+        source=pg.Rect(area) if area is not None else image.get_rect()
+        rect=pg.Rect(dest) if isinstance(dest,pg.Rect) else pg.Rect(dest,source.size)
+        if rect.w<=0 or rect.h<=0 or not rect.colliderect(pg.Rect(0,0,*FULL_HD)):return rect
+        self.draw_calls+=1
+        if self.gpu:
+            texture=self.texture(image);previous=texture.blend_mode
+            try:
+                texture.blend_mode=pg.BLENDMODE_ADD
+                texture.draw(source,rect)
+            finally:texture.blend_mode=previous
+        else:
+            self.surface.blit(image,rect,source,special_flags=pg.BLEND_RGB_ADD)
+        return rect
+
     def raster(self,key,size,paint,position):
         image=self.primitives.pop(key,None)
         if image is None:

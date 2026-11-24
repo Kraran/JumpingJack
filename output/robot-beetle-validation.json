@@ -1,0 +1,14 @@
+{
+  "gpu": true,
+  "atlas_size": [
+    2016,
+    3328
+  ],
+  "variants": 312,
+  "atlas_preloaded": true,
+  "same_texture_after_flight_turn_death": true,
+  "flight_frames_seen": 16,
+  "turn_seen": true,
+  "destruction_frames_seen": 8,
+  "solar_killed_robot": true
+}

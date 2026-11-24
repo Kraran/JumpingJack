@@ -52,6 +52,20 @@ class GpuCompositionTests(unittest.TestCase):
         self.assertEqual(rect.size,(80,114))
         self.assertEqual(rect.midbottom,(600,930))
 
+    def test_additive_light_reuses_texture_and_restores_blend_mode(self):
+        renderer=MagicMock()
+        with patch('pygame._sdl2.video.Renderer') as renderer_type, patch('pygame._sdl2.video.Texture') as texture_type:
+            renderer_type.from_window.return_value=renderer
+            texture=texture_type.from_surface.return_value
+            texture.blend_mode=pg.BLENDMODE_BLEND
+            canvas=NativeCanvas(window=object());atlas=pg.Surface((80,40))
+            for _ in range(3):canvas.blit_additive(atlas,(20,30),(10,0,30,40))
+            texture_type.from_surface.assert_called_once_with(renderer,atlas)
+            self.assertEqual(texture.draw.call_count,3)
+            self.assertEqual(texture.blend_mode,pg.BLENDMODE_BLEND)
+            texture.update.assert_not_called();renderer.to_surface.assert_not_called()
+            canvas.release()
+
     def test_gpu_rectangles_use_native_integer_edges(self):
         native=MagicMock()
         canvas=DesignCanvas(native)

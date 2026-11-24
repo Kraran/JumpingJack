@@ -1,0 +1,7 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "head_bong_count": 1,
+  "glide_lock_until_landing": true,
+  "bong_sound_loaded": true
+}

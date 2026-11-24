@@ -1,0 +1,12 @@
+{
+  "gpu": true,
+  "hero_poses": 113,
+  "solar_poses_seen_both_directions": 32,
+  "enemy_kills": [
+    true,
+    true,
+    true,
+    true
+  ],
+  "solar_textures_cached": true
+}

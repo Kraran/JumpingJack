@@ -150,12 +150,12 @@ class CrocodileIntegrationTests(unittest.TestCase):
             self.assertGreaterEqual(enemy.patrol_left,enemy.floor_left+108)
             self.assertLessEqual(enemy.patrol_right,enemy.floor_right-108)
 
-    def test_32_poses_and_both_directions_are_loaded(self):
+    def test_56_poses_and_both_directions_are_loaded(self):
         sprites=self.game.crocodile_sprites
         self.assertIsNotNone(sprites)
-        self.assertEqual((len(sprites.walk),len(sprites.attack),len(sprites.turn),len(sprites.images)),(16,8,8,64))
+        self.assertEqual((len(sprites.walk),len(sprites.attack),len(sprites.turn),len(sprites.burn),len(sprites.images)),(16,8,8,24,112))
         for image in sprites.images:
-            self.assertEqual(image.get_size(),(384,128))
+            self.assertIn(image.get_size(),((384,128),(384,192)))
             self.assertGreater(image.get_bounding_rect(min_alpha=32).width,30)
 
     def test_render_patrol_warning_lunge_and_recovery(self):

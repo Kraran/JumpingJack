@@ -73,6 +73,21 @@ class AnimationTimingTests(unittest.TestCase):
         self.assertEqual((animation.phase,animation.elapsed,animation.landing),(0.,0.,0.))
         self.assertEqual(animation.state,'idle')
 
+    def test_cancelled_solar_shot_can_render_before_next_animation_update(self):
+        from solar import SolarRay
+        b=bank();b.clips['idle']=['idle'];b.clips['fall']=['fall']
+        for stance in ('ground','air','crouch'):
+            hero=Hero();hero.grounded=stance!='air'
+            if stance=='crouch':hero.crouch=1.
+            ray=SolarRay();ray.update(.1,hero,True)
+            animation=HeroAnimator();animation.update(1/120,hero,hero.grounded,ray)
+            self.assertTrue(animation.state.startswith('solar_'))
+            ray.reset()
+            for alpha in (0,.5,1):
+                self.assertEqual(animation.sample(b,alpha),'idle' if hero.grounded else 'fall')
+            animation.solar=None
+            self.assertEqual(animation.sample(b),'idle' if hero.grounded else 'fall')
+
     def test_fall_lands_on_ground_and_platform_but_gliding_does_not_bend(self):
         for ground in (True,False):
             for gliding in (False,True):
@@ -198,8 +213,14 @@ class SpriteTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):pg.quit()
 
-    def test_all_85_active_poses_are_present_and_share_canvas_scale(self):
-        self.assertEqual(self.bank.pose_count,85)
+    def test_all_177_active_poses_are_present_and_share_canvas_scale(self):
+        self.assertEqual(self.bank.pose_count,177)
+        self.assertEqual(len(self.bank.clips['crouch']),8)
+        self.assertEqual(len(self.bank.clips['solar_crouch']),8)
+        self.assertEqual(len(self.bank.clips['rest']),48)
+        self.assertEqual(len(self.bank.clips['solar_ground']),8)
+        self.assertEqual(len(self.bank.clips['solar_air']),8)
+        self.assertEqual(len(self.bank.clips['drop']),12)
         self.assertEqual(len(self.bank.clips['land']),8)
         self.assertEqual(len(self.bank.clips['land_medium']),8)
         self.assertEqual(len(self.bank.clips['land_heavy']),12)
@@ -217,6 +238,17 @@ class SpriteTests(unittest.TestCase):
     def test_running_head_height_does_not_pump_between_frames(self):
         tops=[p.images[0].get_bounding_rect(min_alpha=32).top for p in self.bank.clips['run']]
         self.assertLessEqual(max(tops)-min(tops),4)
+
+    def test_rest_atlases_share_ground_anchor_and_match_at_join(self):
+        clip=self.bank.clips['rest']
+        for pose in clip:
+            self.assertEqual(pose.pivot,clip[0].pivot)
+            self.assertEqual(pose.images[0].get_bounding_rect(min_alpha=32).bottom,120)
+        before=clip[23].images[0].get_bounding_rect(min_alpha=32)
+        after=clip[24].images[0].get_bounding_rect(min_alpha=32)
+        self.assertLessEqual(abs(before.top-after.top),3)
+        self.assertLess(clip[-1].images[0].get_bounding_rect(min_alpha=32).h,
+                        clip[0].images[0].get_bounding_rect(min_alpha=32).h*.7)
 
     def test_mirroring_keeps_registered_root_on_same_native_pixel(self):
         image=pg.Surface((128,128),pg.SRCALPHA)

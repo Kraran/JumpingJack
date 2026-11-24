@@ -1,0 +1,5 @@
+{
+  "devices": [],
+  "physical_feedback_verified": false,
+  "note": "Aucune manette detectee par SDL ; logique et integration verifiees par tests, ressenti physique non verifie."
+}
