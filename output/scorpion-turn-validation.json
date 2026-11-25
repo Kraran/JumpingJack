@@ -1,0 +1,23 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_texture_uploads": 0,
+  "both_turns_completed": true,
+  "duration": 0.48,
+  "rendered_poses": 49,
+  "source_views": 5,
+  "atlas_pages": [
+    [
+      2048,
+      4058
+    ],
+    [
+      2048,
+      4030
+    ],
+    [
+      2048,
+      3924
+    ]
+  ]
+}

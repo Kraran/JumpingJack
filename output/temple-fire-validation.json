@@ -1,0 +1,9 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_texture_uploads": 0,
+  "flame_frames_seen": 48,
+  "deaths": 1,
+  "lives": 2,
+  "scope": "Real temple flame loop and actual contact/respawn."
+}

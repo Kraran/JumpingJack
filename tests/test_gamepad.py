@@ -2,6 +2,7 @@ import os
 os.environ['SDL_VIDEODRIVER']='dummy'
 os.environ['SDL_AUDIODRIVER']='dummy'
 import unittest
+from unittest.mock import patch
 import pygame as pg
 from gamepad import (
     ControllerPad, Gamepads, JoystickPad, PadButtons, PadSnapshot,
@@ -114,12 +115,62 @@ class MappingTests(unittest.TestCase):
         self.assertTrue(pads.poll().jump_pressed)
 
 
+class DisconnectionTests(unittest.TestCase):
+    def test_unannounced_detachment_is_reported_once_and_clears_held_buttons(self):
+        raw=_FakeController();pads=Gamepads(False);pads.devices={7:ControllerPad(raw)}
+        raw.buttons[pg.CONTROLLER_BUTTON_A]=True
+        self.assertTrue(pads.poll().jump_held)
+        raw.alive=False;lost=pads.poll()
+        self.assertFalse(lost.connected);self.assertTrue(lost.disconnected);self.assertFalse(lost.jump_held)
+        self.assertEqual(pads.devices,{})
+        self.assertFalse(pads.poll().disconnected)
+
+    def test_sampling_failure_is_a_lost_connection(self):
+        raw=_FakeController();pads=Gamepads(False);pads.devices={7:ControllerPad(raw)}
+        self.assertTrue(pads.poll().connected)
+        with patch.object(raw,'get_axis',side_effect=pg.error('controller lost')):
+            sample=pads.poll()
+        self.assertTrue(sample.disconnected);self.assertFalse(sample.connected)
+
+    def test_removal_event_survives_refresh_even_when_another_pad_is_connected(self):
+        raw=_FakeController();pads=Gamepads(False);pads.devices={7:ControllerPad(raw)}
+        self.assertTrue(pads.poll().connected)
+        with patch.object(pads,'_ensure',return_value=True),patch('gamepad.pg.joystick.get_count',return_value=0):
+            pads.refresh()
+        replacement=_FakeController();replacement.id=8;pads.devices={8:ControllerPad(replacement)}
+        sample=pads.poll()
+        self.assertTrue(sample.connected);self.assertTrue(sample.disconnected)
+        self.assertFalse(pads.poll().disconnected)
+
+    def test_reopening_the_same_controller_during_refresh_is_not_a_disconnection(self):
+        raw=_FakeController();pads=Gamepads(False);pads.devices={7:ControllerPad(raw)}
+        self.assertTrue(pads.poll().connected);raw.alive=False
+        replacement=_FakeController()
+        probe=type('Probe',(),{'get_instance_id':lambda self:7})()
+        with patch.object(pads,'_ensure',return_value=True),\
+             patch('gamepad.pg.joystick.get_count',return_value=1),\
+             patch('gamepad.pg.joystick.Joystick',return_value=probe),\
+             patch.object(pads,'_open',return_value=ControllerPad(replacement)):
+            pads.refresh();pads.refresh()
+        sample=pads.poll()
+        self.assertTrue(sample.connected);self.assertFalse(sample.disconnected)
+        self.assertFalse(pads.poll().disconnected)
+
+    def test_unready_new_controller_cannot_generate_a_false_loss_on_reconnect(self):
+        raw=_FakeController();pads=Gamepads(False);pads.devices={7:ControllerPad(raw)}
+        with patch.object(raw,'get_axis',side_effect=pg.error('not ready yet')):
+            sample=pads.poll()
+        self.assertFalse(sample.connected);self.assertFalse(sample.disconnected)
+        replacement=_FakeController();pads.devices={7:ControllerPad(replacement)}
+        self.assertTrue(pads.poll().connected);self.assertFalse(pads.poll().disconnected)
+
+
 class GamepadGameTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):cls.g=Game(True)
     @classmethod
     def tearDownClass(cls):pg.quit()
-    def setUp(self):self.g.reset();self.g.state='play';self.g.hero.grounded=True
+    def setUp(self):self.g.reset();self.g.state='play';self.g.hero.grounded=True;self.g.pad=PadSnapshot()
 
     def test_jump_button_arms_one_jump(self):
         self.g.handle_pad(PadSnapshot(jump_pressed=True,jump_held=True))

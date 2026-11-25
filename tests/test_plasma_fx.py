@@ -26,7 +26,7 @@ class PlasmaTests(unittest.TestCase):
     def test_right_clipping_ends_at_wall_in_native_pixels(self):
         canvas=DesignCanvas(MagicMock())
         self.fx.draw(canvas,400,100,460,.2,1)
-        image,dest,area=canvas.native.blit_additive.call_args.args
+        image,dest,area=canvas.native.blit.call_args.args
         self.assertIs(image,self.fx.images[0])
         self.assertEqual(dest[0]+area.w-1,690)
         self.assertEqual(area.w,146+90+1)
@@ -34,7 +34,7 @@ class PlasmaTests(unittest.TestCase):
     def test_left_clipping_ends_at_wall_in_native_pixels(self):
         canvas=DesignCanvas(MagicMock())
         self.fx.draw(canvas,400,100,340,.2,-1)
-        image,dest,area=canvas.native.blit_additive.call_args.args
+        image,dest,area=canvas.native.blit.call_args.args
         self.assertIs(image,self.fx.images[1])
         self.assertEqual(dest[0],510)
         self.assertEqual(area.w,146+90+1)
@@ -44,7 +44,7 @@ class PlasmaTests(unittest.TestCase):
         with patch('pygame.transform.flip',side_effect=AssertionError('runtime mirror')),patch('pygame.transform.smoothscale',side_effect=AssertionError('runtime scaling')):
             for frame in range(FX_FRAMES):
                 self.fx.draw(canvas,400,100,1100,frame/FX_FPS,1)
-                _,_,area=canvas.native.blit_additive.call_args.args
+                _,_,area=canvas.native.blit.call_args.args
                 seen.add((area.x//FRAME_SIZE[0],area.y//FRAME_SIZE[1]))
         self.assertEqual(len(seen),FX_FRAMES)
 
@@ -75,11 +75,36 @@ class PlasmaTests(unittest.TestCase):
         self.assertEqual(tuple(canvas.surface.get_at((11,10)))[:3],(255,70,60))
         canvas.release()
 
-    def test_final_atlas_frame_has_faded_to_black(self):
+    def test_final_atlas_frame_is_completely_transparent(self):
         index=FX_FRAMES-1;w,h=FRAME_SIZE
         frame=self.fx.images[0].subsurface((index%COLUMNS*w,index//COLUMNS*h,w,h))
-        black=pg.mask.from_threshold(frame,(0,0,0),(1,1,1,255))
-        self.assertEqual(black.count(),w*h)
+        self.assertEqual(pg.mask.from_surface(frame,threshold=0).count(),0)
+
+    def test_colored_plasma_does_not_saturate_blue_sky_to_white(self):
+        self.assertTrue(self.fx.alpha_blend)
+        canvas=NativeCanvas();design=DesignCanvas(canvas)
+        try:
+            for sky in ((110,170,230),(180,205,235),(18,30,42)):
+                canvas.surface.fill(sky)
+                self.fx.draw(design,200,200,900,.22,1)
+                golden=white=0
+                for x in range(350,1300,2):
+                    for y in range(275,325):
+                        r,g,b,_=canvas.surface.get_at((x,y))
+                        golden+=r>b+20 and r>g+5
+                        white+=min(r,g,b)>248
+                self.assertGreater(golden,100,sky)
+                self.assertEqual(white,0,sky)
+        finally:canvas.release()
+
+    def test_alpha_draw_preserves_background_outside_the_effect(self):
+        canvas=NativeCanvas();design=DesignCanvas(canvas);sky=(110,170,230)
+        try:
+            canvas.surface.fill(sky);self.fx.draw(design,200,200,900,.22,1)
+            self.assertEqual(tuple(canvas.surface.get_at((160,259)))[:3],sky)
+            mock=DesignCanvas(MagicMock());self.fx.draw(mock,200,200,900,.22,1)
+            mock.native.blit.assert_called_once();mock.native.blit_additive.assert_not_called()
+        finally:canvas.release()
 
 
 if __name__=='__main__':unittest.main()

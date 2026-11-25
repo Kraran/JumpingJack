@@ -1,0 +1,10 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_texture_uploads": 0,
+  "alpha_compositing": true,
+  "white_pixels_before": 14949,
+  "white_pixels_after": 0,
+  "gold_pixels_after": 16053,
+  "scope": "Same live game scene rendered with the legacy and corrected atlas; controlled repeated shots, protected from enemies."
+}

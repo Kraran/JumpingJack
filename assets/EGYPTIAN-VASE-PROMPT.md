@@ -1,0 +1,13 @@
+# Vase égyptien cassable
+
+Asset : `egyptian-vase-v1.png`, créé avec imagegen intégré, fond transparent. Vase en terre cuite, motifs de lotus et disque solaire ailé, bandes bleu patiné et ocre doré. Il est rendu à 64 unités de hauteur et sert d’obstacle solide de 38 unités de largeur.
+
+Sept exemplaires dans le temple (niveau 03) : quatre au sol aux abscisses 820, 4060, 7840 et 11400, et trois sur des plateformes aux positions (1370, 450), (5800, 450) et (11240, 460). Les sauvegardes qui contiennent uniquement les quatre premiers vases conservent leur état et ajoutent les trois nouveaux vases intacts. Le héros peut sauter par-dessus ou se poser dessus. Le vase bloque les déplacements, la visibilité et les projectiles. Seul le rayon solaire le casse ; un tir sans énergie ne suffit pas et la pierre peut faire écran. La casse enlève immédiatement la collision et projette des tessons avec poussière, sans flammes ni explosion. Les fragments se déposent au sol et restent visibles. Les vases cassés le restent entre les vies et dans les sauvegardes ; les anciennes sauvegardes sont compatibles. Recommencer le niveau les rétablit.
+
+Les rotations de tessons et les 40 images de casse sont préparées au chargement. La démonstration native isole la poterie des ennemis pour montrer le blocage, le tir réel et le passage après destruction : `python preview_vase.py --native-check`. Sorties : `output/egyptian-vase-demo.mp4`, captures et `output/egyptian-vase-validation.json`.
+
+## Prompt exact
+
+```text
+Production prop asset for a realistic Egyptian temple 2D side scrolling platform game. ONE large ancient Egyptian ceramic storage vase standing upright, full object, slightly above straight side camera revealing oval mouth, flat stable baseline. Pear-shaped thick terracotta body, narrow neck, flared thick rim, two small handles near shoulders, worn ochre clay with a faded deep turquoise decorative band and gold/ochre lotus and winged solar disk motifs, subtle scratches and chips but INTACT, believable hand-painted ancient Egyptian pottery, no readable text. Clear solid silhouette, wide enough to block a human's passage, about knee-to-chest height. Restrained natural weathering, warm soft light from upper left consistent with a sandstone temple, realistic physically shaded surfaces, cinematic game cutout, no cartoon, no pixel art, no metallic robot, no glowing lights. Single vase centered, generous margins around entire object, no other objects, no floor, no drop shadow, no pedestal, no labels or UI. Truly TRANSPARENT background with clean edges. Tall portrait image, roughly2:3 aspect.
+```

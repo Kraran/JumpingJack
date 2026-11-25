@@ -1,0 +1,16 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_texture_uploads": 0,
+  "walk_poses_seen": 24,
+  "aim_min": 0,
+  "aim_max": 90,
+  "shots": 6,
+  "lives": 3,
+  "turn_completed": true,
+  "atlas_size": [
+    2048,
+    7808
+  ],
+  "scope": "Animation/shooting gallery with protected target, then actual temple geometry and real solar kill."
+}

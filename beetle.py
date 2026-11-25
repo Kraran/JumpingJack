@@ -2,6 +2,7 @@
 import math
 from dataclasses import dataclass
 import pygame as pg
+from terrain import DuneGround,obstacle_boxes
 
 SPAWNS=((1920,495),(3250,490),(4480,480),(5800,495),(7090,470),(8510,500))
 FLIGHT_FPS=48.
@@ -17,34 +18,36 @@ CHASE_ACCEL=850.
 REARM_TIME=1.5
 
 
-def position(index,t):
-    x,y=SPAWNS[index]
+def position(index,t,spawns=SPAWNS):
+    x,y=spawns[index]
     return x+math.sin(t*.75+index)*105,y+math.sin(t*1.9+index)*46
 
 
-def velocity(index,t):
+def velocity(index,t,spawns=SPAWNS):
     return math.cos(t*.75+index)*78.75,math.cos(t*1.9+index)*87.4
 
 
 class BeetleMotion:
-    def __init__(self,index,t=0.):
+    def __init__(self,index,t=0.,spawns=SPAWNS):
         self.index=index
-        self.facing=1 if velocity(index,t)[0]>=0 else -1
+        self.spawns=spawns
+        self.facing=1 if velocity(index,t,spawns)[0]>=0 else -1
         self.turn_to=self.facing
         self.turning=False
         self.timer=self.previous_timer=0.
         self.clock=self.previous_clock=index*.071
         self.angle=self.previous_angle=0.
-        self.x,self.y=position(index,t)
+        self.x,self.y=position(index,t,spawns)
         self.px,self.py=self.x,self.y
-        self.vx,self.vy=velocity(index,t)
+        self.vx,self.vy=velocity(index,t,spawns)
         self.state='patrol';self.rearm=0.
 
     def sees(self,hero,platforms=()):
         if self.turning:return False
         dx=hero.x-self.x;dy=hero.y-28-self.y
         if dx*self.facing<=0 or abs(dy)>abs(dx)*1.5 or math.hypot(dx,dy)>SIGHT_RANGE:return False
-        return not any(p.rect.clipline((self.x,self.y),(hero.x,hero.y-28)) for p in platforms)
+        start=(self.x,self.y);end=(hero.x,hero.y-28)
+        return not any(box.clipline(start,end) for box in obstacle_boxes(platforms,start,end))
 
     def move(self,dt,platforms):
         # Slide along solid stone instead of flying through platforms or ground.
@@ -54,8 +57,7 @@ class BeetleMotion:
             start=(self.x,self.y)
             end=(self.x+delta,self.y) if axis=='x' else (self.x,self.y+delta)
             allowed=delta
-            for platform in platforms:
-                wall=platform.rect.inflate(36,28)
+            for wall in obstacle_boxes(platforms,start,end,(36,28)):
                 if wall.collidepoint(start):continue
                 if wall.clipline(start,end):
                     edge=(wall.left if delta>0 else wall.right) if axis=='x' else (wall.top if delta>0 else wall.bottom)
@@ -77,8 +79,11 @@ class BeetleMotion:
         elif (hero is not None and can_attack and self.rearm<=0 and self.sees(hero,platforms)):
             self.state='chase'
         if self.state=='patrol':
-            self.x,self.y=position(self.index,t)
-            self.vx,self.vy=velocity(self.index,t)
+            self.x,self.y=position(self.index,t,self.spawns)
+            self.vx,self.vy=velocity(self.index,t,self.spawns)
+            for platform in platforms:
+                if isinstance(platform,DuneGround) and platform.x<=self.x<=platform.x+platform.w:
+                    self.y=min(self.y,platform.height_at(self.x)-18)
         else:
             if self.state=='chase':
                 dx,dy=hero.x-self.x,hero.y-28-self.y
@@ -86,7 +91,7 @@ class BeetleMotion:
                 speed=min(CHASE_SPEED,distance*4)
                 desired=(dx/distance*speed,dy/distance*speed) if distance else (0.,0.)
             else:
-                hx,hy=position(self.index,t);hvx,hvy=velocity(self.index,t)
+                hx,hy=position(self.index,t,self.spawns);hvx,hvy=velocity(self.index,t,self.spawns)
                 desired=(hvx+(hx-self.x)*2,hvy+(hy-self.y)*2)
                 length=math.hypot(*desired)
                 if length>230:desired=tuple(v*230/length for v in desired)
@@ -95,7 +100,7 @@ class BeetleMotion:
             self.vx+=ax*weight;self.vy+=ay*weight
             self.move(dt,platforms)
             if self.state=='return':
-                hx,hy=position(self.index,t)
+                hx,hy=position(self.index,t,self.spawns)
                 if math.hypot(self.x-hx,self.y-hy)<.25:
                     self.x,self.y=hx,hy;self.state='patrol'
         vx,vy=self.vx,self.vy

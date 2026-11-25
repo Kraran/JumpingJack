@@ -1,0 +1,109 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "languages": [
+    {
+      "language": "fr",
+      "native_name": "Français",
+      "new_texture_uploads": 3
+    },
+    {
+      "language": "en",
+      "native_name": "English",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "de",
+      "native_name": "Deutsch",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "es",
+      "native_name": "Español",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "it",
+      "native_name": "Italiano",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "pt",
+      "native_name": "Português",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "nl",
+      "native_name": "Nederlands",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "pl",
+      "native_name": "Polski",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "cs",
+      "native_name": "Čeština",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "ro",
+      "native_name": "Română",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "hu",
+      "native_name": "Magyar",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "tr",
+      "native_name": "Türkçe",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "sv",
+      "native_name": "Svenska",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "da",
+      "native_name": "Dansk",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "nb",
+      "native_name": "Norsk (bokmål)",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "fi",
+      "native_name": "Suomi",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "is",
+      "native_name": "Íslenska",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "ru",
+      "native_name": "Русский",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "bg",
+      "native_name": "Български",
+      "new_texture_uploads": 0
+    },
+    {
+      "language": "sr",
+      "native_name": "Српски",
+      "new_texture_uploads": 0
+    }
+  ],
+  "lives": 2,
+  "elapsed": 0.0,
+  "scope": "All languages: settings, native flags/names, saved summaries and temple HUD; temporary files only."
+}

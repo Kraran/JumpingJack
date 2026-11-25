@@ -8,6 +8,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import math
 import random
 import json
+import argparse
 import numpy as np
 from PIL import Image, ImageFilter
 import pygame as pg
@@ -80,7 +81,28 @@ def plasma(t,elapsed,duration,origin):
     return result,(round(origin[0]-margin),round(origin[1]-center))
 
 
-def build():
+def build_color_atlas(directory):
+    """Straight alpha keeps the golden plasma from bleaching a bright sky."""
+    source=Image.open(directory/'solar-plasma.png').convert('RGB')
+    target=Image.new('RGBA',source.size)
+    for top in range(0,source.height,FRAME_SIZE[1]):
+        bottom=min(source.height,top+FRAME_SIZE[1])
+        rgb=np.asarray(source.crop((0,top,source.width,bottom)),dtype=np.uint16)
+        alpha=rgb.max(axis=2);denominator=np.maximum(alpha,1)[...,None]
+        color=(rgb*255+denominator//2)//denominator
+        color[...,1]=(color[...,1]*94+50)//100
+        color[...,2]=(color[...,2]*72+50)//100
+        rgba=np.empty((*alpha.shape,4),dtype=np.uint8)
+        rgba[...,:3]=color;rgba[...,3]=alpha
+        target.paste(Image.fromarray(rgba),(0,top))
+    path=directory/'solar-plasma-color-v2.png';target.save(path)
+    print('Color-preserving plasma atlas built:',path.name,target.size)
+
+
+def build(color_only=False):
+    directory=Path(__file__).resolve().parents[1]/'assets'
+    if color_only:
+        build_color_atlas(directory);return
     pg.init();pg.display.set_mode((1,1))
     atlas=pg.Surface((COLUMNS*FRAME_SIZE[0],((FX_FRAMES+COLUMNS-1)//COLUMNS)*FRAME_SIZE[1]))
     atlas.fill((0,0,0))
@@ -90,12 +112,14 @@ def build():
         if effect is not None:
             frame=pg.transform.smoothscale(effect[0],FRAME_SIZE)
             atlas.blit(frame,(i%COLUMNS*FRAME_SIZE[0],i//COLUMNS*FRAME_SIZE[1]))
-    directory=Path(__file__).resolve().parents[1]/'assets'
     pg.image.save(atlas,directory/'solar-plasma.png')
     data={'fps':FX_FPS,'frames':FX_FRAMES,'frame_size':list(FRAME_SIZE),'origin':list(ORIGIN),'columns':COLUMNS}
     (directory/'solar-plasma.json').write_text(json.dumps(data,indent=2)+'\n',encoding='utf-8')
     pg.quit()
     print('Plasma atlas built:',atlas.get_size())
+    build_color_atlas(directory)
 
 
-if __name__=='__main__':build()
+if __name__=='__main__':
+    parser=argparse.ArgumentParser();parser.add_argument('--color-only',action='store_true')
+    build(parser.parse_args().color_only)

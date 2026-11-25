@@ -36,11 +36,11 @@ class MedallionInventory:
         return True
 
 
-def position(time):return POSITION[0],POSITION[1]+math.sin(time*1.8)*2
+def position(time,anchor=POSITION):return anchor[0],anchor[1]+math.sin(time*1.8)*2
 
 
-def touches(hero,time):
-    x,y=position(time)
+def touches(hero,time,anchor=POSITION):
+    x,y=position(time,anchor)
     return hero.rect.colliderect(pg.Rect(round(x-22),round(y-22),44,44))
 
 

@@ -1,0 +1,126 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "stages": [
+    {
+      "progress": 0.0,
+      "label": "Ouverture du temple…"
+    },
+    {
+      "progress": 0.05,
+      "label": "Préparation des décors…"
+    },
+    {
+      "progress": 0.12,
+      "label": "Création du Nil et des dunes…"
+    },
+    {
+      "progress": 0.28,
+      "label": "Préparation de l’intérieur du temple…"
+    },
+    {
+      "progress": 0.35,
+      "label": "Assemblage du monde…"
+    },
+    {
+      "progress": 0.4,
+      "label": "Préparation des animations du héros…"
+    },
+    {
+      "progress": 0.52,
+      "label": "Préparation des crocodiles…"
+    },
+    {
+      "progress": 0.6,
+      "label": "Préparation des scarabées…"
+    },
+    {
+      "progress": 0.65,
+      "label": "Préparation des plateformes et des pièges…"
+    },
+    {
+      "progress": 0.71,
+      "label": "Préparation des gardiens solaires…"
+    },
+    {
+      "progress": 0.76,
+      "label": "Préparation des cristaux et des médaillons…"
+    },
+    {
+      "progress": 0.81,
+      "label": "Préparation des menus et des sons…"
+    },
+    {
+      "progress": 0.86,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.8665934065934066,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.8731868131868131,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.8797802197802198,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.8863736263736264,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.892967032967033,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.8995604395604395,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.9061538461538461,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.9127472527472528,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.9193406593406593,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.9259340659340659,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.9325274725274725,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.9391208791208792,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.9457142857142857,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.95,
+      "label": "Transfert des textures vers le rendu…"
+    },
+    {
+      "progress": 0.96,
+      "label": "Préchauffage du rendu et des animations…"
+    },
+    {
+      "progress": 1.0,
+      "label": "Prêt pour l’aventure"
+    }
+  ],
+  "state_after_loading": "title",
+  "elapsed": 0.0,
+  "loading_active": false,
+  "scope": "Actual startup stages and native GPU presentation, without artificial delay."
+}

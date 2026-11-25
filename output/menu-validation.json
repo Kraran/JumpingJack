@@ -1,0 +1,46 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_texture_uploads_during_draw": 0,
+  "texture_upload_events": [],
+  "renderer_rebuilds": 2,
+  "cached_textures": 835,
+  "fullscreen_then_window": [
+    true,
+    false
+  ],
+  "saved_settings": {
+    "fullscreen": false,
+    "sound": false,
+    "rumble": false,
+    "show_fps": true
+  },
+  "quit_requested": true,
+  "observations": [
+    {
+      "frame": 30,
+      "page": "title",
+      "state": "title"
+    },
+    {
+      "frame": 110,
+      "page": "settings",
+      "state": "settings"
+    },
+    {
+      "frame": 145,
+      "page": "controls",
+      "state": "controls"
+    },
+    {
+      "frame": 188,
+      "page": "gameplay",
+      "state": "play"
+    },
+    {
+      "frame": 215,
+      "page": "pause",
+      "state": "pause"
+    }
+  ]
+}

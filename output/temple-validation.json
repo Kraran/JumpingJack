@@ -1,0 +1,42 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_texture_uploads_during_gameplay": 0,
+  "lives": 3,
+  "finish_x": 14384,
+  "observations": [
+    {
+      "frame": 20,
+      "hero": [
+        14035.0,
+        607.7332726445153
+      ],
+      "state": "play"
+    },
+    {
+      "frame": 80,
+      "hero": [
+        14216.333333333367,
+        599.9024053192229
+      ],
+      "state": "play"
+    },
+    {
+      "frame": 104,
+      "hero": [
+        14352.333333333396,
+        620.0
+      ],
+      "state": "play"
+    },
+    {
+      "frame": 135,
+      "hero": [
+        14386.333333333403,
+        620.0
+      ],
+      "state": "win"
+    }
+  ],
+  "scope": "Real physics and fixed final camera; enemies temporarily prevented from attacking."
+}

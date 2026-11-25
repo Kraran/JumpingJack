@@ -1,0 +1,35 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_texture_uploads": 0,
+  "death_duration": 1.25,
+  "death_frames": 64,
+  "flame_size_native": [
+    432,
+    288
+  ],
+  "scarab_flame_size_native": [
+    120,
+    80
+  ],
+  "atlas_pages": [
+    [
+      2048,
+      4058
+    ],
+    [
+      2048,
+      4032
+    ],
+    [
+      2048,
+      4086
+    ],
+    [
+      2048,
+      1672
+    ]
+  ],
+  "real_solar_kill": true,
+  "lives": 3
+}

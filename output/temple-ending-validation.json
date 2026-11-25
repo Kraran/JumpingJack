@@ -1,0 +1,13 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_gameplay_texture_uploads": 0,
+  "ending_duration": 4.32,
+  "state": "win",
+  "lives": 3,
+  "poses_seen": 233,
+  "ending_atlas": [
+    1960,
+    4080
+  ]
+}

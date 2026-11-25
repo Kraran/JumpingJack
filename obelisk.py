@@ -13,7 +13,8 @@ LOOP_FRAMES=48
 
 
 class Obelisk:
-    def __init__(self):
+    def __init__(self,x=CHECKPOINT_X,y=GROUND_Y):
+        self.x=x;self.y=y
         self.active=False
         self.clock=self.previous_clock=0.
 
@@ -22,7 +23,7 @@ class Obelisk:
         if self.active:
             self.clock+=dt
             return False
-        if hero.grounded and abs(hero.y-GROUND_Y)<2 and abs(hero.x-CHECKPOINT_X)<65:
+        if hero.grounded and abs(hero.y-self.y)<2 and abs(hero.x-self.x)<65:
             self.active=True
             return True
         return False

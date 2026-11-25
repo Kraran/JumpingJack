@@ -1,0 +1,16 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_texture_uploads_during_gameplay": 0,
+  "slots": 5,
+  "loaded_level": 2,
+  "lives": 2,
+  "statuses": [
+    "ready",
+    "ready",
+    "ready",
+    "ready",
+    "empty"
+  ],
+  "scope": "Real disk writes in a temporary directory; title/load/play/pause/save/overwrite/back."
+}

@@ -13,16 +13,19 @@ COLUMNS=3
 class PlasmaEffect:
     def __init__(self,sheet):
         self.images=(sheet,pg.transform.flip(sheet,True,False))
+        self.alpha_blend=bool(sheet.get_flags() & pg.SRCALPHA)
 
     @classmethod
     def load(cls,directory):
-        path=directory/'solar-plasma.png'
+        colored=directory/'solar-plasma-color-v2.png'
+        path=colored if colored.exists() else directory/'solar-plasma.png'
         if not path.exists():return None
         info=json.loads((directory/'solar-plasma.json').read_text(encoding='utf-8'))
         expected={'fps':FX_FPS,'frames':FX_FRAMES,'frame_size':list(FRAME_SIZE),
                   'origin':list(ORIGIN),'columns':COLUMNS}
         if info!=expected:raise ValueError('solar-plasma.json: format incompatible')
-        sheet=pg.image.load(str(path)).convert()
+        sheet=pg.image.load(str(path))
+        sheet=sheet.convert_alpha() if path==colored else sheet.convert()
         rows=(FX_FRAMES+COLUMNS-1)//COLUMNS
         if sheet.get_size()!=(COLUMNS*FRAME_SIZE[0],rows*FRAME_SIZE[1]):
             raise ValueError('solar-plasma.png: dimensions incorrectes')
@@ -43,4 +46,5 @@ class PlasmaEffect:
             area.x=image.get_width()-(area.x+width)
             area.x+=width-visible;area.w=visible
             dest=(muzzle-(visible-1-ORIGIN[0]),y-ORIGIN[1])
-        canvas.native.blit_additive(image,dest,area)
+        if self.alpha_blend:canvas.native.blit(image,dest,area)
+        else:canvas.native.blit_additive(image,dest,area)

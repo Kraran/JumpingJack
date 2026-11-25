@@ -1,0 +1,10 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "flame_frames_checked": 48,
+  "new_texture_uploads": 0,
+  "brazier_size": [
+    86,
+    94
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_texture_uploads_during_draw": 0,
+  "shore_frames_seen": 48,
+  "banks": [
+    700,
+    3140
+  ],
+  "bank_contact_height": 640,
+  "lives": 3,
+  "scope": "Both banks rendered with real simulation, protected from enemies for the demonstration."
+}

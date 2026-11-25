@@ -1,0 +1,16 @@
+# Entrée du temple — fin du niveau 02
+
+Image créée avec l’outil intégré imagegen, fond transparent, sans API ni CLI externe.
+Asset : `desert-temple-entrance-v1.png` (1536 × 1024, RGBA). Le fichier original est conservé ; la mise à l’échelle, le découpage du montant droit et l’ombre du passage sont préparés par `DesertArt` au chargement.
+
+## Prompt final exact
+
+```text
+Use case: stylized-concept. Asset type: production game scenery sprite, transparent PNG cutout, for a realistic 2D Egyptian side-scrolling platform game. Primary request: the ruined entrance of an ancient Egyptian sandstone temple at the far right end of a desert level; the hero walks from left to right into its dark interior. Subject: a monumental weathered sandstone pylon gateway, broken cornice, worn Egyptian relief carvings, massive chipped square jambs, a deep nearly black empty rectangular doorway with a little inner depth, a few stones at its foot. Composition: single isolated architectural entrance, orthographic side-scroller stage view showing the facade, modest perspective only inside the doorway, wide 3:2 landscape framing, no ground plane in front. Entire gate visible without cropping. Door opening in right half, spanning approximately 52 to 84 percent of image width, bottom of doorway on a single flat baseline at 91 percent image height, opening height about 52 percent image height. Thick right jamb and connected temple masonry continuing to right edge, left broken wing of facade stretching to left, irregular broken top silhouette. Ground-level walk-through entrance, absolutely no steps, no raised threshold, no doors blocking entry. Materials: realistic eroded warm honey sandstone with fine gritty detail and subtle ochre sand caught in cracks; visual style polished photorealistic game background art. Sunlight from upper left, warm desert daylight, soft contact shadows, fully dark interior. Constraints: genuinely transparent background outside the architecture and below the flat baseline, no sky, no landscape, no characters, no plants, no floating objects, no text, no labels, no watermark, no interface, not cartoon or pixel art. Save the generated image as a local PNG and report its local file path for integration.
+```
+
+## Intégration
+
+Façade de x=13820 à x=14460, sol y=620, avec le montant droit au premier plan dès x=14340. Le sable masque la base et les reliefs existants restent praticables. Le héros entre dans l’ombre puis disparaît derrière le montant ; la fin est déclenchée à x=14384 uniquement à la hauteur de l’ouverture. Le niveau 01 garde sa sortie actuelle. Le bilan propose désormais de poursuivre vers le niveau 03 jouable : voir `TEMPLE-LEVEL-PROMPTS.md`.
+
+L’approche est désormais dégagée : le massif x=13700 et la plateforme x=14100 sont supprimés. Leurs collisions disparaissent également et le sable est continu. Les deux cristaux de la plateforme descendent au niveau du sable ; leurs identifiants sont conservés pour les sauvegardes. Les anciennes références de plateforme par indice sont traduites vers la géométrie correspondante ; une descente sauvegardée sur la plateforme supprimée reprend en chute normale. Le contrôle géométrique atteint les 37 supports restants.

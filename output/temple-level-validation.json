@@ -1,0 +1,43 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_texture_uploads_during_gameplay": 0,
+  "length": 14400,
+  "supports": 43,
+  "crystals": 79,
+  "shots": [
+    {
+      "shot": "hall",
+      "hero": [
+        929.6666666666714,
+        620
+      ],
+      "medallions": 0
+    },
+    {
+      "shot": "galleries",
+      "hero": [
+        5929.666666666629,
+        620
+      ],
+      "medallions": 0
+    },
+    {
+      "shot": "medallion",
+      "hero": [
+        12960.0,
+        348.9270833333328
+      ],
+      "medallions": 1
+    },
+    {
+      "shot": "sanctuary",
+      "hero": [
+        14279.666666666742,
+        620
+      ],
+      "medallions": 1
+    }
+  ],
+  "scope": "Controlled cuts, real physics and pickups; temporary protection from enemies."
+}

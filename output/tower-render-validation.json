@@ -1,0 +1,47 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_gameplay_texture_uploads": 0,
+  "horizontal_camera": 0.0,
+  "height": 14400,
+  "width": 1280,
+  "sections": [
+    {
+      "section": "base",
+      "hero": [
+        908.201388888893,
+        13697
+      ],
+      "checkpoint": 0,
+      "state": "play"
+    },
+    {
+      "section": "guard",
+      "hero": [
+        1005.4062500000015,
+        10768
+      ],
+      "checkpoint": 0,
+      "state": "play"
+    },
+    {
+      "section": "checkpoint",
+      "hero": [
+        547.760416666662,
+        4427
+      ],
+      "checkpoint": 2,
+      "state": "play"
+    },
+    {
+      "section": "summit",
+      "hero": [
+        653.211805555556,
+        261.0
+      ],
+      "checkpoint": 0,
+      "state": "win"
+    }
+  ],
+  "scope": "Controlled cuts with real jumps and temporary enemy protection; full route verified separately."
+}

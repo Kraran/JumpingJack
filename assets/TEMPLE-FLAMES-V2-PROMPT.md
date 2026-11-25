@@ -1,0 +1,13 @@
+# Flammes réalistes et mortelles du temple
+
+Asset : `temple-flames-v2.png`, créé avec imagegen intégré, référence de contexte : `output/temple-torch-detail.png`. Planche transparente de 24 poses, six colonnes et quatre lignes. Le jeu prépare 48 images sur une boucle de 1,6 seconde, avec un émetteur fixe aligné sur les braises du brasero. Aucune transformation ni génération d’image pendant le rendu.
+
+La collision utilise les pixels chauds et suffisamment opaques des flammes. Le halo, la fumée et le support n’infligent pas de dégâts. Le parcours du corps du héros entre deux pas physiques est testé, dans les deux axes, pour empêcher les traversées rapides. Comme les autres dangers du décor, une flamme coûte une vie même pendant la protection contre les ennemis ; la mort utilise le point de reprise, le compteur de vies et la vibration habituels. Les niveaux 01 et 02 ne sont pas concernés.
+
+## Prompt exact
+
+```text
+Production game animation sprite atlas for realistic burning oil-brazier flames in an ancient Egyptian temple. Reference image is ONLY context for the bronze bowl and desired flame placement: replace the flat yellow cartoon teardrop with natural photoreal fire. Generate FIRE ONLY, no bowl, temple, pedestal or background. EXACT 6 columns by 4 rows =24 consecutive frames of one seamless looping live fire, ordered left-to-right top-to-bottom. Equal cells with SAME fixed emitter center and baseline at x50%,y85%, consistent scale and camera. Natural translucent amber and orange wisps, several interweaving irregular tongues, luminous pale-yellow heart, darker orange edges, fine turbulent detail and subtle curls, occasional tiny embers, a very faint wisp of gray smoke; organic fire, no geometric triangular or teardrop icon, no explosion or expanding blast. A modest tall flame appropriate to a bowl 80 pixels wide; each flame 50 percent of cell width and 65 percent height. All fire anchored to a compact horizontal bed of embers, no floating flame bases, grounded low emitter width30%cell. Gentle continuous flicker through 24 frames, last flows naturally back to first, no growing/shrinking trend or changing style. Truly transparent background preserving semitransparent smoke and flame edges; no black or gray matte, no scenery, no labels, no text, no grid outlines. Large detailed 1536x1024 or larger atlas.
+```
+
+Validation : `python -m unittest discover -s tests -p "test_temple*.py" -v` ; `python preview_temple_fire.py --native-check` pour les 48 poses et un véritable contact mortel suivi de la reprise. Sorties : `output/temple-fire-demo.mp4`, `output/temple-fire-detail.png`, `output/temple-fire-validation.json`.

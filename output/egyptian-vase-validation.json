@@ -1,0 +1,9 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_texture_uploads": 0,
+  "blocked_before_ray": true,
+  "broken": true,
+  "passed_after_ray": true,
+  "lives": 3
+}

@@ -1,0 +1,7 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "reached_exit": true,
+  "lives": 3,
+  "new_texture_uploads": 2
+}

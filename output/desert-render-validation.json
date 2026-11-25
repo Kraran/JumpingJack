@@ -1,0 +1,56 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "new_texture_uploads_during_draw": 0,
+  "world_length": 14400,
+  "platforms": 40,
+  "crystals": 73,
+  "medallion": [
+    12960.0,
+    185.0
+  ],
+  "checkpoints": [
+    4800,
+    9600
+  ],
+  "inventory_after_pickup": 2,
+  "shots": [
+    {
+      "shot": "river",
+      "hero": [
+        1335.6666666666633,
+        426.0624999999995
+      ],
+      "lives": 3,
+      "medallions": 1
+    },
+    {
+      "shot": "rocks",
+      "hero": [
+        5035.666666666593,
+        567.1435573147984
+      ],
+      "lives": 3,
+      "medallions": 1
+    },
+    {
+      "shot": "pylon",
+      "hero": [
+        9600.0,
+        440.0
+      ],
+      "lives": 3,
+      "medallions": 1
+    },
+    {
+      "shot": "medallion",
+      "hero": [
+        12960.0,
+        309.8124999999995
+      ],
+      "lives": 3,
+      "medallions": 2
+    }
+  ],
+  "scope": "Controlled camera cuts and protection from enemies; real physics, deadly water, real pickups."
+}

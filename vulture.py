@@ -3,6 +3,7 @@ import math
 import json
 from dataclasses import dataclass
 import pygame as pg
+from terrain import obstacle_boxes
 from crocodile import segment_box
 
 SPAWNS=((5950.,190.),(7520.,180.),(9000.,205.))
@@ -20,8 +21,8 @@ DIVE_ANGLES=(15,30,45,60,75,90)
 
 
 class Vulture:
-    def __init__(self,index):
-        self.index=index;self.home=SPAWNS[index]
+    def __init__(self,index,spawns=SPAWNS):
+        self.index=index;self.home=spawns[index]
         self.clock=self.previous_clock=index*.173
         self.x,self.y=self.patrol_position();self.px,self.py=self.x,self.y
         self.vx=math.cos(self.clock*.45)*99;self.vy=0.
@@ -38,7 +39,8 @@ class Vulture:
         if self.turning:return False
         dx=hero.x-self.x;dy=hero.y-hero.body_height/2-self.y
         if dx*self.facing<-20 or dy<35 or math.hypot(dx,dy)>SIGHT:return False
-        return not any(p.rect.clipline((self.x,self.y),(hero.x,hero.y-hero.body_height/2)) for p in platforms)
+        start=(self.x,self.y);end=(hero.x,hero.y-hero.body_height/2)
+        return not any(box.clipline(start,end) for box in obstacle_boxes(platforms,start,end))
 
     def change(self,state):
         self.state=state;self.timer=self.previous_timer=0.
@@ -47,8 +49,7 @@ class Vulture:
         dx,dy=self.vx*dt,self.vy*dt;length=math.hypot(dx,dy)
         if not length:return False
         fraction=1.;hit=False
-        for p in platforms:
-            box=p.rect.inflate(52,36)
+        for box in obstacle_boxes(platforms,(self.x,self.y),(self.x+dx,self.y+dy),(52,36)):
             if box.collidepoint(self.x,self.y):continue
             crossing=box.clipline((self.x,self.y),(self.x+dx,self.y+dy))
             if crossing:
@@ -71,8 +72,7 @@ class Vulture:
 
     def return_target(self,platforms):
         home=self.patrol_position()
-        for p in platforms:
-            box=p.rect.inflate(52,36)
+        for box in obstacle_boxes(platforms,(self.x,self.y),home,(52,36)):
             if self.y>box.top and box.clipline((self.x,self.y),home):
                 if box.left<=self.x<=box.right and self.y>=box.bottom:
                     edge=box.left-12 if abs(self.x-box.left)<abs(self.x-box.right) else box.right+12

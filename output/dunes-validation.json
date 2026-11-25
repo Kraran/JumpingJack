@@ -1,0 +1,11 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "cheat": "LV02",
+  "level": 2,
+  "lives": 3,
+  "max_foot_height_error": 0.0,
+  "ungrounded_steps": 0,
+  "new_texture_uploads_during_draw": 0,
+  "scope": "Native rendering and actual walking physics; protected from enemies for the demonstration."
+}

@@ -50,7 +50,8 @@ class NativeCanvas:
             entry=(image,Texture.from_surface(self.renderer,image))
             self.uploads+=1
         self.textures[key]=entry
-        if len(self.textures)>640:self.textures.popitem(last=False)
+        # Keep the hero/enemy poses and the prewarmed menu/HUD text resident.
+        if len(self.textures)>2048:self.textures.popitem(last=False)
         return entry[1]
 
     def preload(self, images):

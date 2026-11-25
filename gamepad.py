@@ -27,6 +27,9 @@ class PadButtons:
     down: bool = False
     fire: bool = False
     activity: bool = False
+    menu_axis: int = 0
+    confirm: bool = False
+    cancel: bool = False
 
 
 @dataclass(frozen=True)
@@ -42,6 +45,10 @@ class PadSnapshot:
     down_held: bool = False
     fire_pressed: bool = False
     activity: bool = False
+    menu_axis: int = 0
+    confirm_pressed: bool = False
+    cancel_pressed: bool = False
+    disconnected: bool = False
 
 
 def stick_axis(raw, deadzone=DEADZONE):
@@ -100,6 +107,10 @@ class ControllerPad:
             any(pad.get_button(i) for i in range(pg.CONTROLLER_BUTTON_MAX))
             or any(stick_axis(pad.get_axis(i)) for i in range(4))
             or any(trigger_held(pad.get_axis(i)) for i in (pg.CONTROLLER_AXIS_TRIGGERLEFT,pg.CONTROLLER_AXIS_TRIGGERRIGHT)),
+            merge_axis(stick_axis(pad.get_axis(pg.CONTROLLER_AXIS_LEFTY)),
+                       int(bool(pad.get_button(pg.CONTROLLER_BUTTON_DPAD_DOWN)))-int(bool(pad.get_button(pg.CONTROLLER_BUTTON_DPAD_UP)))),
+            bool(pad.get_button(pg.CONTROLLER_BUTTON_A)),
+            bool(pad.get_button(pg.CONTROLLER_BUTTON_B)),
         )
 
     def close(self):
@@ -145,6 +156,8 @@ class JoystickPad:
             or any(stick_axis(joy.get_axis(i)) for i in (0,1,3,4) if i<joy.get_numaxes())
             or bool(hat_x or hat_y) or trigger
             or (joy.get_numaxes()>2 and trigger_held(joy.get_axis(2))),
+            merge_axis(stick_axis(joy.get_axis(1)) if joy.get_numaxes()>1 else 0,-hat_y),
+            self._button(0),self._button(1),
         )
 
     def close(self):
@@ -160,7 +173,10 @@ class JoystickPad:
 class Gamepads:
     def __init__(self, autodetect=True):
         self.devices = {}
-        self._held = {'jump': False, 'start': False, 'back': False, 'sound': False, 'fire': False}
+        self._held = {'jump': False, 'start': False, 'back': False, 'sound': False, 'fire': False,'confirm':False,'cancel':False}
+        self.rumble_enabled=True
+        self._connected_ids=set()
+        self._lost_ids=set()
         if autodetect:
             self.refresh()
 
@@ -186,12 +202,16 @@ class Gamepads:
         for index in range(pg.joystick.get_count()):
             try:
                 probe = pg.joystick.Joystick(index)
+                instance=probe.get_instance_id()
             except pg.error:
                 continue
-            found[probe.get_instance_id()] = (index, probe)
+            found[instance] = (index, probe)
         for instance in list(self.devices):
             device = self.devices[instance]
-            if instance not in found or not device.attached():
+            try:attached=instance in found and device.attached()
+            except pg.error:attached=False
+            if not attached:
+                if instance in self._connected_ids:self._lost_ids.add(instance)
                 self.devices.pop(instance)
                 self._close(device)
         for instance, (index, probe) in found.items():
@@ -219,17 +239,24 @@ class Gamepads:
 
     def poll(self):
         axis = 0
+        menu_axis=0;confirm=cancel=False
         jump = start = back = sound = down = fire = False
         connected = False
         activity = False
         name = ''
-        for device in self.devices.values():
+        connected_ids=set()
+        for instance,device in list(self.devices.items()):
             try:
                 if not device.attached():
+                    if instance in self._connected_ids:self._lost_ids.add(instance)
+                    self.devices.pop(instance);self._close(device)
                     continue
                 sample = device.sample()
             except pg.error:
+                if instance in self._connected_ids:self._lost_ids.add(instance)
+                self.devices.pop(instance);self._close(device)
                 continue
+            connected_ids.add(instance)
             connected = True
             name = name or device.name
             axis = merge_axis(axis, sample.axis)
@@ -239,6 +266,9 @@ class Gamepads:
             sound = sound or sample.sound
             down = down or sample.down
             fire = fire or sample.fire
+            menu_axis=merge_axis(menu_axis,sample.menu_axis)
+            confirm=confirm or sample.confirm
+            cancel=cancel or sample.cancel
             activity = activity or sample.activity or bool(sample.axis or sample.jump or sample.start or sample.back or sample.sound or sample.down or sample.fire)
         snapshot = PadSnapshot(
             axis, jump,
@@ -247,11 +277,15 @@ class Gamepads:
             back and not self._held['back'],
             sound and not self._held['sound'],
             connected, name, down, fire and not self._held['fire'], activity,
+            menu_axis,confirm and not self._held['confirm'],cancel and not self._held['cancel'],
+            bool(self._lost_ids-connected_ids),
         )
-        self._held.update(jump=jump, start=start, back=back, sound=sound, fire=fire)
+        self._connected_ids=connected_ids;self._lost_ids.clear()
+        self._held.update(jump=jump, start=start, back=back, sound=sound, fire=fire,confirm=confirm,cancel=cancel)
         return snapshot
 
     def rumble(self, event):
+        if not self.rumble_enabled:return False
         effect = RUMBLE_EFFECTS[event]
         played = False
         for device in self.devices.values():

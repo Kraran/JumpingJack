@@ -73,6 +73,9 @@ class SolarRay:
         center=y-(CROUCH_MUZZLE_Y if self.crouched else MUZZLE_Y)
         length=BEAM_RANGE
         for p in platforms:
+            if hasattr(p,'ray_distance'):
+                length=min(length,p.ray_distance(start,center+BEAM_HEIGHT/2,self.facing,length))
+                continue
             if p.y>=center+BEAM_HEIGHT/2 or p.y+p.h<=center-BEAM_HEIGHT/2:continue
             if self.facing>0 and p.x+p.w>start:
                 length=min(length,max(0.,p.x-start))
