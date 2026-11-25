@@ -39,7 +39,7 @@ from menu import StartMenu,PAGES as MENU_PAGES
 from loading import LoadingScreen,LoadingCancelled
 from localization import translate,CODES
 from savegame import SaveSlots,capture as capture_save,restore as restore_save
-from lives import STARTING_LIVES,load_life_symbol
+from lives import STARTING_LIVES,load_life_symbol,game_over_tune
 from medallion import MedallionInventory,MedallionSprites,POSITION as FIRST_MEDALLION,position as medallion_position,touches as touches_medallion,tune as medallion_tune
 from beetle import BeetleSprites, BeetleMotion, BeetleDeath, SPAWNS, DEATH_TIME
 from rendering import DisplayStatus, FramePacer, ParallaxLayer, configure_display, pixel,integer_viewport
@@ -253,24 +253,28 @@ class Hero:
                 contact(ceiling,'bottom')
         self.fall_origin_y = min(self.fall_origin_y,self.y)
         if self.vy >= 0:
-            for p in sorted(platforms,key=lambda support:support.y):
+            landing=None
+            for p in platforms:
                 if p is self.ignored_platform:continue
                 if self.x+15>p.x and self.x-15<p.x+p.w and old_bottom<=p.y+1 and self.y>=p.y:
-                    self.y = p.y
-                    self.impact_vy = self.vy
-                    self.landed_gliding = self.floating
-                    self.landed_height = 0. if self.floating else max(0.,p.y-self.fall_origin_y)
-                    if not was_grounded:
-                        self.landing_kind=landing_clip(self.landed_height)
-                        if not self.floating and self.impact_vy>100 and self.landing_kind=='land_heavy':
-                            self.recovery=LAND_DURATIONS['land_heavy']
-                            self.vx=0.;self.buffer=0.;self.coyote=0.
-                    self.vy = 0
-                    self.grounded = True
-                    self.floating = False
-                    self.glide_locked=False
-                    self.drop_elapsed=None;self.drop_support=None
-                    break
+                    # Choose the first crossed surface without sorting or
+                    # changing the level's drawing order. Keep stable ties.
+                    if landing is None or p.y<landing.y:landing=p
+            if landing is not None:
+                self.y = landing.y
+                self.impact_vy = self.vy
+                self.landed_gliding = self.floating
+                self.landed_height = 0. if self.floating else max(0.,landing.y-self.fall_origin_y)
+                if not was_grounded:
+                    self.landing_kind=landing_clip(self.landed_height)
+                    if not self.floating and self.impact_vy>100 and self.landing_kind=='land_heavy':
+                        self.recovery=LAND_DURATIONS['land_heavy']
+                        self.vx=0.;self.buffer=0.;self.coyote=0.
+                self.vy = 0
+                self.grounded = True
+                self.floating = False
+                self.glide_locked=False
+                self.drop_elapsed=None;self.drop_support=None
         if terrain and self.vy>=0 and not self.grounded:
             for ground in terrain:
                 if not ground.x-13<self.x<ground.x+ground.w+13:continue
@@ -408,6 +412,7 @@ class Game:
         self.show_stats=False
         self.show_fps=self.settings.show_fps
         self.fps_count=0;self.fps_updated=-1.
+        self.run_totals=dict(shards=0,elapsed=0.,deaths=0)
         self.reset()
         self.loading_stage(.86,'Transfert des textures vers le rendu…')
         self.preload_textures()
@@ -617,6 +622,7 @@ class Game:
         return tuple(layers)
 
     def new_game(self):
+        self.run_totals=dict(shards=0,elapsed=0.,deaths=0)
         self.lives=STARTING_LIVES
         self.medallions=MedallionInventory()
         self.level_id=1
@@ -629,9 +635,19 @@ class Game:
 
     def continue_or_restart(self):
         if self.state=='win' and self.level_id in (1,2,3):
+            self.bank_run_stats()
             self.start_level(self.level_id+1)
             self.resume_from_menu()
         else:self.resume_from_menu(new_game=True)
+
+    def bank_run_stats(self):
+        self.run_totals['shards']+=len(self.taken)
+        self.run_totals['elapsed']+=self.elapsed
+        self.run_totals['deaths']+=self.deaths
+
+    def restart_level(self):
+        self.bank_run_stats()
+        self.reset()
 
     def reset(self):
         self.gamepads.stop_rumble()
@@ -772,6 +788,7 @@ class Game:
                     for _ in range(channels): data.append(v)
                 self.sounds[name]=pg.mixer.Sound(buffer=data)
             self.sounds['medallion']=pg.mixer.Sound(buffer=medallion_tune(rate,channels))
+            self.sounds['game_over']=pg.mixer.Sound(buffer=game_over_tune(rate,channels))
         except (pg.error,ImportError): pass
 
     def sound(self,name):
@@ -877,10 +894,15 @@ class Game:
         if self.invuln<=0 and any(enemy.hits(self.hero) for enemy in self.scorpions):hit=True
         if hit:
             self.laser_bolts.clear()
-            self.gamepads.rumble('death')
+            self.beetle_deaths.clear()
+            self.particles.clear()
             self.deaths+=1;self.lives=max(0,self.lives-1)
+            self.gamepads.rumble('death' if self.lives else 'game_over')
             if self.lives==0:
                 self.state='game_over'
+                self.cache_text(self.game_over_results(),22)
+                self.cache_text(f'{translate("Niveau",self.settings.language)} {self.level_id:02}',18,GOLD)
+                self.sound('game_over')
                 self.hero_animation.reset()
                 self.solar.reset();self.rest.reset();self.crouch_fire=False
                 self.pending_jump=self.pending_drop=self.pending_fire=self.pending_activity=False
@@ -1089,9 +1111,9 @@ class Game:
             if self.notice>0:self.text('POINT DE REPRISE ACTIVÉ',(VIEW_W/2,132),19,GOLD,center=True)
         elif self.state=='pause':self.menu.draw(self)
         elif self.state=='win':
-            self.overlay('LE SOMMET EST ATTEINT','L’ASCENSION EST TERMINÉE','Entrée, Start ou A pour rejouer')
+            self.draw_victory()
         elif self.state=='game_over':
-            self.overlay('GAME OVER','Vous avez perdu toutes vos vies.','Entrée, Start ou A pour une nouvelle partie')
+            self.draw_game_over()
         if self.show_fps:self.draw_fps()
         if self.show_stats:self.draw_diagnostics()
         if present:self.present_frame(started)
@@ -1162,21 +1184,17 @@ class Game:
         elif self.level_id==3:self.temple_art.foreground(self.canvas,cam)
         for px,py,vx,vy,life,col in self.particles:
             draw.circle(self.canvas,col,(px-cam,py),max(1,int(life*5)))
-        # Foreground sand motes, drifting continuously at a separate depth.
+        # Foreground sand follows the interpolated simulation clock, including pause.
         for i in range(35):
-            x=(i*173+self.time*(17+i%7)-cam*.65)%(VIEW_W+40)-20
-            y=160+(i*97)%520+math.sin(self.time+i)*9
+            x=(i*173+animation_time*(17+i%7)-cam*.65)%(VIEW_W+40)-20
+            y=160+(i*97)%520+math.sin(animation_time+i)*9
             draw.line(self.canvas,(231,202,146),(x,y),(x+3,y))
         self.hud(alpha)
         if self.state=='pause':self.menu.draw(self)
         elif self.state=='win':
-            if self.level_id==1:self.overlay('LE SEUIL EST FRANCHI','NIVEAU 02 · LE DÉSERT','Entrée, Start ou A pour continuer')
-            elif self.level_id==2:
-                self.overlay('LE TEMPLE EST ATTEINT','NIVEAU 03 · LE TEMPLE','Entrée, Start ou A pour continuer')
-                self.text(f'{len(self.taken)} / {len(self.gems)} éclats solaires   ·   {int(self.elapsed)//60:02}:{int(self.elapsed)%60:02}   ·   {self.deaths} morts',(VIEW_W/2,405),16,center=True)
-            else:self.overlay('LE SANCTUAIRE EST ATTEINT','NIVEAU 04 · LA TOUR','Entrée, Start ou A pour continuer')
+            self.draw_victory()
         elif self.state=='game_over':
-            self.overlay('GAME OVER','Vous avez perdu toutes vos vies.','Entrée, Start ou A pour une nouvelle partie')
+            self.draw_game_over()
         if self.notice>0 and self.state=='play':self.text('POINT DE REPRISE ACTIVÉ',(VIEW_W/2,132),19,GOLD,center=True)
         elif self.level_id==2 and self.state=='play' and self.hero.x<3600:
             self.text('LA RIVIÈRE EST MORTELLE · EMPRUNTEZ LES PASSERELLES',(VIEW_W/2,112),16,GOLD,center=True)
@@ -1394,13 +1412,39 @@ class Game:
         elif key in (pg.K_RIGHT,pg.K_d):self.menu_action('right')
         elif key in (pg.K_RETURN,pg.K_SPACE):self.menu_action('activate')
         elif key==pg.K_ESCAPE:self.menu_action('back')
-        elif key==pg.K_r and self.state=='pause':self.reset();self.state='play'
+        elif key==pg.K_r and self.state=='pause':self.restart_level();self.state='play'
 
     def menu_pointer(self,position):
         if self.display_flags & pg.SCALED:return position[0]/SCALE,position[1]/SCALE
         size,offset=integer_viewport(self.screen.get_size(),(W,H))
         factor=size[0]/W*SCALE
         return (position[0]-offset[0])/factor,(position[1]-offset[1])/factor
+
+    def draw_victory(self):
+        title,subtitle=(('LE SEUIL EST FRANCHI','NIVEAU 02 · LE DÉSERT'),
+                        ('LE TEMPLE EST ATTEINT','NIVEAU 03 · LE TEMPLE'),
+                        ('LE SANCTUAIRE EST ATTEINT','NIVEAU 04 · LA TOUR'),
+                        ('LE SOMMET EST ATTEINT','L’ASCENSION EST TERMINÉE'))[self.level_id-1]
+        helptext='Entrée, Start ou A pour rejouer' if self.level_id==4 else 'Entrée, Start ou A pour continuer'
+        self.overlay(title,subtitle,helptext)
+        self.text(f'{len(self.taken)} / {len(self.gems)} éclats solaires   ·   {int(self.elapsed)//60:02}:{int(self.elapsed)%60:02}   ·   {self.deaths} morts',
+                  (VIEW_W/2,405),16,center=True,max_width=VIEW_W-100)
+
+    def game_over_results(self):
+        shards=self.run_totals['shards']+len(self.taken)
+        elapsed=int(self.run_totals['elapsed']+self.elapsed)
+        deaths=self.run_totals['deaths']+self.deaths
+        return f'{shards} éclats solaires   ·   {elapsed//60:02}:{elapsed%60:02}   ·   {deaths} morts'
+
+    def draw_game_over(self):
+        self.canvas.blit(self.overlay_shade,(0,0))
+        self.text('GAME OVER',(VIEW_W/2+3,243),88,(25,13,12),True,True,max_width=VIEW_W-100)
+        self.text('GAME OVER',(VIEW_W/2,240),88,(247,154,70),True,True,max_width=VIEW_W-100)
+        self.text('Vous avez perdu toutes vos vies.',(VIEW_W/2,330),24,center=True)
+        self.text(f'{translate("Niveau",self.settings.language)} {self.level_id:02}',(VIEW_W/2,379),18,GOLD,center=True)
+        self.text(self.game_over_results(),
+                  (VIEW_W/2,420),22,center=True,max_width=VIEW_W-100)
+        self.text('Entrée, Start ou A pour une nouvelle partie',(VIEW_W/2,505),18,center=True,max_width=VIEW_W-100)
 
     def overlay(self,title,sub,helptext):
         self.canvas.blit(self.overlay_shade,(0,0))
@@ -1427,7 +1471,7 @@ class Game:
             self.pending_fire=True
         if pad.sound_pressed:self.toggle_sound()
         if pad.back_pressed and not pad.start_pressed and self.state in ('play','pause'):
-            self.reset();self.state='play'
+            self.restart_level();self.state='play'
             return
         if self.state in MENU_PAGES:
             if pad.cancel_pressed or pad.back_pressed or (pad.start_pressed and self.state=='pause'):
@@ -1479,13 +1523,13 @@ class Game:
                     elif e.key==pg.K_ESCAPE:
                         if self.state=='play':
                             self.menu.selected['pause']=0;self.enter_menu('pause')
-                        elif self.state=='pause':self.state='play'
+                        elif self.state=='pause':self.resume_from_menu()
                         else:running=False
                         self.acc=0
                     elif e.key==pg.K_RETURN and self.state in ('win','game_over'):
                         self.continue_or_restart()
                     elif e.key==pg.K_r and self.state in ('play','pause'):
-                        self.reset();self.state='play'
+                        self.restart_level();self.state='play'
                     elif e.key in (pg.K_SPACE,pg.K_UP,pg.K_z,pg.K_w) and self.state=='play':
                         self.pending_jump=True
                         keys=pg.key.get_pressed()

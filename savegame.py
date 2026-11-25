@@ -70,6 +70,7 @@ def capture(game):
                 for name in ('drop_support','ignored_platform')}
     return {
         'level':game.level_id,'tower_layout':(tower_level.LAYOUT_VERSION if game.level_id==4 else 0),'lives':game.lives,'deaths':game.deaths,'elapsed':game.elapsed,
+        'run_totals':copy.deepcopy(game.run_totals),
         'camera':game.cam,'camera_y':game.cam_y,'invuln':game.invuln,'checkpoint':list(game.checkpoint),'check_index':game.check_index,
         'medallions':{'count':game.medallions.count,'claimed':sorted(game.medallions.claimed_levels)},
         'taken':sorted(game.taken),'dead_beetles':sorted(game.dead_beetles),'platform_refs':references,
@@ -138,7 +139,9 @@ def validate(data):
     from temple_exit import TempleExit,DURATION
     from vase import Vase,SPAWNS as VASE_SPAWNS,BREAK_TIME
     required={'level','lives','deaths','elapsed','camera','invuln','checkpoint','check_index','medallions',
-              'taken','dead_beetles','platform_refs','camera_y','tower_layout',*SKIP}
+              'taken','dead_beetles','platform_refs','camera_y','tower_layout','run_totals',*SKIP}
+    if isinstance(data,dict) and 'run_totals' not in data:
+        data=copy.deepcopy(data);data['run_totals']=dict(shards=0,elapsed=0.,deaths=0)
     if isinstance(data,dict) and 'tower_layout' not in data:
         data=copy.deepcopy(data);data['tower_layout']=1 if data.get('level')==4 else 0
     if isinstance(data,dict) and 'camera_y' not in data:
@@ -199,6 +202,10 @@ def validate(data):
         data['beetles']=[record(BeetleMotion(i,spawns=tower.BEETLES),'beetles') for i in range(len(tower.BEETLES))]
     number(data['lives'],1,99,integer=True);number(data['deaths'],0,100000,integer=True)
     number(data['elapsed'],0);number(data['invuln'],0,100)
+    totals=data['run_totals']
+    if not isinstance(totals,dict) or totals.keys()!={'shards','elapsed','deaths'}:raise ValueError('Bilan invalide')
+    number(totals['shards'],0,100000,integer=True);number(totals['deaths'],0,100000,integer=True)
+    number(totals['elapsed'],0)
     config={2:desert,3:temple,4:tower}.get(level_id)
     length=config.LENGTH if config else WORLD
     number(data['camera'],0,0 if level_id==4 else length)
@@ -274,6 +281,7 @@ def restore(game,data):
         game.hero.drop_elapsed=None;game.hero.drop_jump_latched=False;game.hero.grounded=False
     game.hero_animation.hero=game.hero;game.hero_animation.solar=game.solar;game.hero_animation.rest=game.rest
     game.lives=data['lives'];game.deaths=data['deaths'];game.elapsed=game.previous_elapsed=data['elapsed']
+    game.run_totals=copy.deepcopy(data['run_totals'])
     game.cam=game.prev_cam=data['camera'];game.cam_y=game.prev_cam_y=data['camera_y'];game.invuln=data['invuln']
     game.checkpoint=tuple(data['checkpoint']);game.check_index=data['check_index']
     game.medallions.count=data['medallions']['count'];game.medallions.claimed_levels=set(data['medallions']['claimed'])

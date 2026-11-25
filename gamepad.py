@@ -13,6 +13,7 @@ AXIS_MAX = 32767
 RUMBLE_EFFECTS = {
     'land_heavy': (0.55, 0.25, 170),
     'death': (1.0, 1.0, 400),
+    'game_over': (1.0, 1.0, 1000),
     'head_bump': (0.35, 0.60, 110),
 }
 

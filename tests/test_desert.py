@@ -78,7 +78,7 @@ class DesertGameTests(unittest.TestCase):
         for lives in (2,1,0):
             g.hero=Hero(1150,650);g.hero.vy=105;g.hero.floating=True;g.invuln=100
             with patch.object(g.gamepads,'rumble') as rumble:
-                g.update(STEP,0,True,False);rumble.assert_called_once_with('death')
+                g.update(STEP,0,True,False);rumble.assert_called_once_with('death' if lives else 'game_over')
             self.assertEqual(g.lives,lives)
             if lives:self.assertEqual(g.hero.x,160)
         self.assertEqual(g.state,'game_over');g.draw(1,present=False)

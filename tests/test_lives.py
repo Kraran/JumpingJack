@@ -18,6 +18,28 @@ class LivesTests(unittest.TestCase):
         self.g.hero.y=900
         self.g.update(STEP,0,False,False)
 
+    def test_death_clears_old_explosions_and_particles_without_reviving_beetles(self):
+        from beetle import BeetleDeath
+        g=self.g
+        for lives in (2,1):
+            with self.subTest(lives=lives):
+                g.new_game();g.state='play';g.lives=lives
+                g.dead_beetles.add(0)
+                g.beetle_deaths.append(BeetleDeath(1920,495,-1))
+                g.burst(1920,495,(1,2,3),12)
+                self.die()
+                self.assertFalse(g.beetle_deaths)
+                self.assertEqual(g.dead_beetles,{0})
+                self.assertNotIn(0,[index for index,_,_ in g.beetles()])
+                self.assertFalse(any(particle[5]==(1,2,3) for particle in g.particles))
+                if lives>1:
+                    self.assertEqual(g.state,'play')
+                    self.assertEqual(len(g.particles),24)
+                    self.assertTrue(all(particle[5]==(130,224,227) for particle in g.particles))
+                else:
+                    self.assertEqual(g.state,'game_over')
+                    self.assertFalse(g.particles)
+
     def test_three_lives_two_respawns_then_game_over_and_frozen_world(self):
         g=self.g;g.checkpoint=(4740,620)
         self.assertEqual(g.lives,3)
@@ -26,7 +48,7 @@ class LivesTests(unittest.TestCase):
             self.assertEqual(g.lives,remaining);self.assertEqual(g.state,'play')
             self.assertEqual(g.hero.x,4740);self.assertGreater(g.invuln,0)
         with patch.object(g.gamepads,'rumble') as rumble:
-            self.die();rumble.assert_called_once_with('death')
+            self.die();rumble.assert_called_once_with('game_over')
         self.assertEqual(g.lives,0);self.assertEqual(g.deaths,3);self.assertEqual(g.state,'game_over')
         self.assertEqual(g.hero.y,900+1550*STEP*STEP)
         before=(g.elapsed,g.hero.x,g.hero.y,g.deaths)

@@ -4,6 +4,21 @@ import pygame as pg
 STARTING_LIVES=3
 
 
+def game_over_tune(rate,channels):
+    """A short descending motif, prepared once with the other effects."""
+    import math
+    from array import array
+    data=array('h')
+    for frequency,duration in ((220.,.20),(196.,.20),(164.81,.24),(110.,.65)):
+        for frame in range(int(rate*duration)):
+            t=frame/rate
+            envelope=min(1.,t/.012)*(1-t/duration)**1.5
+            wave=math.sin(math.tau*frequency*t)+.25*math.sin(math.tau*frequency*2*t)
+            sample=round(4200*envelope*wave)
+            data.extend([sample]*channels)
+    return data
+
+
 def load_life_symbol(path):
     # The frontal hovering pose exposes both wings of the original insignia.
     source=pg.image.load(str(path)).convert_alpha().subsurface((1093,477,54,39))

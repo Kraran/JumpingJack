@@ -1,0 +1,35 @@
+{
+  "reference": "bc8a5ff70c1b9e8e766f53499ad17e5c1da3615d",
+  "steps_compared": 25920,
+  "levels": {
+    "1": {
+      "before": 48.32,
+      "after": 38.773,
+      "platforms": 28,
+      "change_percent": -19.8
+    },
+    "2": {
+      "before": 67.448,
+      "after": 61.532,
+      "platforms": 37,
+      "change_percent": -8.8
+    },
+    "3": {
+      "before": 61.874,
+      "after": 45.125,
+      "platforms": 46,
+      "change_percent": -27.1
+    },
+    "4": {
+      "before": 159.649,
+      "after": 129.412,
+      "platforms": 124,
+      "change_percent": -18.9
+    }
+  },
+  "unit": "microseconds per Hero.update",
+  "scope": "CPU-only synthetic descending steps, not display FPS",
+  "samples": 7,
+  "iterations_per_sample": 3000,
+  "identical_physics": true
+}

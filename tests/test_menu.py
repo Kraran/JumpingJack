@@ -151,6 +151,42 @@ class MenuTests(unittest.TestCase):
         self.run_events();self.assertFalse(g.menu_gameplay_blocked)
         g.handle_pad(PadSnapshot(jump_pressed=True,jump_held=True));self.assertTrue(g.pending_jump)
 
+    def test_escape_resume_blocks_held_keyboard_or_stick_until_release(self):
+        class Keys:
+            def __init__(self,*held):self.held=set(held)
+            def __getitem__(self,key):return key in self.held
+            def __iter__(self):return iter((bool(self.held),))
+        g=self.g
+        for key,pad,air in ((pg.K_SPACE,PadSnapshot(),False),(pg.K_RIGHT,PadSnapshot(),False),
+                            (None,PadSnapshot(axis=1,activity=True),False),(pg.K_SPACE,PadSnapshot(),True)):
+            with self.subTest(key=key,stick=pad.axis,air=air):
+                g.new_game();g.state='play'
+                if air:
+                    g.hero.y=g.hero.py=300;g.hero.grounded=False;g.hero.vy=105;g.hero.floating=True
+                g.enter_menu('pause')
+                g.pending_jump=g.pending_drop=g.pending_fire=True
+                keys=Keys() if key is None else Keys(key)
+                with patch('main.pg.key.get_pressed',return_value=keys),\
+                     patch.object(g,'resume_from_menu',wraps=g.resume_from_menu) as resume,\
+                     patch.object(g,'update',wraps=g.update) as update:
+                    self.run_events([pg.event.Event(pg.KEYDOWN,key=pg.K_ESCAPE)],pad=pad)
+                    resume.assert_called_once_with()
+                    self.assertEqual(g.state,'play');self.assertTrue(g.menu_gameplay_blocked)
+                    self.assertFalse(g.pending_jump or g.pending_drop or g.pending_fire)
+                    if not air:self.assertEqual((g.hero.x,g.hero.y),(160,620))
+                    # Force a physics step while the controls remain held.
+                    g.acc=2/120;self.run_events(pad=pad)
+                    self.assertTrue(update.called)
+                    self.assertFalse(g.hero.floating)
+                    for call in update.call_args_list:
+                        self.assertEqual(call.args[1:6],(0,False,False,False,False))
+                with patch('main.pg.key.get_pressed',return_value=Keys()):
+                    self.run_events()
+                self.assertFalse(g.menu_gameplay_blocked)
+                with patch('main.pg.key.get_pressed',return_value=Keys(pg.K_RIGHT)):
+                    g.acc=2/120;self.run_events()
+                self.assertGreater(g.hero.x,160)
+
     def test_mouse_selects_configuration_and_quit_closes_the_loop(self):
         g=self.g
         for index,expected in ((1,'settings'),(3,'title')):

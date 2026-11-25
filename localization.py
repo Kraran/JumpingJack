@@ -172,12 +172,13 @@ def translate(text,language='fr'):
     if match:return f'{c["slot"]} {match[1]} · {s["overwrite_title"]}'
     match=re.fullmatch(r'Partie sauvegardée dans l’emplacement (\d+)\.',text)
     if match:return f'{c["saved"]} · {c["slot"]} {match[1]}'
-    match=re.fullmatch(r'(\d+) / (\d+) éclats solaires   ·   (\d+:\d+)   ·   (\d+) morts',text)
+    match=re.fullmatch(r'(\d+)(?: / (\d+))? éclats solaires   ·   (\d+:\d+)   ·   (\d+) morts',text)
     if match:
         shards,total,duration,deaths=match.groups()
         death_label={'en':'Deaths','de':'Tode','es':'Muertes','it':'Morti','pt':'Mortes','nl':'Doden',
                      'pl':'Śmierci','cs':'Úmrtí','ro':'Decese','hu':'Halálok','tr':'Ölümler',
                      'sv':'Dödsfall','da':'Dødsfald','nb':'Dødsfall','fi':'Kuolemat','is':'Dauðsföll',
                      'ru':'Смерти','bg':'Смърти','sr':'Смрти'}[language]
-        return f'{c["shards"]} {shards} / {total}   ·   {c["time"]} {duration}   ·   {death_label} {deaths}'
+        count=f'{shards} / {total}' if total else shards
+        return f'{c["shards"]} {count}   ·   {c["time"]} {duration}   ·   {death_label} {deaths}'
     return text

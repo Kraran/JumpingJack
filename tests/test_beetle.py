@@ -170,10 +170,10 @@ class BeetleGameTests(unittest.TestCase):
         for _ in range(100):self.g.update(STEP,0,False,False)
         self.assertFalse(self.g.beetle_deaths)
 
-    def test_death_preserves_kills_and_fragments_restart_restores_robots(self):
+    def test_death_preserves_kills_clears_fragments_and_restart_restores_robots(self):
         self.g.dead_beetles.add(0);self.g.beetle_deaths.append(BeetleDeath(1920,495,-1))
         self.g.hero.y=900;self.g.update(STEP,0,False,False)
-        self.assertEqual(len(self.g.beetles()),5);self.assertTrue(self.g.beetle_deaths)
+        self.assertEqual(len(self.g.beetles()),5);self.assertFalse(self.g.beetle_deaths)
         self.g.dead_beetles.add(1);self.g.reset()
         self.assertEqual(len(self.g.beetle_motions),6);self.assertEqual(len(self.g.beetles()),6)
 

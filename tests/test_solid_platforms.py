@@ -7,6 +7,27 @@ from main import Hero,Platform,Game,STEP
 
 
 class SolidPlatformTests(unittest.TestCase):
+    def test_fall_lands_on_highest_crossed_surface_without_reordering_platforms(self):
+        from itertools import permutations
+        platforms=[Platform(0,y,500,32) for y in (180,240,300)]
+        for order in permutations(platforms):
+            supports=list(order);before=supports.copy()
+            hero=Hero(100,150);hero.vy=950
+            hero.update(.2,0,False,False,supports)
+            self.assertEqual(hero.y,180);self.assertTrue(hero.grounded)
+            self.assertEqual(supports,before)
+
+    def test_shattered_vase_no_longer_takes_priority_over_the_floor(self):
+        from vase import Vase
+        floor=Platform(0,620,500,140,True)
+        vase=Vase(0,((100,620),))
+        for broken,expected in ((False,556),(True,620)):
+            if broken:vase.shatter()
+            supports=[floor]+[v for v in [vase] if not v.broken]
+            hero=Hero(100,500);hero.vy=950
+            hero.update(.2,0,False,False,supports)
+            self.assertEqual(hero.y,expected);self.assertTrue(hero.grounded)
+
     def test_sides_stop_hero_from_both_directions_even_with_large_step(self):
         wall=Platform(200,300,120,32)
         for direction in (-1,1):
