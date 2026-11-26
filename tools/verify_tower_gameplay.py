@@ -13,6 +13,7 @@ def replay():
     g=Game(True);frames=shots=0;landings=[]
     try:
         g.start_level(4);g.state='play';g.sound_on=False;g.invuln=0
+        initial_energy=g.energy.value
         route=tower.route_platforms(g.platforms)
         def step(axis,jump=False):
             nonlocal frames,shots
@@ -21,6 +22,7 @@ def replay():
                     h.y+(-790 if jump else h.vy)*lead+.5*1550*lead**2-54)
             candidates=[(m.x+m.vx*lead,m.y+m.vy*lead) for m in g.beetle_motions if m.index not in g.dead_beetles]
             candidates += [(e.x,e.y-22) for e in g.scorpions if e.alive]
+            candidates += [(e.x+e.vx*lead,e.y+e.vy*lead) for e in g.gyrospheres if e.alive]
             candidates=[(x,y) for x,y in candidates if abs(x-h.x)<650 and abs(y-future)<32]
             fire=bool(candidates and g.energy.value>=RAY_COST and not g.solar.active and g.solar.cooldown<=0)
             if fire:
@@ -32,7 +34,8 @@ def replay():
             frames+=1
             if g.deaths:
                 nearest=sorted([(m.index,round(m.x-h.x,1),round(m.y-(h.y-h.body_height/2),1)) for m in motions],key=lambda p:abs(p[1])+abs(p[2]))[:2]
-                raise AssertionError(f'Death on ascent {len(landings)}, frame {frames}, at {before}; spike={h.spike_hit}; fire={g.temple_art.flame_hits(h,g.elapsed,tower.TORCHES)}; enemies={nearest}; ray={ray}')
+                gyros=[(e.index,round(e.x-h.x,1),round(e.y-h.y+27,1),e.state) for e in g.gyrospheres if e.alive]
+                raise AssertionError(f'Death on ascent {len(landings)}, frame {frames}, at {before}; spike={h.spike_hit}; fire={g.temple_art.flame_hits(h,g.elapsed,tower.TORCHES)}; enemies={nearest}; gyros={gyros}; ray={ray}')
         for number,target in enumerate(route):
             source=tower.START[0] if number==0 else route[number-1].x+route[number-1].w/2
             support=g.platforms[0] if number==0 else route[number-1]
@@ -58,8 +61,10 @@ def replay():
             else:raise AssertionError(f'Missed platform {number}, hero={g.hero.x,g.hero.y}')
         assert g.state=='win'
         return {'state':g.state,'deaths':g.deaths,'lives':g.lives,'frames':frames,'shots':shots,
-                'crystals':len(g.taken),'energy':g.energy.value,'checkpoint':g.check_index,
+                'crystals':len(g.taken),'initial_energy':initial_energy,'energy':g.energy.value,'checkpoint':g.check_index,
                 'scorpions_killed':sum(not e.alive for e in g.scorpions),'scarabs_killed':len(g.dead_beetles),
+                'gyrospheres_killed':sum(not e.alive for e in g.gyrospheres),
+                'gyrospheres_total':len(g.gyrospheres),
                 'protection_disabled':True,'enemies_active':True,'glide_used':False,
                 'landings':landings}
     finally:g.close()

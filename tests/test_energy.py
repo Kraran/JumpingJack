@@ -3,28 +3,28 @@ os.environ['SDL_VIDEODRIVER']='dummy'
 os.environ['SDL_AUDIODRIVER']='dummy'
 import unittest
 from unittest.mock import patch,MagicMock
-from energy import SolarEnergy,MAX_ENERGY,GLIDE_PER_SECOND,RAY_COST,SHARD_ENERGY
+from energy import SolarEnergy,MAX_ENERGY,INITIAL_ENERGY,GLIDE_PER_SECOND,RAY_COST,SHARD_ENERGY
 from solar import SolarRay
 from main import Game,Hero,STEP
 
 
 class EnergyBudgetTests(unittest.TestCase):
-    def test_starts_full_and_glide_is_time_based(self):
+    def test_starts_at_sixty_and_glide_is_time_based(self):
         for hz in (60,120,144):
             energy=SolarEnergy()
-            self.assertEqual(energy.value,MAX_ENERGY)
+            self.assertEqual(energy.value,INITIAL_ENERGY)
             for _ in range(hz*3):energy.drain_glide(1/hz)
-            self.assertAlmostEqual(energy.value,MAX_ENERGY-3*GLIDE_PER_SECOND)
+            self.assertAlmostEqual(energy.value,INITIAL_ENERGY-3*GLIDE_PER_SECOND)
 
     def test_ray_debits_once_and_rejected_or_cooldown_inputs_are_free(self):
         energy=SolarEnergy();hero=Hero();ray=SolarRay()
         ray.update(STEP,hero,True,energy)
-        self.assertEqual(energy.value,MAX_ENERGY-RAY_COST)
+        self.assertEqual(energy.value,INITIAL_ENERGY-RAY_COST)
         for _ in range(60):ray.update(STEP,hero,True,energy)
-        self.assertEqual(energy.value,MAX_ENERGY-RAY_COST)
+        self.assertEqual(energy.value,INITIAL_ENERGY-RAY_COST)
         ray.reset();hero.floating=True
         ray.update(STEP,hero,True,energy)
-        self.assertEqual(energy.value,MAX_ENERGY-RAY_COST)
+        self.assertEqual(energy.value,INITIAL_ENERGY-RAY_COST)
 
     def test_insufficient_energy_plays_gesture_without_beam_or_sound(self):
         for budget in (0,RAY_COST-.01):
@@ -74,10 +74,10 @@ class EnergyBudgetTests(unittest.TestCase):
 
     def test_ray_display_moves_rapidly_but_never_jumps_or_overshoots(self):
         energy=SolarEnergy();energy.spend_ray()
-        self.assertEqual(energy.display,MAX_ENERGY)
+        self.assertEqual(energy.display,INITIAL_ENERGY)
         seen=[]
         for _ in range(12):energy.update_display(STEP);seen.append(energy.display)
-        self.assertTrue(all(energy.value<=v<MAX_ENERGY for v in seen))
+        self.assertTrue(all(energy.value<=v<INITIAL_ENERGY for v in seen))
         self.assertEqual(seen,sorted(seen,reverse=True))
         self.assertLess(energy.display-energy.value,1)
         self.assertGreater(energy.fraction(0),energy.fraction(1))
@@ -96,7 +96,7 @@ class EnergyGameTests(unittest.TestCase):
     def setUpClass(cls):cls.g=Game(True)
     @classmethod
     def tearDownClass(cls):cls.g.close()
-    def setUp(self):self.g.reset();self.g.state='play';self.g.invuln=10
+    def setUp(self):self.g.new_game();self.g.state='play';self.g.invuln=10
 
     def test_collection_recharges_once_and_same_step_can_pay_for_ray(self):
         x,y=self.g.gems[0];self.g.hero=Hero(x,y+28)
@@ -130,7 +130,7 @@ class EnergyGameTests(unittest.TestCase):
         self.g.update(STEP,0,False,False,fire=True)
         for _ in range(100):self.g.update(STEP,0,False,False)
         self.assertFalse(self.g.solar.active)
-        self.assertEqual(self.g.energy.value,MAX_ENERGY)
+        self.assertEqual(self.g.energy.value,INITIAL_ENERGY)
 
     def test_no_passive_regeneration(self):
         self.g.hero=Hero(100,620);self.g.hero.grounded=True
@@ -151,14 +151,34 @@ class EnergyGameTests(unittest.TestCase):
                 self.assertNotIn(unittest.mock.call('solar'),sound.call_args_list)
             self.assertEqual(self.g.energy.value,0)
 
-    def test_death_refills_and_restart_starts_with_full_gauge(self):
+    def test_resurrection_and_level_restart_restore_sixty_energy(self):
+        from support import finish_respawn
         self.g.energy.value=self.g.energy.display=10
         self.g.hero.y=900;self.g.update(STEP,0,False,False)
-        self.assertEqual(self.g.energy.value,MAX_ENERGY)
-        self.assertTrue(10<self.g.energy.display<MAX_ENERGY)
+        finish_respawn(self.g)
+        self.assertEqual(self.g.energy.value,INITIAL_ENERGY)
+        self.assertTrue(10<self.g.energy.display<INITIAL_ENERGY)
         self.g.energy.value=0;self.g.reset()
-        self.assertEqual(self.g.energy.value,MAX_ENERGY)
-        self.assertEqual(self.g.energy.display,MAX_ENERGY)
+        self.assertEqual(self.g.energy.value,INITIAL_ENERGY)
+        self.assertEqual(self.g.energy.display,INITIAL_ENERGY)
+
+    def test_new_game_starts_at_sixty_but_crystals_can_fill_to_one_hundred(self):
+        g=self.g;g.energy.value=100.;g.new_game()
+        self.assertEqual((g.energy.value,g.energy.display,g.energy.previous_display),(60.,60.,60.))
+        for _ in range(10):g.energy.collect()
+        self.assertEqual(g.energy.value,100.)
+
+    def test_campaign_transitions_keep_the_exact_energy_and_smoothed_display(self):
+        g=self.g
+        for level in (1,2,3):
+            for value in (0.,17.5,60.,100.):
+                with self.subTest(level=level,energy=value):
+                    g.new_game();g.start_level(level)
+                    g.energy.value=value;g.energy.display=72.;g.energy.previous_display=74.
+                    g.energy.fast_timer=.1;g.energy.warning=.2
+                    before=vars(g.energy).copy();g.state='win';g.continue_or_restart()
+                    self.assertEqual(g.level_id,level+1)
+                    self.assertEqual(vars(g.energy),before)
 
     def test_pause_freezes_energy_and_display(self):
         self.g.energy.spend_ray();self.g.energy.update_display(STEP)

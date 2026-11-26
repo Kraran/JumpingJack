@@ -49,7 +49,7 @@ class MedallionGameTests(unittest.TestCase):
         self.assertIsNotNone(tick)
         self.assertTrue(35<tick<75,tick)
         self.assertEqual(self.g.medallions.count,1)
-        self.assertEqual(self.g.energy.value,100)
+        self.assertEqual(self.g.energy.value,60)
         self.assertEqual(len(self.g.gems),52)
 
     def test_medallion_and_inventory_survive_death_and_level_restart(self):

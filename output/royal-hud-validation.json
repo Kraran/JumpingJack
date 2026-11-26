@@ -1,0 +1,26 @@
+{
+  "gpu": true,
+  "new_repeated_frame_uploads": 0,
+  "cases": [
+    {
+      "level": 1,
+      "language": "fr",
+      "lives": 3
+    },
+    {
+      "level": 2,
+      "language": "de",
+      "lives": 3
+    },
+    {
+      "level": 3,
+      "language": "ru",
+      "lives": 6
+    },
+    {
+      "level": 4,
+      "language": "fr",
+      "lives": 3
+    }
+  ]
+}

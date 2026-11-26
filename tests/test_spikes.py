@@ -81,6 +81,7 @@ class SpikeGameTests(unittest.TestCase):
     def setUp(self):self.g.new_game();self.g.state='play'
 
     def test_upward_hit_kills_even_during_grace_and_respawns_at_checkpoint(self):
+        from support import finish_respawn
         g=self.g;g.reset();g.state='play';g.invuln=100;g.checkpoint=(4740,620)
         g.platforms=[Platform(200,300,120,32,spiked=True)]
         g.hero=Hero(212,420);g.hero.vy=-600
@@ -88,8 +89,9 @@ class SpikeGameTests(unittest.TestCase):
             for _ in range(10):
                 g.update(STEP,0,False,False)
                 if g.deaths:break
-            rumble.assert_called_once_with('death')
+            rumble.assert_called_once_with('death',duration=1200)
             self.assertNotIn(call('bong'),sound.call_args_list)
+        finish_respawn(g)
         self.assertEqual(g.deaths,1);self.assertEqual((g.hero.x,g.hero.y),g.checkpoint)
         self.assertFalse(g.hero.spike_hit)
 
@@ -113,6 +115,6 @@ class SpikeGameTests(unittest.TestCase):
                     g.update(STEP,0,False,False)
                     if g.deaths:break
                 self.assertEqual(g.deaths,1)
-                raw.rumble.assert_called_once_with(*RUMBLE_EFFECTS['death'])
+                raw.rumble.assert_called_once_with(*RUMBLE_EFFECTS['death'][:2],1200)
                 self.assertEqual(RUMBLE_EFFECTS['death'],(1.,1.,400))
         finally:g.gamepads.devices=original_devices

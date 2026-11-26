@@ -119,7 +119,7 @@ Le corps métallique et les deux textures de l’obélisque sont préchargés su
 
 ## Deuxième niveau — Le désert
 
-Le bilan du premier niveau propose **Entrée, Start ou A pour continuer** vers le niveau 02. Les vies et les médaillons sont conservés ; la réserve solaire repart pleine. Le niveau mesure **14 400 unités**, soit **50 % de plus** que le premier. Pour le tester directement, taper **LV02** dans le **menu de démarrage**, sans appuyer sur Entrée : le niveau 2 commence immédiatement avec trois vies et zéro médaillon. Les majuscules, minuscules et chiffres du pavé numérique sont acceptés ; les modificateurs Maj/Caps Lock n’interrompent pas le code. La saisie est limitée à l’accueil, avec huit secondes maximum entre caractères. Le menu conserve son aspect et ses actions habituelles. La commande `python main.py --level 2 --play` reste disponible (ajouter `--windowed` pour une fenêtre).
+Le bilan du premier niveau propose **Entrée, Start ou A pour continuer** vers le niveau 02. Les vies et les médaillons sont conservés ; la réserve solaire conserve sa valeur au passage de niveau. Le niveau mesure **14 400 unités**, soit **50 % de plus** que le premier. Pour le tester directement, taper **LV02** dans le **menu de démarrage**, sans appuyer sur Entrée : le niveau 2 commence immédiatement avec trois vies et zéro médaillon. Les majuscules, minuscules et chiffres du pavé numérique sont acceptés ; les modificateurs Maj/Caps Lock n’interrompent pas le code. La saisie est limitée à l’accueil, avec huit secondes maximum entre caractères. Le menu conserve son aspect et ses actions habituelles. La commande `python main.py --level 2 --play` reste disponible (ajouter `--windowed` pour une fenêtre).
 
 La première zone longe le **Nil**, entre x = 700 et 3 140. **Cinq passerelles de bois** forment le chemin au-dessus de l’eau, avec des joncs et des crocodiles sur les rives et une passerelle. Toucher l’eau est mortel, même en planant ou pendant la protection de réapparition. Les deux berges descendent progressivement jusqu’au niveau du Nil. Une bande de sable humide et un talus immergé se fondent sous l’eau, accompagnés de remous discrets préchargés en 48 poses par rive. Le sable du bord reste praticable ; le danger correspond toujours à l’eau de la rivière. Un saut normal ou un vol plané depuis la rive ne suffit pas à atteindre l’autre bord sans utiliser les passerelles. Scarabées et vautours occupent également cette zone.
 
@@ -161,15 +161,19 @@ L’escalier du sanctuaire conduit à l’ascension finale de l’Égypte. Le ni
 
 La caméra conserve la **simulation à 120 Hz, l’interpolation commune des positions et la présentation synchronisée au rafraîchissement**. Le plan de jeu reçoit un décalage unique arrondi en pixels Full HD. Les textures et les compteurs sont préparés au démarrage afin d’éviter les chargements pendant l’ascension.
 
-La tour contient **deux obélisques de reprise**, **96 cristaux** répartis aléatoirement à raison de **0, 1 ou 2 par plateforme**, **onze scarabées**, **trois scorpions robots**, **neuf vases**, **sept flambeaux mortels** et un médaillon de Rê près du haut. **Quinze plateformes secondaires portent des lames.** Les plateformes conservent leurs collisions solides et la descente Bas + saut. Les sauvegardes gardent l’altitude, la caméra verticale, les reprises, les vases cassés et les ennemis éliminés. Les anciennes sauvegardes de la tour sont replacées sur un support du nouveau parcours à leur altitude. Atteindre le palier sommital termine le niveau.
+La tour contient **deux obélisques de reprise**, **96 cristaux** répartis aléatoirement à raison de **0, 1 ou 2 par plateforme**, **onze scarabées**, **trois scorpions robots**, **six Gyrosphères**, **neuf vases**, **sept flambeaux mortels** et un médaillon de Rê près du haut. **Quinze plateformes secondaires portent des lames.** Les plateformes conservent leurs collisions solides et la descente Bas + saut. Les sauvegardes gardent l’altitude, la caméra verticale, les reprises, les vases cassés et les ennemis éliminés. Les anciennes sauvegardes de la tour sont replacées sur un support du nouveau parcours à leur altitude. Atteindre le palier sommital termine le niveau.
+
+Une **Gyrosphère** se trouve vers les trois quarts du niveau 02 (x = 10 800). Deux occupent des passages moins peuplés du temple, vers x = 5 050 et 9 470. Les **six Gyrosphères** de la tour sont réparties sur l’ascension ; les trois positions initiales sont conservées. Ces petits robots chromés de 44 pixels natifs poursuivent le héros à 120 unités/s dès qu’ils partagent son écran, quelle que soit leur orientation. Ils contournent les plateformes, ralentissent puis s’immobilisent lorsque le défilement les sort de l’écran, et reprennent la poursuite s’ils redeviennent visibles. La rotation suit la distance et le sens de déplacement, avec 120 poses préchargées dans un atlas. Le contact provoque l’électrocution classique de 1,2 s, avec vibration jusqu’à la résurrection ou au Game Over. Le rayon solaire les détruit avec une explosion et rapporte 200 points ; ils restent détruits entre les vies. Les anciennes sauvegardes ajoutent les nouveaux robots en conservant les Gyrosphères déjà détruites et l’état des autres ennemis. [Dessin et prompts](assets/GYROSPHERE-PREVIEW-PROMPTS.md) · [Vérification GPU](output/gyrosphere-game-validation.json), régénérable avec `python preview_gyrosphere_game.py`.
 
 **LV04** à taper dans le menu, ou `python main.py --level 4 --play --windowed`, permet de commencer directement dans la tour. [Décor et prompt imagegen](assets/TOWER-LEVEL-PROMPT.md) · [Démonstration de l’ascension](output/tower-level-demo.mp4) · [Point de reprise en hauteur](output/tower-checkpoint.png).
 
-`python tools/verify_tower.py` atteint les **96 paliers principaux avec les vrais sauts, sans planage ni téléportation**. `python tools/verify_tower_gameplay.py` vérifie aussi une traversée complète avec ennemis et dangers actifs, énergie finie et sans protection : victoire sans mort, 81 cristaux ramassés et 14 tirs. `python preview_tower.py --native-check` régénère la vidéo et les mesures GPU. La vidéo montre des passages sélectionnés avec protection contre les ennemis ; la preuve des combats figure dans `output/tower-gameplay-validation.json`.
+`python tools/verify_tower.py` atteint les **96 paliers principaux avec les vrais sauts, sans planage ni téléportation**. `python tools/verify_tower_gameplay.py` vérifie aussi une traversée complète avec ennemis et dangers actifs, énergie finie et sans protection : victoire sans mort avec les six Gyrosphères actives, 81 cristaux ramassés et 20 tirs, dont quatre Gyrosphères détruites. `python preview_tower.py --native-check` régénère la vidéo et les mesures GPU. La vidéo montre des passages sélectionnés avec protection contre les ennemis ; la preuve des combats figure dans `output/tower-gameplay-validation.json`.
 
 ## Vies et Game Over
 
 Une nouvelle partie commence avec **trois vies**, représentées en haut à gauche par le **faucon doré de la poitrine du héros**, extrait du sprite frontal. Chaque mort par ennemi, chute ou pics retire exactement une vie et conserve la vibration de mort. Tant qu’il reste une vie, le héros reprend au point de réapparition habituel avec sa protection temporaire.
+
+Avant chaque reprise, le **symbole de la vie consommée quitte son emplacement dans le HUD**, rejoint le centre de l’écran et devient géant. Un halo doré accompagne le zoom, puis un flash lumineux masque le retour au point de reprise : le héros apparaît au pic du flash, à **0,94 seconde**, et la lumière se dissipe. La séquence dure **1,28 seconde**. Après une mort par crocodile, elle attend la fin de la dévoration ; à zéro vie, seul le Game Over se déclenche. Les commandes et les collisions restent suspendues pendant la transition, puis attendent le relâchement des touches maintenues. La pause et les sauvegardes conservent la phase de la résurrection. Le zoom utilise une version haute définition fidèle au faucon du HUD et la mise à l’échelle du GPU, sans nouvelle texture pendant le clip. [Vidéo en jeu](output/hero-resurrection-demo.mp4) · [Emblème et prompt imagegen](assets/RESURRECTION-PROMPT.md). Régénérer avec `python preview_resurrection.py --native-check`.
 
 À zéro vie — donc à la **troisième mort sans bonus** — le monde se fige et un grand **GAME OVER** apparaît sur le décor assombri. La dernière mort déclenche une vibration d’une seconde et un motif sonore descendant de 1,29 seconde, une seule fois, en respectant les options de son et de vibrations. Le bilan affiche le niveau atteint, les éclats ramassés, le temps joué et les morts cumulés sur toute la partie. Ces totaux survivent aux changements de niveau, aux redémarrages du niveau et aux sauvegardes. Les anciennes sauvegardes restent compatibles ; leurs niveaux précédemment terminés n’ayant pas de totaux enregistrés, seuls les compteurs disponibles à la reprise peuvent être comptés.
 
@@ -185,18 +189,25 @@ Le HUD affiche la progression sur **trois médaillons**. Le troisième accorde i
 
 Le ramassage joue une courte mélodie ascendante de quatre notes, qui respecte le réglage du son. [Dessin et prompt](assets/RA-MEDALLION-PROMPT.md) · [Animation avec mélodie](output/ra-medallion-demo.mp4), régénérable avec `python preview_medallion.py --native-check` pour le GPU. Les tests vérifient l’accessibilité avec la physique réelle, le plafond, la conservation, l’unicité du ramassage, le HUD et le son.
 
+## HUD — Bandeau royal
+
+Le HUD est transparent et épuré : vies et score à gauche, titre, jauge et niveau centrés sur l’écran, éclats et médaillons à droite. Les ornements latéraux, les séparateurs et les libellés permanents « Énergie solaire » et « Échap / Start » sont supprimés. Le score se centre selon sa longueur. Les textes, les alertes et la progression de la tour ont un contour sombre et une ombre locale, préparés au chargement. Six emplacements accueillent les symboles de vie ; la résurrection part de leur emplacement. Les traductions gardent des marges et des largeurs limitées par zone. Les avertissements d’énergie apparaissent dans le réservoir. Le placement est vérifié dans les vingt langues et les quatre niveaux, y compris avec de grandes valeurs de compteurs. [Aperçu](output/royal-hud-level1-fr.png) · [Exemple cyrillique](output/royal-hud-level3-ru.png) · [Historique graphique](assets/HUD-ROYAL-BANNER-PROMPT.md). Régénérer : `python preview_royal_hud.py`.
+
 ## Jauge solaire
+
+Le design **Ailes d’Horus** associe une tête de faucon et des plumes dorées à un réservoir de plasma animé. Les 96 poses, dans leurs variantes dorée et orangée, sont regroupées en deux atlas GPU préchargés ; la fenêtre s’assombrit quand l’énergie est épuisée. L’animation respecte la pause et la baisse fluide existante. [Vidéo](output/solar-gauge-horus-demo.mp4) · [Asset et prompt imagegen](assets/SOLAR-GAUGE-HORUS-PROMPT.md). Régénérer : `python preview_solar_gauge.py`.
 
 Les 52 objets à ramasser utilisent le dessin **« Cristal solaire »** : ambre facettée, lumière intérieure, halo et braises discrètes. Les 48 poses sur 1,6 seconde sont préparées dans un atlas GPU unique avant la partie. Chaque cristal flotte et pulse avec une phase différente ; la pause fige l’animation. Le HUD utilise le même cristal. [Sprite et prompt](assets/SOLAR-CRYSTAL-PROMPT.md) · [Aperçu animé et recharge](output/solar-crystal-demo.mp4), régénérable avec `python preview_crystal.py` (`--native-check` pour le GPU).
 
-Le héros démarre avec **100 points d’énergie solaire**, affichés dans la barre dorée en haut de l’écran. Chaque éclat ramassé recharge **10 points**, sans dépasser 100. Il n’y a pas de recharge passive.
+Le héros démarre avec **60 points d’énergie solaire**, affichés dans la barre dorée en haut de l’écran. Chaque éclat ramassé recharge **10 points**, sans dépasser 100. Il n’y a pas de recharge passive. Le passage au niveau suivant conserve exactement l’énergie restante et l’état d’animation de la barre, y compris lorsque la réserve est vide.
 
 | Action | Énergie |
 | --- | --- |
 | Vol plané | −4 points par seconde, uniquement pendant le vol plané |
 | Rayon solaire, F, RT ou B | −30 points au début du geste |
 | Éclat ramassé | +10 points |
-| Réapparition ou nouveau départ | Réserve pleine |
+| Résurrection ou nouveau départ | Réserve remise à 60 points |
+| Passage au niveau suivant | Énergie restante conservée |
 
 Le coût du rayon est prélevé une seule fois, dès le début de sa préparation. Un tir refusé ou un appui pendant le délai entre deux tirs ne consomme rien. En dessous de 30 points, le héros effectue le geste complet de tir, au sol comme en l’air, mais aucun rayon ni lueur ne sort de ses mains et aucun ennemi ne subit de dégâts. Cet essai à vide ne consomme rien, conserve le délai habituel entre deux tirs et affiche « ÉNERGIE INSUFFISANTE ». Ramasser un éclat pendant ce geste ne déclenche pas de tir automatique : il faut un nouvel appui. À zéro, le vol plané s’arrête et la chute normale reprend. Le saut, la course et le freinage aérien restent gratuits.
 
@@ -279,11 +290,42 @@ Le rayon et ses impacts sont calculés à 120 Hz ; le rendu se cale sur la posit
 
 Les six ennemis volants adoptent la **proposition 2** : titane argenté, mécanique sombre, visière et réacteur cyan. Leur vol possède 16 poses d’ailes et de pattes, un demi-tour en huit poses passant par une vue de face, ainsi qu’une légère inclinaison selon la montée ou la descente. Chaque ennemi utilise une phase d’ailes différente.
 
+Un contact mortel déclenche une **électrocution du héros pendant 1,2 seconde** : éclair cyan relié au scarabée, corps crispé, deux révélations du squelette doré puis effondrement. En plein vol, le héros retombe avec les collisions du sol et des plateformes. La vibration couvre toute la séquence, la pause la suspend et les sauvegardes conservent sa phase. Les 16 poses dessinées deviennent **64 images par sens**, accompagnées d’un atlas d’éclairs orientés ; tout est préparé au chargement. Une seule vie est retirée et le scarabée reste vivant. La résurrection suit la mort, ou le Game Over si c’était la dernière vie ; le corps reste alors dans sa pose finale derrière le bilan. [Vidéo en jeu](output/hero-beetle-death-demo.mp4) · [Asset et prompt imagegen](assets/HERO-BEETLE-DEATH-PROMPT.md). Reproduire avec `python preview_beetle_death.py --native-check`.
+
 En patrouille, leurs trajectoires restent sinusoïdales. Ils détectent le héros à 460 unités dans un cône avant d’environ 112°, uniquement hors demi-tour et si aucune plateforme ne masque la vue. Un héros derrière eux ne déclenche pas de poursuite. Dès la détection, ils accélèrent vers lui à une vitesse maximale de 300 unités/s et peuvent ensuite le suivre même s’il passe derrière eux. La poursuite n’a aucune limite de temps : ils abandonnent uniquement lorsque le héros s’éloigne à plus de 720 unités, puis regagnent progressivement leur patrouille. La protection de réapparition interrompt également une poursuite. Un délai de 1,5 seconde évite une reprise immédiate de la poursuite. Pendant la poursuite et le retour, ils glissent le long des obstacles au lieu de traverser la pierre. La protection de réapparition empêche la poursuite. Le contact demeure mortel. Le rayon solaire les neutralise immédiatement : la carapace se disloque en huit poses, avec éclat du réacteur, fragments métalliques et étincelles cyan. Une explosion en seize images ajoute des flammes orangées, puis un peu de fumée et des braises. La dislocation conserve sa durée de 0,34 seconde ; la fumée se dissipe sur une durée totale de 0,60 seconde. Les fragments, flammes et fumées sont purement visuels. Le vol, les demi-tours et la destruction suivent l’horloge de simulation et se figent en pause ; les positions sont interpolées pour le rendu.
 
 Les miroirs, les inclinaisons et les poses sont préparés au chargement dans **un seul atlas GPU partagé**. Le jeu ne calcule aucune rotation et ne charge aucun sprite pendant le vol. Les collisions et la neutralisation par le rayon restent celles des ennemis existants. [Dessins et prompts](assets/ROBOT-BEETLE-PROMPTS.md). [Aperçu animé](output/robot-beetle-demo.mp4), régénérable avec `python preview_robot_beetle.py`. [Explosion à vitesse normale et au ralenti](output/beetle-explosion-demo.mp4), régénérable avec `python preview_beetle_explosion.py`.
 
+## Panneau vers le désert
+
+À la fin du niveau 01, un [panneau de bois ancien](assets/desert-direction-sign-v1.png) pointe vers la droite, en direction du désert, avec l’inscription **𓂧 𓈙 𓂋 𓏏 𓅟 𓈉**. Le décor transparent est préchargé sur le GPU et ne gêne pas le passage du héros. [Prompt et provenance](assets/DESERT-DIRECTION-SIGN-PROMPT.md).
+
+## Score de la partie
+
+En fin de niveau, les symboles des vies restantes rejoignent le score un par un. Le compteur du bilan et le score du HUD augmentent progressivement de **100 points par vie**. L’animation dépend du temps réel et dure au maximum 3,5 secondes, même avec beaucoup de vies. Elle ne consomme aucune vie réelle ; continuer immédiatement conserve le bonus complet. [Aperçu animé](output/level-life-bonus-demo.mp4), régénérable avec `python preview_level_bonus.py`.
+
+Le score total apparaît dans le HUD, le bilan de chaque niveau et le Game Over. Le bilan sépare clairement « Score total » et « Points du niveau » sur deux lignes, bonus compris. Les points restent acquis après une mort, un changement de niveau ou un redémarrage manuel du niveau ; une nouvelle partie les remet à zéro. Le score est conservé dans les cinq cases de sauvegarde. Les anciennes sauvegardes démarrent à zéro, sans estimation rétroactive.
+
+| Action | Points |
+| --- | ---: |
+| Éclat solaire | 10 |
+| Fragment de Rê | 500 |
+| Scarabée détruit | 100 |
+| Vautour détruit | 200 |
+| Crocodile détruit | 100 |
+| Scorpion détruit | 300 |
+| Gyrosphère détruite | 200 |
+| Vase brisé | 10 |
+| Niveau 01 terminé | 1 000 + 100 par vie restante |
+| Niveau 02 terminé | 2 000 + 100 par vie restante |
+| Niveau 03 terminé | 3 000 + 100 par vie restante |
+| Niveau 04 terminé | 4 000 + 100 par vie restante |
+
+Chaque collecte, destruction et bonus de fin est compté une seule fois. Le bonus utilise les vies restantes au franchissement de la sortie, y compris les vies supplémentaires. Les chiffres du HUD sont préchargés : un changement de score ne crée aucune nouvelle texture de texte pendant le jeu. Aperçus : [HUD](output/score-hud.png), [victoire](output/score-victory.png), [Game Over](output/score-game-over.png), régénérables avec `python preview_score.py`.
+
 ## Gardien solaire — vautour fauve robotique
+
+Une mort au contact du vautour utilise la même électrocution de **1,2 seconde** que le scarabée : arcs depuis le robot, chute du héros s’il est en l’air, vibration continue, puis résurrection ou Game Over. La séquence respecte la pause et les sauvegardes.
 
 Trois vautours de la **proposition 3** survolent uniquement la seconde moitié du niveau, autour de x = 5 950, 7 520 et 9 000 : titane argenté, ornements égyptiens dorés, collerette mécanique blanche et réacteur cyan.
 
@@ -295,9 +337,38 @@ Le contact avec le corps est mortel, avec une détection continue même pendant 
 
 [Dessins et prompts](assets/SOLAR-GUARDIAN-PROMPTS.md) · [Aperçu animé](output/solar-guardian-demo.mp4), régénérable avec `python preview_vulture.py` (`--native-check` pour le rendu GPU).
 
+## Mort par chute dans un trou
+
+Chaque trou possède un dégradé de profondeur : le bord laisse voir le décor éclairé, puis la lumière diminue progressivement jusqu’au noir au fond. Le noir est atteint à 95 unités sous le bord au niveau 01, 85 au niveau 02 et 75 au niveau 03. Les trous du temple sont remplis par une maçonnerie dédiée, issue de la texture de pierre du premier plan : blocs plus petits, joints décalés et parois latérales convergentes suggèrent un puits en retrait. Cette paroi opaque masque entièrement le décor de la salle, puis le dégradé assombrit ensemble les pierres et le héros. La rivière conserve son rendu aquatique. Les masques sont préchargés et suivent les mêmes coordonnées interpolées que le décor. Aperçus : `python preview_pit_lighting.py`.
+
+La chute dans un trou déclenche une séquence rapide de **0,75 seconde** : fondu de 0,10 s depuis la pose aérienne, puis bras qui s’agitent et cape soulevée pendant la disparition vers le bas. Les 64 images par sens et le retour de boucle sont interpolés et préchargés. Le déclenchement intervient dès que le héros passe irréversiblement sous le bord, avant qu’il quitte l’écran ; la caméra ne plonge pas avec lui. Les commandes sont neutralisées et la manette vibre pendant la séquence. Pause et sauvegardes conservent sa progression ; la résurrection ou le Game Over attend la fin du clip. [Vidéo](output/hero-pit-death-demo.mp4) · [Dessin et prompts](assets/HERO-PIT-DEATH-PROMPTS.md). Régénérer : `python preview_pit_death.py`.
+
+## Mort par noyade
+
+
+La mort dans la rivière du niveau 02 possède une séquence de **2,6 secondes** : chute avec élan amorti, immersion et éclaboussures, surgissement de mâchoires de crocodile, dévoration puis disparition sous l’eau. La chute et la noyade passent derrière les poteaux et le devant des passerelles. Aucun avertissement ne révèle la dangerosité de la rivière. Le héros est découpé au niveau de l’eau pendant l’immersion ; les derniers remous se dissipent avant la résurrection ou le Game Over. Les 64 images par sens et les effets d’eau sont préchargés. Vibrations, pause et sauvegardes conservent la progression ; les crocodiles du niveau ne sont pas modifiés par cet effet local. [Vidéo](output/hero-water-death-demo.mp4) · [Dessin et prompt](assets/HERO-WATER-DEATH-PROMPT.md). Régénérer : `python preview_water_death.py`.
+
+## Mort par les braseros
+
+Le feu des braseros déclenche une séquence de **1,6 seconde minimum** : retrait au contact, protection du visage, embrasement du costume et de la cape, chute sans planage, effondrement puis extinction. Le costume reste noirci et une fumée grise accompagne les dernières braises. L’animation attend l’atterrissage avant l’effondrement ; la résurrection ou le Game Over commence ensuite. La manette vibre de façon irrégulière pendant la brûlure puis plus légèrement pendant l’extinction. Les 64 poses par sens et les nappes de feu sont préchargées sur le GPU. L’embrasement forme une enveloppe continue sur la tête, les membres, le torse et la cape : le feu suit la silhouette dans chaque pose, ses turbulences sont interpolées et son extinction est continue. Pause et sauvegardes conservent la progression. [Vidéo en jeu](output/hero-fire-envelope-v2-death-demo.mp4) · [Asset et prompt imagegen](assets/HERO-FIRE-DEATH-PROMPT.md). Régénérer : `python preview_fire_death.py`.
+
+## Mort par le tir des scorpions
+
+Le contact avec le corps du scorpion provoque la même mort électrique que les scarabées et les vautours robots : décharges depuis la carapace, convulsions puis effondrement en **1,2 seconde**. La manette vibre pendant la séquence ; les commandes sont neutralisées, et la résurrection ou le Game Over attend la fin de l’animation. La pause et les sauvegardes conservent le scorpion responsable de la décharge. Ses projectiles gardent la mort par brûlure décrite ci-dessous.
+
+Les projectiles des scorpions déclenchent une mort spécifique du héros : brûlure incandescente au contact, recul selon la trajectoire du tir, chute inerte puis effondrement avec une petite fumée. Les 64 images par sens et les effets sont préchargés sur le GPU. La durée minimale est de **1,4 seconde** ; une chute aérienne attend l’atterrissage et la fin de l’effondrement avant la résurrection ou le Game Over. La vibration est forte à l’impact, puis plus légère pendant la chute. Pause, reprise et sauvegardes sont prises en charge, y compris si le corps tombe dans un trou. [Vidéo en jeu](output/hero-laser-death-demo.mp4) · [Asset et prompt imagegen](assets/HERO-LASER-DEATH-PROMPT.md). Régénérer : `python preview_laser_death.py`.
+
+## Mort par les lames des plateformes
+
+La mort par les lames des plateformes dispose de sa propre animation de **1,2 seconde** : choc tranchant avec une courte trace de sang, cape soulevée, puis chute inerte et effondrement. Les 16 poses dessinées donnent 64 images préchargées par sens, sans transformation d’image pendant le jeu. Une seule vie est retirée ; la séquence précède la résurrection ou le Game Over. Pause, sauvegardes et vibration pendant toute la séquence sont prises en charge. [Vidéo](output/hero-blade-death-demo.mp4) · [Asset et prompt imagegen](assets/HERO-BLADE-DEATH-PROMPT.md). Régénérer : `python preview_blade_death.py --native-check`.
+
 ## Crocodile du Nil
 
+Pendant la résurrection après dévoration, le crocodile conserve sa dernière pose jusqu’au flash. L’ancienne attaque et son dernier intervalle de déplacement ne sont pas rejoués par l’interpolation. La caméra reste stable et la remise en patrouille a lieu sous le flash. Vérification GPU reproductible : `python preview_crocodile_resurrection.py`.
+
 Premier ennemi terrestre, dessiné d’après l’illustration fournie : longue queue recourbée, écailles cuirassées et silhouette basse. Il dispose de **16 poses de marche, 8 poses d’attaque/récupération, 8 poses de retournement et 24 poses de combustion**, dans les deux directions, préchargées sur le GPU.
+
+Une mort au contact déclenche désormais une **séquence de dévoration de 1,75 seconde** : prise depuis la position réelle du héros, saisie par les mâchoires, soulèvement puis disparition de la cape. Les 16 poses dessinées sont déclinées en **64 images par sens**, préparées dans deux atlas GPU. Une seule vie est retirée au contact ; la réapparition, ou le Game Over pour la dernière vie, attend la fin du clip. La manette vibre pendant toute la séquence si cette option est activée ; la pause arrête la vibration et la reprise relance uniquement la durée restante. Les commandes restent neutralisées pendant l’animation, qui se fige en pause et peut être sauvegardée puis rechargée. Les anciennes sauvegardes restent compatibles. [Vidéo en jeu](output/hero-crocodile-death-demo.mp4) · [Asset et prompts imagegen](assets/HERO-CROCODILE-DEATH-PROMPTS.md). Régénérer l’aperçu avec `python preview_crocodile_death.py --native-check`.
 
 Touché par le rayon solaire, le crocodile s’enflamme, s’affaisse et se réduit progressivement en cendres en **1,2 seconde**, sans explosion ni morceaux projetés. Il cesse immédiatement de se déplacer et de blesser le héros. Les flammes et la fumée se dissipent, puis un petit tas de cendres reste au sol jusqu’au redémarrage du niveau ou à une nouvelle partie, y compris après une mort du héros. La pause fige cette animation. [Dessin et prompt](assets/CROCODILE-BURN-PROMPT.md). [Aperçu normal et au ralenti](output/crocodile-burn-demo.mp4), régénérable avec `python preview_crocodile_burn.py`.
 
@@ -355,7 +426,7 @@ La descente volontaire est montrée dans [cet aperçu](output/hero-drop-demo.mp4
 
 `python -m unittest discover -s tests -v`
 
-Les 460 tests couvrent la physique, la collecte, les ennemis, les reprises, la victoire, les manettes, le plein écran et ses replis, les rapports de parallaxe, l’absence de dérive et de trous de raccord, l’interpolation commune, les coordonnées Full HD, la transparence des plans, l’agrandissement entier et la cadence à 60/75/120/144/165/240/360 Hz sans double limiteur. Ils vérifient aussi la réutilisation et le préchauffage hors écran des textures, l’absence de transfert d’image complète ou de lecture GPU dans la boucle de composition, le cycle complet de 24 poses à 60 Hz, la phase indépendante de la cadence de simulation, les transitions aériennes et les ancrages des sprites. La jauge solaire est vérifiée pour la consommation indépendante de la cadence, le coût unique du tir, les réserves insuffisantes, la recharge, la fluidité de la barre, la pause et les commandes de réveil. Pour les crocodiles : patrouille, déclenchement, charge engagée, limites de sol, récupération, collision continue, saut, protection de réapparition, placements, retournement stationnaire, abandon d’une attaque devenue hors de portée, contact pendant la rotation, combustion biologique, cendres persistantes et 56 poses graphiques.
+Les 546 tests couvrent la physique, la collecte, les ennemis, les reprises, la victoire, les manettes, le plein écran et ses replis, les rapports de parallaxe, l’absence de dérive et de trous de raccord, l’interpolation commune, les coordonnées Full HD, la transparence des plans, l’agrandissement entier et la cadence à 60/75/120/144/165/240/360 Hz sans double limiteur. Ils vérifient aussi la réutilisation et le préchauffage hors écran des textures, l’absence de transfert d’image complète ou de lecture GPU dans la boucle de composition, le cycle complet de 24 poses à 60 Hz, la phase indépendante de la cadence de simulation, les transitions aériennes et les ancrages des sprites. La jauge solaire est vérifiée pour la consommation indépendante de la cadence, le coût unique du tir, les réserves insuffisantes, la recharge, la fluidité de la barre, la pause et les commandes de réveil. Pour les crocodiles : patrouille, déclenchement, charge engagée, limites de sol, récupération, collision continue, saut, protection de réapparition, placements, retournement stationnaire, abandon d’une attaque devenue hors de portée, contact pendant la rotation, combustion biologique, cendres persistantes et 56 poses graphiques.
 
 `python tools/profile_startup.py --output output/startup-profile.json` mesure les toutes premières images, sans retirer une période de chauffe. Le rapport distingue mise à jour, composition, présentation synchronisée, créations de textes, formes et transferts de textures ; il compare le premier parcours à une reprise identique. Les mesures de présentation dépendent aussi du système et ne constituent pas une mesure physique du balayage.
 

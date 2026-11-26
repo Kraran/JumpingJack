@@ -76,7 +76,7 @@ class SaveGameTests(unittest.TestCase):
         g.hero_animation.update(STEP,g.hero,True,g.solar,g.rest)
         g.vultures[0].state='dive';g.vultures[0].target=(300,500)
         restore(g,canonical(capture(g)));g.draw(1,present=False)
-        self.assertTrue(g.solar.active);self.assertEqual(g.energy.value,70)
+        self.assertTrue(g.solar.active);self.assertEqual(g.energy.value,30)
         self.assertIs(g.hero_animation.solar,g.solar)
         g.solar.reset();g.rest.state='seated';g.rest.progress=1;g.rest.previous_progress=1
         g.hero_animation.update(STEP,g.hero,True,g.solar,g.rest)

@@ -1,0 +1,32 @@
+{
+  "gpu": true,
+  "sequence_seconds": 1.28,
+  "reappear_seconds": 0.94,
+  "new_resurrection_texture_uploads": 0,
+  "sections": [
+    {
+      "cause": "fall",
+      "level": 1,
+      "lives": 2,
+      "deaths": 1,
+      "state": "play",
+      "respawn_finished": true
+    },
+    {
+      "cause": "crocodile",
+      "level": 1,
+      "lives": 2,
+      "deaths": 1,
+      "state": "play",
+      "respawn_finished": true
+    },
+    {
+      "cause": "tower",
+      "level": 4,
+      "lives": 2,
+      "deaths": 1,
+      "state": "play",
+      "respawn_finished": true
+    }
+  ]
+}

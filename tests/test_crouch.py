@@ -53,16 +53,16 @@ class CrouchTests(unittest.TestCase):
 
     def test_shot_while_lowering_waits_for_crouch_then_debits_once(self):
         self.tick(fire=True)
-        self.assertFalse(self.g.solar.active);self.assertEqual(self.g.energy.value,100)
+        self.assertFalse(self.g.solar.active);self.assertEqual(self.g.energy.value,60)
         for _ in range(29):self.tick()
         self.assertTrue(self.g.solar.active);self.assertTrue(self.g.solar.crouched)
-        self.assertEqual(self.g.energy.value,70)
+        self.assertEqual(self.g.energy.value,30)
         self.assertEqual(self.g.hero_animation.state,'solar_crouch')
 
     def test_releasing_down_cancels_pending_crouch_shot(self):
         self.tick(fire=True);self.tick(down=False)
         for _ in range(60):self.tick(down=False)
-        self.assertFalse(self.g.solar.active);self.assertEqual(self.g.energy.value,100)
+        self.assertFalse(self.g.solar.active);self.assertEqual(self.g.energy.value,60)
 
     def test_crouched_ray_aims_lower_in_both_directions_and_stays_low(self):
         for facing in (-1,1):

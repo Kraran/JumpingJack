@@ -68,11 +68,13 @@ class TowerTests(unittest.TestCase):
         for position in results:self.assertEqual(position,results[0])
 
     def test_both_obelisks_and_death_restore_vertical_camera(self):
+        from support import finish_respawn
         g=self.g
         for index,(x,y) in enumerate(tower.CHECKPOINTS,1):
             g.hero=Hero(x,y);g.hero.grounded=True;g.update(STEP,0,False,False)
             self.assertEqual(g.check_index,index);self.assertEqual(g.checkpoint,(x-60,y))
         g.hero.y=tower.HEIGHT+200;g.update(STEP,0,False,False)
+        finish_respawn(g)
         self.assertEqual(g.lives,2);self.assertEqual(g.hero.y,tower.CHECKPOINTS[-1][1])
         self.assertEqual(g.cam_y,g.prev_cam_y);self.assertEqual(g.cam_y,tower.camera_target(g.hero.y))
 

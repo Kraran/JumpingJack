@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import patch
 from main import Game,Hero,STEP
 from gamepad import PadSnapshot
+from support import finish_respawn
 
 
 class LivesTests(unittest.TestCase):
@@ -17,6 +18,7 @@ class LivesTests(unittest.TestCase):
     def die(self):
         self.g.hero.y=900
         self.g.update(STEP,0,False,False)
+        finish_respawn(self.g)
 
     def test_death_clears_old_explosions_and_particles_without_reviving_beetles(self):
         from beetle import BeetleDeath
@@ -34,7 +36,7 @@ class LivesTests(unittest.TestCase):
                 self.assertFalse(any(particle[5]==(1,2,3) for particle in g.particles))
                 if lives>1:
                     self.assertEqual(g.state,'play')
-                    self.assertEqual(len(g.particles),24)
+                    self.assertTrue(g.particles);self.assertLessEqual(len(g.particles),24)
                     self.assertTrue(all(particle[5]==(130,224,227) for particle in g.particles))
                 else:
                     self.assertEqual(g.state,'game_over')
@@ -48,9 +50,12 @@ class LivesTests(unittest.TestCase):
             self.assertEqual(g.lives,remaining);self.assertEqual(g.state,'play')
             self.assertEqual(g.hero.x,4740);self.assertGreater(g.invuln,0)
         with patch.object(g.gamepads,'rumble') as rumble:
-            self.die();rumble.assert_called_once_with('game_over')
+            self.die()
+            self.assertEqual([(call.args,call.kwargs) for call in rumble.call_args_list],
+                             [(('death',),{'duration':750}),(('game_over',),{})])
         self.assertEqual(g.lives,0);self.assertEqual(g.deaths,3);self.assertEqual(g.state,'game_over')
-        self.assertEqual(g.hero.y,900+1550*STEP*STEP)
+        self.assertGreater(g.hero.y,900)
+        self.assertEqual(g.hero_death.kind,'pit')
         before=(g.elapsed,g.hero.x,g.hero.y,g.deaths)
         for _ in range(20):g.update(STEP,1,True,True,fire=True)
         self.assertEqual(before,(g.elapsed,g.hero.x,g.hero.y,g.deaths))

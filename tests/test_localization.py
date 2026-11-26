@@ -127,5 +127,9 @@ class LanguageMenuTests(unittest.TestCase):
             sources={call.args[0] for call in text.call_args_list}
         allowed={name for code,name in LANGUAGES}|{'JUMPING JACK','FULL HD','FPS','PAUSE','Pause','Start','F','RT / B','← → / Q D'}
         for source in sources:
+            # "Score" has the same spelling in French and English.
+            if source.startswith('SCORE  '):
+                self.assertEqual(translate(source,'en'),source)
+                continue
             if source in allowed or not any(character.isalpha() for character in source):continue
             self.assertNotEqual(translate(source,'en'),source,source)

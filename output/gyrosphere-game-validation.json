@@ -1,0 +1,14 @@
+{
+  "gpu": true,
+  "new_texture_uploads": 0,
+  "counts": {
+    "4": 6,
+    "2": 1,
+    "3": 2
+  },
+  "points": 200,
+  "pursuit": true,
+  "screen_loss": true,
+  "electric_death": true,
+  "solar_destruction": true
+}

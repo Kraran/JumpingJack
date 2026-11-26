@@ -1,0 +1,12 @@
+{
+  "gpu": true,
+  "frames": 96,
+  "new_animation_texture_uploads": 0,
+  "final_energy": 50.0,
+  "window": [
+    40,
+    39,
+    363,
+    23
+  ]
+}

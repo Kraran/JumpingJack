@@ -261,14 +261,27 @@ class DesertArt:
         else:
             art_y-=BRIDGE_DECK_CENTER
             area=self.areas[('bridge',platform.w)]
-            for fraction in (.08,.34,.65,.92):
-                x=platform.x+platform.w*fraction-camera
-                draw.rect(canvas,(81,57,32),(x-3,art_y+22,6,max(0,WATER_Y+25-art_y-22)))
         x,y=canvas.point((platform.x-camera,art_y))
         canvas.native.blit(self.props,(x,y),area)
         if platform.kind=='rock':
             left,top,image=self.rock_sand[platform.x]
             canvas.native.blit(image,(left-pixel(camera*SCALE),top))
+
+    def bridge_foreground(self,canvas,platforms,camera):
+        """Posts and deck fronts occlude falling actors below the walking plane."""
+        for platform in platforms:
+            if platform.kind!='bridge' or platform.x-camera>1280 or platform.x+platform.w-camera<0:continue
+            art_y=platform.y-BRIDGE_DECK_CENTER
+            for fraction in (.08,.34,.65,.92):
+                x=platform.x+platform.w*fraction-camera
+                draw.rect(canvas,(81,57,32),(x-3,art_y+22,6,max(0,WATER_Y+25-art_y-22)))
+            # Keep the deck covering the tops of the posts, while leaving the
+            # walking plane and the standing hero above this foreground slice.
+            area=self.areas[('bridge',platform.w)].copy()
+            cut=pixel((BRIDGE_DECK_CENTER+2)*SCALE)
+            area.y+=cut;area.h-=cut
+            x,y=canvas.point((platform.x-camera,art_y))
+            canvas.native.blit(self.props,(x,y+cut),area)
 
     def reeds(self,canvas,camera):
         for x,offset in self.reed_offsets.items():

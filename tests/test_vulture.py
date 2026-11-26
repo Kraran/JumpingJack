@@ -105,11 +105,14 @@ class VultureGameTests(unittest.TestCase):
         self.assertEqual(enemy.state,'death')
 
     def test_guardian_contact_uses_death_rumble_and_resets_all_guardians(self):
+        from support import finish_respawn
         g=self.g;g.invuln=0;g.hero=Hero(9000,620);g.hero.grounded=True
         enemy=g.vultures[2];enemy.x=enemy.px=9000;enemy.y=enemy.py=593
         enemy.state='warning';enemy.target=(9000,593);enemy.vx=enemy.vy=0
         with patch.object(g.gamepads,'rumble') as rumble:g.update(STEP,0,False,False)
-        self.assertEqual(g.deaths,1);rumble.assert_called_once_with('death')
+        self.assertEqual(g.deaths,1);rumble.assert_called_once_with('death',duration=1200)
+        self.assertEqual(g.hero_death.kind,'vulture')
+        finish_respawn(g)
         self.assertTrue(all(v.alive and v.state=='patrol' for v in g.vultures))
 
     def test_pause_and_drawing_do_not_advance_guardian_simulation(self):

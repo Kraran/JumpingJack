@@ -63,6 +63,9 @@ VASES=((240.,float(BASE_Y)),(1000.,float(BASE_Y)))+tuple(
 TORCHES=tuple((float(x+35 if x<600 else x+w-35),float(y-35))
               for x,y,w,i in BRANCHES if i in (10,25,40,55,70,85,90))
 SPIKED_ROWS={5,10,15,20,25,30,35,40,45,50,55,60,75,85,90}
+GYROSPHERES=tuple(next((float(cx),float(LEDGES[i][1]-65)) for cx in (640,320,960,200,1080)
+    if not any(x-18<cx<x+w+18 and y-18<LEDGES[i][1]-65<y+50
+               for x,y,w in LEDGES+tuple((x,y,w) for x,y,w,row in BRANCHES))) for i in (14,46,78,30,62,90))
 
 
 def collectible_sites():

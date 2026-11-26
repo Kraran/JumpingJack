@@ -1,0 +1,11 @@
+{
+  "authored_poses": 24,
+  "prepared_poses": 120,
+  "sampled_poses": 120,
+  "diameter_native": 44,
+  "increase_percent": 10,
+  "duration_seconds": 10,
+  "fps": 60,
+  "rotation_reversed": true,
+  "isolated_preview": true
+}

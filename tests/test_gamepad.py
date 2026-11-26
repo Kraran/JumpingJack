@@ -2,13 +2,25 @@ import os
 os.environ['SDL_VIDEODRIVER']='dummy'
 os.environ['SDL_AUDIODRIVER']='dummy'
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch,Mock
 import pygame as pg
 from gamepad import (
     ControllerPad, Gamepads, JoystickPad, PadButtons, PadSnapshot,
     merge_axis, stick_axis, trigger_held,
 )
 from main import Game, Hero, STEP
+
+
+class RumbleDurationTests(unittest.TestCase):
+    def test_custom_duration_keeps_intensity_and_respects_disabled_setting(self):
+        pads=Gamepads(False);device=Mock();device.attached.return_value=True
+        device.rumble.return_value=True;pads.devices={1:device}
+        self.assertTrue(pads.rumble('death',duration=1750))
+        device.rumble.assert_called_once_with(1.,1.,1750)
+        device.rumble.reset_mock();pads.rumble_enabled=False
+        self.assertFalse(pads.rumble('death',duration=1350));device.rumble.assert_not_called()
+        pads.rumble_enabled=True;pads.rumble('death')
+        device.rumble.assert_called_once_with(1.,1.,400)
 
 
 class AxisTests(unittest.TestCase):

@@ -2,6 +2,7 @@
 import math
 
 MAX_ENERGY=100.
+INITIAL_ENERGY=60.
 GLIDE_PER_SECOND=4.
 RAY_COST=30.
 SHARD_ENERGY=10.
@@ -10,9 +11,9 @@ SHARD_ENERGY=10.
 class SolarEnergy:
     def __init__(self):self.reset()
 
-    def reset(self):
-        self.value=MAX_ENERGY
-        self.display=self.previous_display=MAX_ENERGY
+    def reset(self,value=INITIAL_ENERGY):
+        self.value=max(0.,min(MAX_ENERGY,float(value)))
+        self.display=self.previous_display=self.value
         self.fast_timer=0.
         self.warning=0.
 
@@ -35,8 +36,8 @@ class SolarEnergy:
         self.value=min(MAX_ENERGY,self.value+SHARD_ENERGY)
         if self.value>=RAY_COST:self.warning=0.
 
-    def refill(self):
-        self.value=MAX_ENERGY
+    def refill(self,value=INITIAL_ENERGY):
+        self.value=max(0.,min(MAX_ENERGY,float(value)))
         self.warning=0.;self.fast_timer=0.
 
     def update_display(self,dt):

@@ -1,0 +1,11 @@
+# Jauge solaire — Ailes d’Horus
+
+Asset retenu : `solar-gauge-horus-v1.png`, produit avec l’outil intégré imagegen à partir de la proposition 2 approuvée. Le PNG transparent est conservé sans modification. Au chargement, le jeu prépare une version native de 450 × 83 pixels et extrait le masque de sa fenêtre transparente pour le réservoir.
+
+Deux atlas de 96 poses animent le plasma, doré au-dessus du coût d’un tir et orangé en dessous. La fenêtre vide reste bleu sombre et le cadre s’atténue à zéro. Tous les atlas, le cadre et les reflets sont préchargés sur le GPU. La longueur affichée suit l’interpolation déjà utilisée par `SolarEnergy` ; la consommation, la recharge et les sauvegardes restent identiques. La lumière suit le temps simulé et se fige en pause.
+
+Reproduire l’aperçu : `python preview_solar_gauge.py`.
+
+## Prompt de préparation du cadre
+
+> Extract and refine the selected AILES D'HORUS design into ONE production HUD FRAME asset. The reference image is the approved design: match the central large golden falcon/wing energy bar exactly in silhouette, engraved feathers, gold material, turquoise patina accents, left falcon head and round sun disk behind the head, tapered feather tail at the right. Produce ONLY ONE EMPTY FRAME, completely horizontal, face-on orthographic game UI. Very long slim reservoir with parallel straight horizontal top and bottom and rounded ends. NO energy/plasma/fill, NO fill threshold marker, NO words, numbers, titles, captions, secondary bars or labels. The left sun disk has a softly amber metallic center, no external glow. Critically the long inner energy reservoir/window must be a genuinely TRANSPARENT HOLE, as must all of the background outside the gold frame, so animated light can be drawn behind it in the game. Clean crisp antialiased transparent edges. Keep the whole frame, sun disk, left head, feathered top/bottom and right tail fully inside the image with clear margins. Wide elongated horizontal prop, roughly six times wider than its complete height. Realistically painted detailed premium game UI matching the reference; preserve its sophisticated feather anatomy, dark metal recesses and restrained warm gold highlights. No background, shadow backdrop, glow haze, labels, or additional objects. This is the actual modular frame sprite to integrate into a Full HD game HUD.

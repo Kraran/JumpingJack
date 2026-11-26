@@ -107,15 +107,19 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual(n,len(self.g.taken))
 
     def test_checkpoint_respawn(self):
+        from support import finish_respawn
         self.g.hero=Hero(4800,620);self.g.update(STEP,0,False,False)
         self.assertEqual(self.g.check_index,1)
         self.g.hero.y=900;self.g.update(STEP,0,False,False)
+        finish_respawn(self.g)
         self.assertEqual(self.g.hero.x,4740)
         self.assertEqual(self.g.deaths,1)
 
     def test_enemy_respawn_and_grace(self):
+        from support import finish_respawn
         x,y=self.g.enemy_positions()[0]
         self.g.hero=Hero(x,y+27);self.g.update(STEP,0,False,False)
+        finish_respawn(self.g)
         self.assertEqual(self.g.deaths,1)
         self.assertGreater(self.g.invuln,0)
 

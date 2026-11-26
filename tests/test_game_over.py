@@ -22,12 +22,14 @@ class GameOverTests(unittest.TestCase):
         g=self.g;g.lives=1;g.hero.y=900
         with patch.object(g.gamepads,'rumble') as rumble,patch.object(g,'sound') as sound:
             g.update(STEP,0,False,False)
+            self.assertTrue(g.hero_death.active);self.assertEqual(g.state,'play')
+            while g.hero_death.active:g.update(STEP,0,False,False)
             self.assertEqual((g.state,g.lives,g.deaths),('game_over',0,1))
-            rumble.assert_called_once_with('game_over');sound.assert_called_once_with('game_over')
+            self.assertEqual(rumble.call_args.args,('game_over',));sound.assert_called_once_with('game_over')
             elapsed=g.elapsed
             for _ in range(120):g.update(STEP,1,True,True,fire=True)
             self.assertEqual(g.elapsed,elapsed)
-            rumble.assert_called_once();sound.assert_called_once()
+            self.assertEqual(rumble.call_count,2);sound.assert_called_once()
         self.assertGreater(RUMBLE_EFFECTS['game_over'][2],RUMBLE_EFFECTS['death'][2])
 
     def test_game_over_displays_the_whole_run_in_every_level(self):

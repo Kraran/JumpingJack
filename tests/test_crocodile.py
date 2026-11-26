@@ -131,6 +131,10 @@ class CrocodileIntegrationTests(unittest.TestCase):
         self.game.hero=Hero(enemy.x,620)
         self.game.update(STEP,0,False,False)
         self.assertEqual(self.game.deaths,1)
+        self.assertTrue(self.game.hero_death.active)
+        for _ in range(400):
+            self.game.update(STEP,0,False,False)
+            if not (self.game.hero_death.active or self.game.resurrection.active):break
         self.assertEqual(self.game.hero.x,160)
         self.assertGreater(self.game.invuln,0)
         self.assertEqual(enemy.state,'patrol')

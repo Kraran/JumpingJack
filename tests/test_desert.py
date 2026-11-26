@@ -74,12 +74,14 @@ class DesertGameTests(unittest.TestCase):
         self.assertEqual((len(g.beetle_motions),len(g.vultures),len(g.crocodiles)),(10,6,3))
 
     def test_river_is_fatal_during_glide_even_with_respawn_protection(self):
+        from support import finish_respawn
         g=self.g
         for lives in (2,1,0):
             g.hero=Hero(1150,650);g.hero.vy=105;g.hero.floating=True;g.invuln=100
             with patch.object(g.gamepads,'rumble') as rumble:
-                g.update(STEP,0,True,False);rumble.assert_called_once_with('death' if lives else 'game_over')
+                g.update(STEP,0,True,False);rumble.assert_called_once_with('water_entry',duration=550)
             self.assertEqual(g.lives,lives)
+            finish_respawn(g)
             if lives:self.assertEqual(g.hero.x,160)
         self.assertEqual(g.state,'game_over');g.draw(1,present=False)
 
@@ -92,12 +94,14 @@ class DesertGameTests(unittest.TestCase):
             self.assertEqual(g.lives,3)
 
     def test_both_pylons_activate_and_latest_checkpoint_survives_death(self):
+        from support import finish_respawn
         g=self.g
         for index,x in enumerate(desert.CHECKPOINTS,1):
             y=sand_height(x)
             g.hero=Hero(x,y);g.hero.grounded=True;g.update(STEP,0,False,False)
             self.assertEqual(g.check_index,index);self.assertEqual(g.checkpoint,(x-60,y))
         g.hero.y=900;g.update(STEP,0,False,False)
+        finish_respawn(g)
         self.assertEqual((g.hero.x,g.hero.y),(9540,sand_height(9600)))
         self.assertTrue(all(pylon.active for pylon in g.obelisks))
         g.reset();self.assertEqual(g.level_id,2)

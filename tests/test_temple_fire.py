@@ -46,15 +46,20 @@ class TempleFireTests(unittest.TestCase):
         self.assertFalse(art.flame_hits(hero,0))
 
     def test_contact_costs_one_life_and_triggers_death_vibration(self):
+        from support import finish_respawn
         g=self.g;g.hero=Hero(650,390);g.invuln=100
         with patch.object(g.gamepads,'rumble') as rumble:g.update(STEP,0,False,False)
         self.assertEqual(g.lives,2);self.assertEqual(g.deaths,1)
         self.assertEqual(sum(call.args==('death',) for call in rumble.call_args_list),1)
+        finish_respawn(g)
         self.assertEqual(g.hero.x,g.checkpoint[0])
 
     def test_last_life_ends_in_game_over(self):
+        from support import finish_respawn
         g=self.g;g.hero=Hero(650,390);g.lives=1
         g.update(STEP,0,False,False)
+        self.assertEqual(g.state,'play');self.assertTrue(g.hero_death.active)
+        finish_respawn(g)
         self.assertEqual((g.state,g.lives),('game_over',0))
 
     def test_other_levels_do_not_have_temple_flame_collisions(self):

@@ -12,6 +12,8 @@ class VerticalNative:
         if isinstance(dest,pg.Rect):dest=dest.move(0,-self.offset)
         else:dest=(dest[0],dest[1]-self.offset,*dest[2:])
         return self.native.blit(image,dest,area)
+    def blit_faded(self,image,dest,area,opacity):
+        return self.native.blit_faded(image,(dest[0],dest[1]-self.offset),area,opacity)
     def rect(self,color,rect,width=0):return self.native.rect(color,pg.Rect(rect).move(0,-self.offset),width)
     def raster(self,key,size,paint,position):
         return self.native.raster(key,size,paint,(position[0],position[1]-self.offset))

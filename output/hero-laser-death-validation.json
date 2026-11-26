@@ -1,0 +1,35 @@
+{
+  "gpu": true,
+  "poses_per_facing": 64,
+  "observed_poses": 95,
+  "new_death_texture_uploads": 0,
+  "sections": [
+    {
+      "cause": "ground",
+      "level": 3,
+      "lives": 2,
+      "deaths": 1,
+      "state": "play",
+      "landed_at": 0.2833333333333334,
+      "duration": 1.3999999999999975
+    },
+    {
+      "cause": "air",
+      "level": 3,
+      "lives": 2,
+      "deaths": 1,
+      "state": "play",
+      "landed_at": 0.7749999999999997,
+      "duration": 1.3999999999999975
+    },
+    {
+      "cause": "game-over",
+      "level": 4,
+      "lives": 0,
+      "deaths": 1,
+      "state": "game_over",
+      "landed_at": 0.2833333333333334,
+      "duration": 1.3999999999999975
+    }
+  ]
+}

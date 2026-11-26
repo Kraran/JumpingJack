@@ -1,0 +1,30 @@
+{
+  "gpu": true,
+  "sequence_seconds": 1.2,
+  "poses_per_facing": 64,
+  "observed_poses": 128,
+  "new_death_texture_uploads": 0,
+  "sections": [
+    {
+      "cause": "impact",
+      "level": 1,
+      "lives": 2,
+      "deaths": 1,
+      "state": "play"
+    },
+    {
+      "cause": "tower",
+      "level": 4,
+      "lives": 2,
+      "deaths": 1,
+      "state": "play"
+    },
+    {
+      "cause": "game-over",
+      "level": 1,
+      "lives": 0,
+      "deaths": 1,
+      "state": "game_over"
+    }
+  ]
+}

@@ -85,6 +85,26 @@ class NativeCanvas:
             self.surface.blit(entry[1],rect)
         return rect
 
+    def blit_faded(self,image,dest,area,opacity):
+        """Fade a preloaded native-size atlas cell without changing its pixels."""
+        opacity=max(0,min(255,round(opacity)))
+        source=pg.Rect(area);rect=pg.Rect(pixel(dest[0]),pixel(dest[1]),source.w,source.h)
+        if not opacity or not rect.colliderect(pg.Rect(0,0,*FULL_HD)):return rect
+        self.draw_calls+=1
+        if self.gpu:
+            texture=self.texture(image);previous=texture.alpha
+            try:
+                texture.alpha=round(previous*opacity/255)
+                texture.draw(source,rect)
+            finally:texture.alpha=previous
+        else:
+            previous=image.get_alpha()
+            try:
+                image.set_alpha(round((255 if previous is None else previous)*opacity/255))
+                self.surface.blit(image,rect,source)
+            finally:image.set_alpha(previous)
+        return rect
+
     def rect(self,color,rect,width=0):
         rect=pg.Rect(rect)
         if rect.w<=0 or rect.h<=0:return

@@ -1,0 +1,33 @@
+{
+  "gpu": true,
+  "new_death_texture_uploads": 0,
+  "sections": [
+    {
+      "cause": "air",
+      "level": 3,
+      "lives": 2,
+      "deaths": 1,
+      "state": "play",
+      "landed_at": 0.6000000000000003,
+      "duration": 1.5999999999999968
+    },
+    {
+      "cause": "platform",
+      "level": 4,
+      "lives": 2,
+      "deaths": 1,
+      "state": "play",
+      "landed_at": 0.6000000000000003,
+      "duration": 1.5999999999999968
+    },
+    {
+      "cause": "game-over",
+      "level": 4,
+      "lives": 0,
+      "deaths": 1,
+      "state": "game_over",
+      "landed_at": 0.6000000000000003,
+      "duration": 1.5999999999999968
+    }
+  ]
+}

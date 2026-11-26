@@ -17,7 +17,8 @@ from crocodile import Crocodile,CrocodileSprites, create_crocodiles
 from gamepad import Gamepads, PadSnapshot, merge_axis
 from solar import SolarRay
 from rest import RestPose
-from energy import SolarEnergy,MAX_ENERGY,RAY_COST
+from energy import SolarEnergy,RAY_COST
+from solar_gauge import SolarGauge
 from obelisk import Obelisk,ObeliskSprites,CHECKPOINT_X,GROUND_Y,RESPAWN
 from plasma_fx import PlasmaEffect
 from platform_sprites import SacredPlatforms
@@ -32,14 +33,27 @@ from desert_art import DesertArt
 from vase import Vase,VaseSprites,SPAWNS as VASE_SPAWNS
 from temple_art import TempleArt
 from temple_exit import TempleExit,TempleExitSprites,APPROACH
+from hero_death import HeroDeath,CrocodileDeathSprites,CAPTURE as DEATH_CAPTURE,BEETLE_STUN,LASER_IMPACT,LASER_DURATION,LASER_LIMIT,smooth as death_smooth
+from beetle_death import BeetleDeathSprites
+from blade_death import BladeDeathSprites
+from laser_death import LaserDeathSprites
+from fire_death import FireDeathSprites
+from water_death import WaterDeathSprites,water_position
+from pit_death import PitDeathSprites,pit_position
+from pit_darkness import PitDarkness,pit_regions
+from hero_death import FIRE_REACTION,FIRE_DURATION
 from scorpion import Scorpion,ScorpionSprites
+from gyrosphere import Gyrosphere,GyrosphereSprites,DEATH_TIME as GYRO_DEATH_TIME,POINTS as GYRO_POINTS
 from terrain import DuneGround,sand_height
 from settings import Settings
 from menu import StartMenu,PAGES as MENU_PAGES
 from loading import LoadingScreen,LoadingCancelled
 from localization import translate,CODES
 from savegame import SaveSlots,capture as capture_save,restore as restore_save
-from lives import STARTING_LIVES,load_life_symbol,game_over_tune
+from lives import STARTING_LIVES,load_life_symbol,game_over_tune,life_position
+from resurrection import Resurrection,ResurrectionSprites,REAPPEAR
+from level_bonus import sample as sample_life_bonus
+import hud_layout as hud_layout
 from medallion import MedallionInventory,MedallionSprites,POSITION as FIRST_MEDALLION,position as medallion_position,touches as touches_medallion,tune as medallion_tune
 from beetle import BeetleSprites, BeetleMotion, BeetleDeath, SPAWNS, DEATH_TIME
 from rendering import DisplayStatus, FramePacer, ParallaxLayer, configure_display, pixel,integer_viewport
@@ -352,6 +366,9 @@ class Game:
         self.vase_sprites=VaseSprites.load(ROOT/'assets')
         self.loading_stage(.35,'Assemblage du monde…')
         self.tiles = [self.make_tile(128,128,i) for i in range(4)]
+        self.desert_sign=pg.transform.smoothscale(
+            pg.image.load(str(ROOT/'assets'/'desert-direction-sign-v1.png')).convert_alpha(),
+            (pixel(111*SCALE),pixel(74*SCALE)))
         stone = ROOT/'assets'/'sandstone.png'
         if stone.exists():
             texture = pg.transform.smoothscale(pg.image.load(str(stone)).convert(), (512,512))
@@ -359,9 +376,7 @@ class Game:
         self.haze=pg.Surface((VIEW_W,120),pg.SRCALPHA)
         for y in range(120):
             draw.line(self.haze,(234,198,139,int(28*y/120)),(0,y),(VIEW_W,y))
-        self.hud_panel=pg.Surface((VIEW_W,90),pg.SRCALPHA)
-        for y in range(90):draw.line(self.hud_panel,(12,28,36,int(185*(1-y/90))),(0,y),(VIEW_W,y))
-        self.hud_panel=self.hud_panel.convert_alpha()
+        self.hud_panel=pg.Surface((W,pixel(hud_layout.HEIGHT*SCALE)),pg.SRCALPHA).convert_alpha()
         self.help_panel=pg.Surface((1040,36),pg.SRCALPHA)
         self.help_panel.fill((12,28,36,190))
         self.title_shade=pg.Surface((VIEW_W,VIEW_H),pg.SRCALPHA)
@@ -376,13 +391,23 @@ class Game:
         self.hero_animation=HeroAnimator()
         self.temple_exit_sprites=TempleExitSprites.load(ROOT/'assets')
         self.energy=SolarEnergy()
+        self.solar_gauge=SolarGauge.load(ROOT/'assets')
         self.solar=SolarRay(PlasmaEffect.load(ROOT/'assets'))
         self.rest=RestPose()
         self.loading_stage(.52,'Préparation des crocodiles…')
         self.crocodile_sprites=CrocodileSprites.load(ROOT/'assets')
+        self.hero_death_sprites=CrocodileDeathSprites.load(ROOT/'assets')
+        self.beetle_death_sprites=BeetleDeathSprites.load(ROOT/'assets')
+        self.blade_death_sprites=BladeDeathSprites.load(ROOT/'assets')
+        self.laser_death_sprites=LaserDeathSprites.load(ROOT/'assets')
+        self.fire_death_sprites=FireDeathSprites.load(ROOT/'assets')
+        self.water_death_sprites=WaterDeathSprites.load(ROOT/'assets')
+        self.pit_death_sprites=PitDeathSprites.load(ROOT/'assets')
+        self.pit_darkness=PitDarkness.load()
         self.loading_stage(.60,'Préparation des scarabées…')
         self.beetle_sprites=BeetleSprites.load(ROOT/'assets')
         self.scorpion_sprites=ScorpionSprites.load(ROOT/'assets')
+        self.gyrosphere_sprites=GyrosphereSprites.load(ROOT/'assets')
         self.loading_stage(.65,'Préparation des plateformes et des pièges…')
         self.obelisk_sprites=ObeliskSprites(ROOT/'assets'/'solar-obelisk-v1.png')
         self.platform_sprites=SacredPlatforms(ROOT/'assets'/'sacred-platforms-v1.png',PLATFORM_WIDTHS)
@@ -396,6 +421,9 @@ class Game:
         self.lives=STARTING_LIVES
         self.level_id=1
         self.life_symbol=load_life_symbol(ROOT/'assets'/'hero-atlas-v2.png')
+        self.life_symbol_empty=self.life_symbol.copy()
+        self.life_symbol_empty.fill((85,102,120,130),special_flags=pg.BLEND_RGBA_MULT)
+        self.resurrection_sprites=ResurrectionSprites(self.life_symbol,ROOT/'assets'/'life-symbol-hd-v1.png')
         self.loading_stage(.81,'Préparation des menus et des sons…')
         self.menu=StartMenu(ROOT/'assets')
         self.menu.save_failed=not initial_settings_saved
@@ -412,6 +440,7 @@ class Game:
         self.show_stats=False
         self.show_fps=self.settings.show_fps
         self.fps_count=0;self.fps_updated=-1.
+        self.score=0
         self.run_totals=dict(shards=0,elapsed=0.,deaths=0)
         self.reset()
         self.loading_stage(.86,'Transfert des textures vers le rendu…')
@@ -446,19 +475,31 @@ class Game:
         images += self.temple_art.images
         images += self.tower_art.images
         images += self.vase_sprites.images
+        images += [self.desert_sign]
         images += self.temple_exit_sprites.images
+        images += self.hero_death_sprites.images
+        images += self.beetle_death_sprites.images
+        images += self.blade_death_sprites.images
+        images += self.laser_death_sprites.images
         images += [image for pair in self.hero_sprites for image in pair]
         if self.animation_bank:images += self.animation_bank.images
         if self.solar.effect:images += self.solar.effect.images
         if self.crocodile_sprites:images += self.crocodile_sprites.images
         if self.beetle_sprites:images += self.beetle_sprites.images
         images += self.scorpion_sprites.images
+        images += self.gyrosphere_sprites.images
+        images += self.fire_death_sprites.images
+        images += self.water_death_sprites.images
+        images += self.pit_death_sprites.images
+        images += self.pit_darkness.images
         images += self.platform_sprites.images
         images += self.spike_sprites.images
         images += self.vulture_sprites.images
         images += self.crystal_sprites.images
         images += self.medallion_sprites.images
-        images += [self.life_symbol]
+        images += [self.life_symbol,self.life_symbol_empty]
+        images += self.resurrection_sprites.images
+        images += self.solar_gauge.images
         images += self.obelisk_sprites.images
         images += self.menu.images
         images += [self.haze,self.hud_panel,self.help_panel,self.title_shade,
@@ -476,10 +517,9 @@ class Game:
         try:
             for level_id in (1,2,3,4):
                 gem_count=len(level(level_id)[1])
-                for count in range(gem_count+1):self.cache_text(f'{count:02} / {gem_count}',23,GOLD)
+                for count in range(gem_count+1):self.cache_text(f'{count:02} / {gem_count}',23,GOLD,outlined=True)
             for label in ('NIVEAU 01  /  LE SEUIL DU DÉSERT','NIVEAU 02  /  LE DÉSERT','NIVEAU 03  /  LE TEMPLE','NIVEAU 04  /  LA TOUR'):
-                self.cache_text(label,11,(198,209,199))
-            self.cache_text('LA RIVIÈRE EST MORTELLE · EMPRUNTEZ LES PASSERELLES',16,GOLD)
+                self.cache_text(label,11,(198,209,199),outlined=True)
             self.cache_text('LE SEUIL EST FRANCHI',44,GOLD,True)
             self.cache_text('NIVEAU 02 · LE DÉSERT',24)
             self.cache_text('Entrée, Start ou A pour continuer',18)
@@ -489,22 +529,25 @@ class Game:
             self.cache_text('LE SOMMET EST ATTEINT',44,GOLD,True)
             self.cache_text('NIVEAU 04 · LA TOUR',24)
             self.cache_text('L’ASCENSION EST TERMINÉE',24)
-            for percent in range(101):self.cache_text(f'ASCENSION : {percent} %',16,GOLD)
+            for percent in range(101):self.cache_text(f'ASCENSION : {percent} %',16,GOLD,outlined=True)
             for label,color in (('ÉNERGIE SOLAIRE',GOLD),('ÉNERGIE SOLAIRE',(247,144,65)),
                                 ('ÉNERGIE SOLAIRE ÉPUISÉE',(247,144,65)),
                                 ('ÉNERGIE INSUFFISANTE',(255,160,91))):
-                self.cache_text(label,10,color)
-            self.cache_text('POINT DE REPRISE ACTIVÉ',19,GOLD)
-            for count in range(4):self.cache_text(f'{count} / 3',20,GOLD)
-            self.cache_text('VIE +1 OBTENUE',10,GOLD)
+                self.cache_text(label,10,color,outlined=True)
+            self.cache_text('POINT DE REPRISE ACTIVÉ',19,GOLD,outlined=True)
+            for count in range(4):self.cache_text(f'{count} / 3',20,GOLD,outlined=True)
+            self.cache_text('VIE +1 OBTENUE',10,GOLD,outlined=True)
+            self.cache_text('ÉPUISÉE',10,(247,144,65),outlined=True)
             self.cache_text('VIES',9,GOLD)
             self.cache_text('GAME OVER',44,GOLD,True)
             self.cache_text('Vous avez perdu toutes vos vies.',24)
             self.cache_text('Entrée, Start ou A pour une nouvelle partie',18)
             self.native_canvas.begin()
             self.menu.prepare(self)
-            for digit in '0123456789':self.cache_text(digit,12)
-            self.cache_text('FPS',10,GOLD)
+            self.draw_solar_gauge(low=True)
+            for digit in '0123456789':self.cache_text(digit,12,outlined=True)
+            for digit in '0123456789':self.cache_text(digit,20,GOLD,outlined=True)
+            self.cache_text('FPS',10,GOLD,outlined=True)
             # Include half-pixel rounding variants before their first appearance.
             self.native_canvas.begin()
             for width in (47,48,49):
@@ -622,21 +665,22 @@ class Game:
         return tuple(layers)
 
     def new_game(self):
+        self.score=0
         self.run_totals=dict(shards=0,elapsed=0.,deaths=0)
         self.lives=STARTING_LIVES
         self.medallions=MedallionInventory()
         self.level_id=1
         self.reset()
 
-    def start_level(self,level_id):
+    def start_level(self,level_id,preserve_energy=False):
         if level_id not in (1,2,3,4):raise ValueError(f'Niveau inconnu : {level_id}')
         self.level_id=level_id
-        self.reset()
+        self.reset(preserve_energy=preserve_energy)
 
     def continue_or_restart(self):
         if self.state=='win' and self.level_id in (1,2,3):
             self.bank_run_stats()
-            self.start_level(self.level_id+1)
+            self.start_level(self.level_id+1,preserve_energy=True)
             self.resume_from_menu()
         else:self.resume_from_menu(new_game=True)
 
@@ -649,9 +693,13 @@ class Game:
         self.bank_run_stats()
         self.reset()
 
-    def reset(self):
+    def reset(self,preserve_energy=False):
+        self.victory_started=None
+        self.victory_lives=0
+        self.level_score=0
+        self.level_bonus_awarded=False
         self.gamepads.stop_rumble()
-        self.energy.reset()
+        if not preserve_energy:self.energy.reset()
         self.solar.reset()
         self.rest.reset()
         self.wake_blocked=False
@@ -667,11 +715,16 @@ class Game:
         self.scorpions=([Scorpion(i,tower_level.SCORPIONS) for i in range(3)] if self.level_id==4 else
                         [Scorpion(i) for i in range(len(temple_level.SCORPIONS))] if self.level_id==3 else [])
         self.laser_bolts=[]
+        gyro_spawns=getattr(config,'GYROSPHERES',())
+        self.gyrospheres=[Gyrosphere(i,gyro_spawns) for i in range(len(gyro_spawns))]
         self.beetle_deaths=[]
         self.temple_exit=TempleExit()
+        self.hero_death=HeroDeath()
+        self.resurrection=Resurrection()
         self.vases=([Vase(i,tower_level.VASES) for i in range(len(tower_level.VASES))] if self.level_id==4 else
                     [Vase(i) for i in range(len(VASE_SPAWNS))] if self.level_id==3 else [])
         self.platforms,self.gems=level(self.level_id)
+        self.pit_regions=pit_regions(self.platforms,self.level_id)
         self.taken=set()
         self.hero=(Hero(*tower_level.START) if self.level_id==4 else
                    Hero(160,sand_height(160)) if self.level_id==2 else Hero())
@@ -708,16 +761,32 @@ class Game:
             self.fonts[key]=pg.font.SysFont('Georgia' if serif else 'Segoe UI',pixel(size*SCALE))
         return self.fonts[key]
 
-    def cache_text(self,txt,size=20,color=(246,236,210),serif=False):
+    def cache_text(self,txt,size=20,color=(246,236,210),serif=False,outlined=False):
         txt=translate(txt,self.settings.language)
-        key=(txt,size,color,serif)
+        key=(txt,size,color,serif)+(('outlined',) if outlined else ())
         if key not in self.text_cache:
-            if len(self.text_cache)>=1024:self.text_cache.pop(next(iter(self.text_cache)))
-            self.text_cache[key]=self.font(size,serif).render(txt,True,color).convert_alpha()
+            if len(self.text_cache)>=2048:self.text_cache.pop(next(iter(self.text_cache)))
+            if outlined:
+                base=self.cache_text(txt,size,color,serif)
+                image=pg.Surface((base.get_width()+6,base.get_height()+6),pg.SRCALPHA).convert_alpha()
+                shade=base.copy();shade.fill((6,12,18,200),special_flags=pg.BLEND_RGBA_MULT)
+                image.blit(shade,(5,6))
+                for dx,dy in ((-1,-1),(0,-1),(1,-1),(-1,0),(1,0),(-1,1),(0,1),(1,1)):
+                    image.blit(shade,(3+dx,3+dy))
+                image.blit(base,(3,3));self.text_cache[key]=image
+            else:self.text_cache[key]=self.font(size,serif).render(txt,True,color).convert_alpha()
         return self.text_cache[key]
 
-    def text(self,txt,pos,size=20,color=(246,236,210),serif=False,center=False,max_width=None):
-        s=self.cache_text(txt,size,color,serif)
+    def text(self,txt,pos,size=20,color=(246,236,210),serif=False,center=False,max_width=None,outlined=False):
+        s=self.cache_text(txt,size,color,serif,outlined=outlined)
+        if outlined:
+            w,h=s.get_width()-6,s.get_height()-6
+            factor=min(1.,max_width*SCALE/w) if max_width is not None and w else 1.
+            width,height=max(1,pixel(w*factor)),max(1,pixel(h*factor));pad=pixel(3*factor)
+            x,y=self.canvas.point(pos)
+            if center:x-=width//2;y-=height//2
+            self.native_canvas.blit(s,(x-pad,y-pad,width+pad*2,height+pad*2))
+            return
         if max_width is not None and s.get_width()>max_width*SCALE:
             width=pixel(max_width*SCALE);height=max(1,round(s.get_height()*width/s.get_width()))
             x,y=self.canvas.point(pos)
@@ -800,7 +869,75 @@ class Game:
             self.particles.append([x,y,math.cos(a)*v,math.sin(a)*v,self.rng.uniform(.3,.7),color])
 
     def update(self,dt,axis,held,pressed,drop=False,fire=False,activity=False,down=False):
-        if self.state=='game_over':return
+        if self.state in ('game_over','win'):return
+        if self.resurrection.active:
+            if self.state!='play':return
+            self.prev_cam=self.cam;self.prev_cam_y=self.cam_y
+            self.previous_elapsed=self.elapsed;self.elapsed+=dt
+            spawn,finished=self.resurrection.update(dt)
+            if spawn:self.respawn_hero()
+            if self.resurrection.spawned:self.update_particles(dt)
+            self.energy.update_display(dt)
+            if finished:
+                self.resurrection.active=False;self.menu_gameplay_blocked=True
+            return
+        if self.hero_death.active:
+            if self.state!='play':return
+            self.previous_elapsed=self.elapsed;self.elapsed+=dt
+            finished=self.hero_death.update(dt)
+            if self.hero_death.kind=='pit':
+                self.hero.px,self.hero.py=self.hero.x,self.hero.y
+                self.hero.x,self.hero.y=pit_position(self.hero_death,self.hero,self.hero_death.elapsed)
+                self.prev_cam_y=self.cam_y
+            if self.hero_death.kind=='water':
+                self.hero.px,self.hero.py=self.hero.x,self.hero.y
+                self.hero.x,self.hero.y=water_position(self.hero_death,self.hero,self.hero_death.elapsed)
+                for boundary in (.55,1.35):
+                    if self.hero_death.previous_elapsed<boundary<=self.hero_death.elapsed:self.rumble_death_animation()
+            if self.hero_death.electrical or self.hero_death.kind in ('blade','laser','fire'):
+                if self.hero_death.electrical:
+                    enemy={'beetle':self.beetle_motions,'vulture':self.vultures,
+                           'scorpion':self.scorpions,'gyrosphere':self.gyrospheres}[self.hero_death.kind][self.hero_death.index]
+                    enemy.previous_clock=enemy.clock;enemy.clock+=dt
+                    if self.hero_death.kind=='vulture':enemy.previous_timer=enemy.timer;enemy.timer+=dt
+                fall_dt=dt if self.hero_death.kind in ('laser','fire') else max(0.,min(dt,self.hero_death.elapsed-BEETLE_STUN))
+                if fall_dt:self.hero.update(fall_dt,0,False,False,self.collision_platforms(),allow_glide=False)
+                else:self.hero.px,self.hero.py=self.hero.x,self.hero.y
+                if self.hero_death.kind in ('laser','fire'):
+                    death=self.hero_death
+                    fire=death.kind=='fire';reaction=FIRE_REACTION if fire else .28
+                    if self.hero.grounded and death.elapsed>=reaction and death.landed_at is None:death.landed_at=death.elapsed
+                    lost=self.hero.y>(tower_level.HEIGHT+160 if self.level_id==4 else 850)
+                    finished=(death.elapsed>=LASER_LIMIT or
+                              death.elapsed>=(FIRE_DURATION if fire else LASER_DURATION)-1e-9 and
+                              (lost or death.landed_at is not None and death.elapsed>=death.duration-1e-9))
+                    if fire and finished and death.landed_at is None:
+                        death.landed_at=max(FIRE_REACTION,death.elapsed-1.)
+                    refresh=(int(death.elapsed/.12+1e-9)!=int(death.previous_elapsed/.12+1e-9) if fire else
+                             death.previous_elapsed<LASER_IMPACT<=death.elapsed or
+                             death.elapsed>=1.2 and int(death.elapsed*5+1e-9)!=int(death.previous_elapsed*5+1e-9))
+                    if not finished and refresh:
+                        self.rumble_death_animation()
+                self.prev_cam=self.cam
+                if self.level_id==4:
+                    self.cam=self.prev_cam=0.;self.prev_cam_y=self.cam_y
+                    self.cam_y+=(tower_level.camera_target(self.hero.y)-self.cam_y)*(1-math.exp(-5.8*dt))
+                else:
+                    target=max(0,min(self.world_length-VIEW_W,self.hero.x-VIEW_W*.4))
+                    self.cam+=(target-self.cam)*(1-math.exp(-5.8*dt))
+            else:
+                self.prev_cam=self.cam
+                if self.hero_death.kind!='pit':
+                    target=max(0,min(self.world_length-VIEW_W,self.hero_death.x-VIEW_W*.5))
+                    self.cam+=(target-self.cam)*(1-math.exp(-5.8*dt))
+            if finished:
+                final=self.lives==0
+                self.hero_death.active=False
+                self.gamepads.stop_rumble()
+                if final:self.gamepads.rumble('game_over')
+                self.finish_death()
+                self.menu_gameplay_blocked=True
+            return
         if self.temple_exit.active:
             if self.state!='play':return
             self.previous_elapsed=self.elapsed;self.elapsed+=dt
@@ -808,7 +945,7 @@ class Game:
             self.hero_animation.update(dt,self.hero,True,self.solar,self.rest)
             self.prev_cam=self.cam
             self.cam+=(self.world_length-VIEW_W-self.cam)*(1-math.exp(-5.8*dt))
-            if finished:self.state='win';self.sound('win')
+            if finished:self.complete_level()
             return
         self.previous_elapsed=self.elapsed
         self.elapsed+=dt
@@ -844,9 +981,10 @@ class Game:
         if self.hero.floating or self.hero.landed_gliding:self.energy.drain_glide(dt)
         for i,(x,y) in enumerate(self.gems):
             if i not in self.taken and abs(self.hero.x-x)<31 and abs(self.hero.y-28-y)<42:
-                self.taken.add(i);self.energy.collect();self.burst(x,y,GOLD,12);self.sound('gem')
+                self.taken.add(i);self.award_points(10);self.energy.collect();self.burst(x,y,GOLD,12);self.sound('gem')
         if self.medallions.available(self.level_id) and touches_medallion(self.hero,self.elapsed,self.medallion_anchor):
             if self.medallions.collect(self.level_id):
+                self.award_points(500)
                 x,y=medallion_position(self.elapsed,self.medallion_anchor);self.burst(x,y,GOLD,24);self.sound('medallion')
                 if self.medallions.redeem_extra_life():
                     self.lives+=1;self.extra_life_notice=3.
@@ -871,6 +1009,7 @@ class Game:
             target=max(0,min(self.world_length-VIEW_W,self.hero.x-VIEW_W*.40+self.hero.vx*.24))
             self.cam+=(target-self.cam)*(1-math.exp(-5.8*dt))
         self.invuln=max(0,self.invuln-dt)
+        for enemy in self.gyrospheres:enemy.update(dt,self.hero,solids,self.cam_y,self.cam)
         self.notice=max(0,self.notice-dt)
         for enemy in self.crocodiles:
             event=enemy.update(dt,self.hero,can_attack=self.invuln<=0)
@@ -881,47 +1020,46 @@ class Game:
             if obelisk.update(dt,self.hero) and index>self.check_index:
                 self.checkpoint=(obelisk.x-60,obelisk.y);self.check_index=index;self.notice=3
                 self.sound('checkpoint')
-        hit=self.hero.y>(tower_level.HEIGHT+160 if self.level_id==4 else 850) or self.hero.spike_hit or (self.level_id==2 and desert_level.water_hits(self.hero))
-        if self.level_id in (3,4) and self.temple_art.flame_hits(self.hero,self.elapsed,
-                tower_level.TORCHES if self.level_id==4 else None):hit=True
+        water_hit=self.level_id==2 and desert_level.water_hits(self.hero)
+        pit_limit=tower_level.BASE_Y+2 if self.level_id==4 else desert_level.WATER_Y+2 if self.level_id==2 else GROUND_Y+2
+        pit_hit=self.hero.y>pit_limit and not self.hero.grounded and not water_hit
+        hit=pit_hit or self.hero.spike_hit or water_hit
+        fire_killer=None
+        if self.level_id in (3,4):
+            fire_source=self.temple_art.flame_source(self.hero,self.elapsed,
+                tower_level.TORCHES if self.level_id==4 else None)
+            if fire_source is not None:
+                if not hit:fire_killer=fire_source
+                hit=True
+        laser_killer=None
         for bolt in self.laser_bolts:
-            if bolt.update(dt,self.hero,solids,can_hit=self.invuln<=0):hit=True
+            if bolt.update(dt,self.hero,solids,can_hit=self.invuln<=0):
+                if not hit:laser_killer=bolt
+                hit=True
         self.laser_bolts=[bolt for bolt in self.laser_bolts if bolt.alive]
+        environmental_hit=hit;beetle_hit=None
         for x,y in self.enemy_positions():
-            if self.invuln<=0 and abs(self.hero.x-x)<32 and abs(self.hero.y-self.hero.body_height/2-y)<self.hero.body_height/2+6:hit=True
-        if self.invuln<=0 and any(enemy.hits(self.hero) for enemy in self.crocodiles):hit=True
-        if self.invuln<=0 and any(enemy.hits(self.hero) for enemy in self.vultures):hit=True
-        if self.invuln<=0 and any(enemy.hits(self.hero) for enemy in self.scorpions):hit=True
+            if self.invuln<=0 and abs(self.hero.x-x)<32 and abs(self.hero.y-self.hero.body_height/2-y)<self.hero.body_height/2+6:
+                hit=True
+                if not environmental_hit:
+                    beetle_hit=next((m for m in self.beetle_motions if m.index not in self.dead_beetles
+                                     and abs(m.x-x)<.01 and abs(m.y-y)<.01),None)
+                break
+        crocodile_hit=next((enemy for enemy in self.crocodiles if enemy.hits(self.hero)),None) if self.invuln<=0 else None
+        killer=crocodile_hit if not hit else None
+        if crocodile_hit is not None:hit=True
+        vulture_hit=next((enemy for enemy in self.vultures if enemy.hits(self.hero)),None) if self.invuln<=0 else None
+        vulture_killer=vulture_hit if not hit else None
+        if vulture_hit is not None:hit=True
+        scorpion_hit=next((enemy for enemy in self.scorpions if enemy.hits(self.hero)),None) if self.invuln<=0 else None
+        scorpion_killer=scorpion_hit if not hit else None
+        if scorpion_hit is not None:hit=True
+        gyro_hit=next((enemy for enemy in self.gyrospheres if enemy.hits(self.hero)),None) if self.invuln<=0 else None
+        gyro_killer=gyro_hit if not hit else None
+        if gyro_hit is not None:hit=True
         if hit:
-            self.laser_bolts.clear()
-            self.beetle_deaths.clear()
-            self.particles.clear()
-            self.deaths+=1;self.lives=max(0,self.lives-1)
-            self.gamepads.rumble('death' if self.lives else 'game_over')
-            if self.lives==0:
-                self.state='game_over'
-                self.cache_text(self.game_over_results(),22)
-                self.cache_text(f'{translate("Niveau",self.settings.language)} {self.level_id:02}',18,GOLD)
-                self.sound('game_over')
-                self.hero_animation.reset()
-                self.solar.reset();self.rest.reset();self.crouch_fire=False
-                self.pending_jump=self.pending_drop=self.pending_fire=self.pending_activity=False
-                return
-            self.hero=Hero(*self.checkpoint)
-            self.hero_animation.reset()
-            self.solar.reset()
-            self.energy.refill()
-            self.beetle_motions=[BeetleMotion(i,self.elapsed,self.beetle_spawns) for i in range(len(self.beetle_spawns))]
-            for enemy in self.scorpions:
-                if enemy.alive:enemy.reset()
-            self.vultures=[Vulture(enemy.index,self.vulture_spawns) if enemy.alive else enemy for enemy in self.vultures]
-            self.rest.reset();self.wake_blocked=False
-            self.crouch_fire=False
-            for enemy in self.crocodiles:
-                if enemy.alive:enemy.reset()
-            self.cam=self.prev_cam=max(0,min(self.world_length-VIEW_W,self.hero.x-VIEW_W*.4))
-            if self.level_id==4:self.cam_y=self.prev_cam_y=tower_level.camera_target(self.hero.y)
-            self.invuln=2.;self.sound('fall');self.burst(self.hero.x,self.hero.y-25,(130,224,227),24)
+            self.kill_hero(killer,beetle_hit,vulture_killer,laser_killer,scorpion_killer,fire_killer,water_hit,pit_hit,gyro_killer)
+            if self.hero_death.active or self.resurrection.active or self.state=='game_over':return
         elif self.hero.head_bump:
             self.gamepads.rumble('head_bump')
         elif not was_grounded and self.hero.grounded and not self.hero.landed_gliding and self.hero.impact_vy>100 and self.hero.landing_kind=='land_heavy':
@@ -933,11 +1071,127 @@ class Game:
                   tower_level.completed(self.hero) if self.level_id==4 else
                   self.level_id==1 and self.hero.x>=self.world_length+EXIT_MARGIN)
         if self.state=='play' and finished:
-            self.state='win';self.sound('win')
+            self.complete_level()
+        self.update_particles(dt)
+        self.energy.update_display(dt)
+
+    def award_points(self,points):
+        self.score+=points
+        self.level_score+=points
+
+    def complete_level(self):
+        if not self.level_bonus_awarded:
+            self.victory_started=self.time
+            self.victory_lives=self.lives
+            self.award_points(self.level_id*1000+self.lives*100)
+            self.level_bonus_awarded=True
+        self.state='win';self.sound('win')
+
+    def update_particles(self,dt):
         for p in self.particles:
             p[0]+=p[2]*dt;p[1]+=p[3]*dt;p[3]+=100*dt;p[4]-=dt
         self.particles=[p for p in self.particles if p[4]>0]
-        self.energy.update_display(dt)
+
+    def kill_hero(self,crocodile=None,beetle=None,vulture=None,laser=None,scorpion=None,fire=None,water=False,pit=False,gyrosphere=None):
+        self.laser_bolts.clear();self.beetle_deaths.clear();self.particles.clear()
+        self.hero_death=HeroDeath()
+        self.deaths+=1;self.lives=max(0,self.lives-1)
+        if self.hero.spike_hit or pit or water or fire is not None or laser is not None or (crocodile is not None and self.crocodile_sprites) or beetle is not None or vulture is not None or scorpion is not None or gyrosphere is not None:
+            if self.hero.spike_hit:
+                self.hero_death.begin_blade(self.hero)
+                self.hero.coyote=self.hero.buffer=0.;self.hero.floating=False
+                self.hero.drop_elapsed=None;self.hero.drop_support=self.hero.ignored_platform=None
+            elif pit:
+                self.hero_death.begin_pit(self.hero)
+                self.hero.coyote=self.hero.buffer=0.;self.hero.floating=False
+                self.hero.drop_elapsed=None;self.hero.drop_support=self.hero.ignored_platform=None
+            elif water:
+                self.hero_death.begin_water(self.hero)
+                self.hero.x,self.hero.y=self.hero_death.hero_x,self.hero_death.hero_y
+                self.hero.coyote=self.hero.buffer=0.;self.hero.floating=False
+                self.hero.drop_elapsed=None;self.hero.drop_support=self.hero.ignored_platform=None
+            elif fire is not None:
+                self.hero_death.begin_fire(fire,self.hero)
+                self.hero.coyote=self.hero.buffer=0.;self.hero.floating=False
+                self.hero.drop_elapsed=None;self.hero.drop_support=self.hero.ignored_platform=None
+            elif laser is not None:
+                self.hero_death.begin_laser(laser,self.hero)
+                self.hero.coyote=self.hero.buffer=0.;self.hero.floating=False
+                self.hero.drop_elapsed=None;self.hero.drop_support=self.hero.ignored_platform=None
+            elif beetle is not None or vulture is not None or scorpion is not None or gyrosphere is not None:
+                if beetle is not None:self.hero_death.begin_beetle(beetle,self.hero)
+                elif vulture is not None:self.hero_death.begin_vulture(vulture,self.hero)
+                elif scorpion is not None:self.hero_death.begin_scorpion(scorpion,self.hero)
+                else:self.hero_death.begin_gyrosphere(gyrosphere,self.hero)
+                attacker=beetle if beetle is not None else vulture if vulture is not None else scorpion if scorpion is not None else gyrosphere
+                attacker.px=attacker.x
+                if self.hero_death.kind!='scorpion':attacker.py=attacker.y
+                self.hero.coyote=self.hero.buffer=0.;self.hero.floating=False
+                self.hero.drop_elapsed=None;self.hero.drop_support=self.hero.ignored_platform=None
+            else:self.hero_death.begin(self.crocodiles.index(crocodile),crocodile,self.hero)
+            self.rumble_death_animation()
+            if laser is None and fire is None and not water and not pit:self.hero.vx=self.hero.vy=0.
+            self.hero.px=self.hero.x;self.hero.py=self.hero.y
+            self.solar.reset();self.rest.reset();self.crouch_fire=False
+            self.pending_jump=self.pending_drop=self.pending_fire=self.pending_activity=False
+            return
+        self.gamepads.rumble('death' if self.lives else 'game_over')
+        self.finish_death()
+
+    def rumble_death_animation(self):
+        if self.hero_death.active and self.hero_death.elapsed<self.hero_death.duration:
+            if self.hero_death.kind=='water':
+                elapsed=self.hero_death.elapsed
+                event,end=('water_entry',.55) if elapsed<.55 else ('death',1.35) if elapsed<1.35 else ('laser_fall',self.hero_death.duration)
+                self.gamepads.rumble(event,duration=max(1,math.ceil((end-elapsed)*1000-1e-7)))
+                return
+            if self.hero_death.kind=='fire':
+                from fire_death import extinction
+                death=self.hero_death
+                event=('death' if death.elapsed<.12 else 'fire_embers' if extinction(death,death.elapsed)>0 else
+                       'fire_burn' if int(death.elapsed/.12)%3 else 'fire_flicker')
+                self.gamepads.rumble(event,duration=max(1,min(120,math.ceil((death.duration-death.elapsed)*1000-1e-7))))
+                return
+            if self.hero_death.kind=='laser':
+                elapsed=self.hero_death.elapsed
+                remaining=(LASER_IMPACT-elapsed if elapsed<LASER_IMPACT else self.hero_death.duration-elapsed)
+                event='death' if elapsed<LASER_IMPACT else 'laser_fall'
+                self.gamepads.rumble(event,duration=max(1,math.ceil(remaining*1000-1e-7)))
+                return
+            remaining=math.ceil((self.hero_death.duration-self.hero_death.elapsed)*1000-1e-7)
+            self.gamepads.rumble('death',duration=max(1,remaining))
+
+    def finish_death(self):
+        if self.lives==0:
+            self.state='game_over'
+            self.cache_text(self.game_over_results(),22)
+            self.cache_text(f'{translate("Niveau",self.settings.language)} {self.level_id:02}',18,GOLD)
+            self.sound('game_over')
+            self.hero_animation.reset()
+            self.solar.reset();self.rest.reset();self.crouch_fire=False
+            self.pending_jump=self.pending_drop=self.pending_fire=self.pending_activity=False
+            return
+        self.solar.reset();self.rest.reset();self.hero_animation.reset();self.crouch_fire=False
+        self.pending_jump=self.pending_drop=self.pending_fire=self.pending_activity=False
+        self.resurrection.begin(self.lives)
+        self.prev_cam=self.cam;self.prev_cam_y=self.cam_y
+
+    def respawn_hero(self):
+        self.hero=Hero(*self.checkpoint)
+        self.hero_animation.reset();self.solar.reset();self.energy.refill()
+        self.beetle_motions=[BeetleMotion(i,self.elapsed,self.beetle_spawns) for i in range(len(self.beetle_spawns))]
+        for enemy in self.scorpions:
+            if enemy.alive:enemy.reset()
+        for enemy in self.gyrospheres:
+            if enemy.alive:enemy.reset()
+            else:enemy.previous_death_timer=enemy.death_timer=GYRO_DEATH_TIME
+        self.vultures=[Vulture(enemy.index,self.vulture_spawns) if enemy.alive else enemy for enemy in self.vultures]
+        self.rest.reset();self.wake_blocked=False;self.crouch_fire=False
+        for enemy in self.crocodiles:
+            if enemy.alive:enemy.reset()
+        self.cam=self.prev_cam=max(0,min(self.world_length-VIEW_W,self.hero.x-VIEW_W*.4))
+        if self.level_id==4:self.cam_y=self.prev_cam_y=tower_level.camera_target(self.hero.y)
+        self.invuln=2.;self.sound('fall');self.burst(self.hero.x,self.hero.y-25,(130,224,227),24)
 
     def collision_platforms(self):
         return self.platforms+[v for v in self.vases if not v.broken] if self.vases else self.platforms
@@ -953,17 +1207,26 @@ class Game:
         beam=self.solar.bounds(self.hero,self.collision_platforms())
         contact=beam.inflate(2,2)
         for vase in self.vases:
-            if not vase.broken and contact.colliderect(vase.rect):vase.shatter()
+            if not vase.broken and contact.colliderect(vase.rect):
+                vase.shatter();self.award_points(10)
         for guardian in self.vultures:
-            if guardian.alive and beam.colliderect(guardian.hurtbox):guardian.ignite()
+            if guardian.alive and beam.colliderect(guardian.hurtbox):
+                guardian.ignite();self.award_points(200)
         for enemy in self.crocodiles:
             if enemy.alive and beam.colliderect(enemy.hurtbox):
                 enemy.ignite()
+                self.award_points(100)
         for enemy in self.scorpions:
-            if enemy.alive and beam.colliderect(enemy.hurtbox):enemy.ignite()
+            if enemy.alive and beam.colliderect(enemy.hurtbox):
+                enemy.ignite();self.award_points(300)
+        for enemy in self.gyrospheres:
+            if enemy.alive and beam.colliderect(enemy.rect):
+                enemy.destroy();self.award_points(GYRO_POINTS)
+                self.burst(enemy.x,enemy.y,(130,224,227),14)
         for i,x,y in self.beetles():
             if beam.colliderect(pg.Rect(round(x-30),round(y-20),60,40)):
                 self.dead_beetles.add(i);self.burst(x,y,GOLD,20)
+                self.award_points(100)
                 motion=self.beetle_motions[i]
                 self.beetle_deaths.append(BeetleDeath(x,y,motion.facing,motion.vx,motion.vy))
 
@@ -1005,6 +1268,32 @@ class Game:
 
     def draw_hero(self,x,y,alpha=1):
         h=self.hero;t=self.time;f=h.face
+        if self.resurrection.active and (not self.resurrection.spawned or self.resurrection.time(alpha)<REAPPEAR):return
+        if self.hero_death.active or (self.state=='game_over' and self.hero_death.elapsed>0):
+            if self.hero_death.kind=='pit':
+                clip='float' if self.hero_animation.state=='float' else 'fall'
+                self.pit_death_sprites.draw(self.canvas,self.hero_death,h,x,y,alpha,self.animation_bank.clips[clip][0])
+                return
+            if self.hero_death.kind=='water':
+                self.water_death_sprites.draw(self.canvas,self.hero_death,h,x,y,alpha,self.animation_bank)
+                return
+            if self.hero_death.kind in ('laser','fire'):
+                sprites=self.fire_death_sprites if self.hero_death.kind=='fire' else self.laser_death_sprites
+                sprites.draw(self.canvas,self.hero_death,h,x,y,alpha)
+                return
+            if self.hero_death.kind=='blade':
+                self.blade_death_sprites.draw(self.canvas,self.hero_death,h,x,y,alpha)
+                return
+            if self.hero_death.electrical:
+                self.beetle_death_sprites.draw(self.canvas,self.hero_death,h,x,y,alpha)
+                return
+            elapsed=self.hero_death.time(alpha)
+            if elapsed>=DEATH_CAPTURE:return
+            p=death_smooth(elapsed/DEATH_CAPTURE)
+            x+=(self.hero_death.x+self.hero_death.facing*85-self.hero_death.hero_x)*p
+            y+=(self.hero_death.y-self.hero_death.hero_y)*p-math.sin(p*math.pi)*10
+            self.animation_bank.clips['fall'][0].draw(self.canvas,x,y,self.hero_death.hero_face)
+            return
         if self.temple_exit.active and self.temple_exit.elapsed>=APPROACH:
             self.temple_exit_sprites.draw(self.canvas,self.temple_exit,h,h.px+(h.x-h.px)*alpha-x,alpha)
             return
@@ -1047,13 +1336,21 @@ class Game:
             draw.arc(self.canvas,(169,231,223),(x-33,y-26,66,30),math.pi,math.tau,2)
 
     def draw_crocodiles(self,cam,alpha):
-        for enemy in self.crocodiles:
+        holding_death=(self.resurrection.active and not self.resurrection.spawned
+                       and self.hero_death.elapsed>0)
+        # The world is frozen during resurrection; don't replay the last lunge
+        # interval as the renderer's interpolation fraction cycles each frame.
+        crocodile_alpha=1. if self.resurrection.active else alpha
+        for index,enemy in enumerate(self.crocodiles):
+            if (self.hero_death.active or holding_death or (self.state=='game_over' and self.hero_death.elapsed>0)) and self.hero_death.kind=='crocodile' and index==self.hero_death.index:
+                self.hero_death_sprites.draw(self.canvas,self.hero_death,cam,crocodile_alpha,self.crocodile_sprites)
+                continue
             if not enemy.alive and not (self.crocodile_sprites and self.crocodile_sprites.burn):continue
-            x=enemy.px+(enemy.x-enemy.px)*alpha-cam
+            x=enemy.px+(enemy.x-enemy.px)*crocodile_alpha-cam
             if not -180<x<VIEW_W+180:continue
             if enemy.alive:draw.ellipse(self.canvas,(81,69,44),(x-77,enemy.y-5,154,8))
             if self.crocodile_sprites:
-                self.crocodile_sprites.sample(enemy,alpha).draw(self.canvas,x,enemy.y,enemy.facing)
+                self.crocodile_sprites.sample(enemy,crocodile_alpha).draw(self.canvas,x,enemy.y,enemy.facing)
             else:
                 # Visible fallback for development checkouts without the atlas.
                 f=enemy.facing;y=enemy.y
@@ -1061,6 +1358,13 @@ class Game:
                 draw.ellipse(self.canvas,(68,85,58),(x-55,y-33,117,30))
                 draw.rect(self.canvas,(83,99,65),(x+f*72-31,y-25,62,18),border_radius=5)
                 draw.circle(self.canvas,(219,177,71),(x+f*64,y-28),3)
+
+    def draw_desert_sign(self,cam):
+        if self.level_id!=1:return
+        x=WORLD-300-cam
+        if -55.5<x<VIEW_W+55.5:
+            # Bury the sandy foot slightly in the ground; this is scenery only.
+            self.canvas.blit_native(self.desert_sign,(x-55.5,GROUND_Y-72))
 
     def draw_tower(self,alpha,started,present):
         render_y=self.prev_cam_y+(self.cam_y-self.prev_cam_y)*alpha
@@ -1096,19 +1400,22 @@ class Game:
                 if camera-100<vase.floor<camera+VIEW_H+100:self.vase_sprites.draw(self.canvas,vase,0,alpha)
             for enemy in self.scorpions:
                 if camera-200<enemy.y<camera+VIEW_H+200:self.scorpion_sprites.draw(self.canvas,enemy,0,alpha)
+            for enemy in self.gyrospheres:
+                if camera-100<enemy.y<camera+VIEW_H+100:self.gyrosphere_sprites.draw(self.canvas,enemy,alpha,self.beetle_sprites)
             for bolt in self.laser_bolts:
                 if camera-100<bolt.y<camera+VIEW_H+100:self.scorpion_sprites.draw_bolt(self.canvas,bolt,0,alpha)
             hx=self.hero.px+(self.hero.x-self.hero.px)*alpha
             hy=self.hero.py+(self.hero.y-self.hero.py)*alpha
-            if self.solar.active or self.invuln<=0 or int(self.time*12)%2==0:self.draw_hero(hx,hy,alpha)
+            if self.state=='game_over' or self.hero_death.active or self.resurrection.active or self.solar.active or self.invuln<=0 or int(self.time*12)%2==0:self.draw_hero(hx,hy,alpha)
             self.solar.draw(self.canvas,self.hero,self.collision_platforms(),0,alpha)
             for x,y,vx,vy,life,color in self.particles:
                 if camera-30<y<camera+VIEW_H+30:draw.circle(self.canvas,color,(x,y),max(1,int(life*5)))
         finally:self.canvas=original
         self.hud(alpha)
+        self.resurrection_sprites.draw(self.canvas,self.resurrection,alpha)
         if self.state=='play':
-            self.text(f'ASCENSION : {tower_level.progress(self.hero.y)} %',(VIEW_W/2,104),16,GOLD,center=True)
-            if self.notice>0:self.text('POINT DE REPRISE ACTIVÉ',(VIEW_W/2,132),19,GOLD,center=True)
+            self.hud_notice(f'ASCENSION : {tower_level.progress(self.hero.y)} %',152,16)
+            if self.notice>0:self.hud_notice('POINT DE REPRISE ACTIVÉ',198,19)
         elif self.state=='pause':self.menu.draw(self)
         elif self.state=='win':
             self.draw_victory()
@@ -1138,6 +1445,7 @@ class Game:
             self.desert_art.river(self.canvas,cam,animation_time)
             self.desert_art.temple_background(self.canvas,cam)
         for p in self.platforms:self.platform(p,cam)
+        self.draw_desert_sign(cam)
         if self.level_id==2:
             self.desert_art.shorelines(self.canvas,cam,animation_time)
             self.desert_art.reeds(self.canvas,cam)
@@ -1172,15 +1480,19 @@ class Game:
         self.draw_crocodiles(cam,alpha)
         for enemy in self.scorpions:
             if -200<enemy.x-cam<VIEW_W+200:self.scorpion_sprites.draw(self.canvas,enemy,cam,alpha)
+        for enemy in self.gyrospheres:
+            if -100<enemy.x-cam<VIEW_W+100:self.gyrosphere_sprites.draw(self.canvas,enemy,alpha,self.beetle_sprites,cam)
         for bolt in self.laser_bolts:self.scorpion_sprites.draw_bolt(self.canvas,bolt,cam,alpha)
         for guardian in self.vultures:
             gx,gy=guardian.position(alpha)
             if -180<gx-cam<VIEW_W+180:self.vulture_sprites.draw(self.canvas,guardian,cam,alpha)
         hx=(self.hero.px+(self.hero.x-self.hero.px)*alpha)-cam
         hy=self.hero.py+(self.hero.y-self.hero.py)*alpha
-        if self.temple_exit.active or self.solar.active or self.invuln<=0 or int(self.time*12)%2==0:self.draw_hero(hx,hy,alpha)
+        if self.state=='game_over' or self.hero_death.active or self.resurrection.active or self.temple_exit.active or self.solar.active or self.invuln<=0 or int(self.time*12)%2==0:self.draw_hero(hx,hy,alpha)
         self.solar.draw(self.canvas,self.hero,self.collision_platforms(),cam,alpha)
-        if self.level_id==2:self.desert_art.temple_foreground(self.canvas,cam)
+        if self.level_id==2:
+            self.desert_art.bridge_foreground(self.canvas,self.platforms,cam)
+            self.desert_art.temple_foreground(self.canvas,cam)
         elif self.level_id==3:self.temple_art.foreground(self.canvas,cam)
         for px,py,vx,vy,life,col in self.particles:
             draw.circle(self.canvas,col,(px-cam,py),max(1,int(life*5)))
@@ -1189,15 +1501,15 @@ class Game:
             x=(i*173+animation_time*(17+i%7)-cam*.65)%(VIEW_W+40)-20
             y=160+(i*97)%520+math.sin(animation_time+i)*9
             draw.line(self.canvas,(231,202,146),(x,y),(x+3,y))
+        self.pit_darkness.draw(self.canvas,self.pit_regions,self.level_id,cam)
         self.hud(alpha)
+        self.resurrection_sprites.draw(self.canvas,self.resurrection,alpha)
         if self.state=='pause':self.menu.draw(self)
         elif self.state=='win':
             self.draw_victory()
         elif self.state=='game_over':
             self.draw_game_over()
-        if self.notice>0 and self.state=='play':self.text('POINT DE REPRISE ACTIVÉ',(VIEW_W/2,132),19,GOLD,center=True)
-        elif self.level_id==2 and self.state=='play' and self.hero.x<3600:
-            self.text('LA RIVIÈRE EST MORTELLE · EMPRUNTEZ LES PASSERELLES',(VIEW_W/2,112),16,GOLD,center=True)
+        if self.notice>0 and self.state=='play':self.hud_notice('POINT DE REPRISE ACTIVÉ',152,19)
         if self.show_fps:self.draw_fps()
         if self.show_stats:
             self.draw_diagnostics()
@@ -1225,8 +1537,8 @@ class Game:
                 f'{"Composition GPU" if self.native_canvas.gpu else "Repli CPU"}  |  {len(self.native_canvas.textures)} textures  |  Pixels Full HD entiers  |  Héros {self.animation_bank.pose_count if self.animation_bank else 8} poses',
                 'Parallaxe : 0,08 / 0,24 / 0,48  |  Une caméra / une interpolation')
             self.diagnostic_time=now
-        self.canvas.blit(self.diagnostic_panel,(20,88))
-        for i,line in enumerate(self.diagnostic_lines):self.text(line,(30,94+i*25),16)
+        self.canvas.blit(self.diagnostic_panel,(20,140))
+        for i,line in enumerate(self.diagnostic_lines):self.text(line,(30,146+i*25),16)
 
     def draw_fps(self):
         now=time.perf_counter()
@@ -1234,54 +1546,53 @@ class Game:
             total=sum(self.frame_intervals)
             self.fps_count=min(999,round(len(self.frame_intervals)/total)) if total>0 else 0
             self.fps_updated=now
-        draw.rect(self.canvas,(15,34,42),(1167,99,90,28))
         digits=str(self.fps_count)
-        for index,digit in enumerate(digits):self.text(digit,(1200-9*(len(digits)-index),104),12)
-        self.text('FPS',(1213,106),10,GOLD)
+        for index,digit in enumerate(digits):self.text(digit,(1200-9*(len(digits)-index),141),12,outlined=True)
+        self.text('FPS',(1213,143),10,GOLD,outlined=True)
+
+    def hud_notice(self,message,y,size):
+        self.text(message,(VIEW_W/2,y),size,GOLD,center=True,max_width=1000,outlined=True)
 
     def hud(self,alpha=1.):
-        self.canvas.blit(self.hud_panel,(0,0))
-        self.text('VIES',(34,10),9,GOLD)
-        for index in range(min(self.lives,6)):
-            self.canvas.blit_native(self.life_symbol,(34+(index%3)*27,29+(index//3)*23))
-        if self.lives>6:self.text(f'× {self.lives}',(34,62),10,GOLD)
-        self.text('LES SABLES D’HORUS',(124,20),18)
+        self.canvas.blit_native(self.hud_panel,(0,0))
+        self.text('VIES',hud_layout.LIVES_LABEL,11,GOLD,max_width=45,outlined=True)
+        visible=self.lives+(1 if self.hero_death.active and self.lives else 0)
+        for index in range(6):
+            self.canvas.blit_native(self.life_symbol if index<visible else self.life_symbol_empty,life_position(index))
+        if self.lives>6:self.text(f'× {self.lives}',(302,20),10,GOLD,max_width=36,outlined=True)
+        self.text('LES SABLES D’HORUS',hud_layout.TITLE,18,center=True,max_width=432,outlined=True)
         label={1:'NIVEAU 01  /  LE SEUIL DU DÉSERT',2:'NIVEAU 02  /  LE DÉSERT',3:'NIVEAU 03  /  LE TEMPLE',4:'NIVEAU 04  /  LA TOUR'}[self.level_id]
-        self.text(label,(124,45),11,(198,209,199))
+        self.text(label,hud_layout.LEVEL,11,(198,209,199),center=True,max_width=432,outlined=True)
+        shown_score=self.score
+        if self.state=='win' and self.victory_started is not None:
+            shown_score-=self.victory_lives*100-sample_life_bonus(self.time-self.victory_started,self.victory_lives).points
+        digits=f'{shown_score:,}'.replace(',',' ')
+        label_width=min(100,self.cache_text('SCORE  ',20,GOLD).get_width()/SCALE)
+        score_x=hud_layout.SCORE[0]-(label_width+sum(6 if digit==' ' else 12 for digit in digits))/2
+        self.text('SCORE  ',(score_x,hud_layout.SCORE[1]),20,GOLD,max_width=100,outlined=True)
+        score_x+=label_width
+        for digit in digits:
+            if digit==' ':score_x+=6;continue
+            self.text(digit,(score_x,hud_layout.SCORE[1]),20,GOLD,outlined=True)
+            score_x+=12
         animation_time=self.previous_elapsed+(self.elapsed-self.previous_elapsed)*max(0.,min(1.,alpha))
-        self.crystal_sprites.draw(self.canvas,VIEW_W-331,41,animation_time,bob=False)
-        self.text(f'{len(self.taken):02} / {len(self.gems)}',(VIEW_W-311,26),23,GOLD)
-        self.text('ÉCHAP / START',(VIEW_W-188,34),14)
-        self.medallion_sprites.draw(self.canvas,816,39,animation_time,hud=True)
-        self.text(f'{self.medallions.count} / 3',(839,27),20,GOLD)
-        if self.extra_life_notice>0:self.text('VIE +1 OBTENUE',(795,61),10,GOLD)
+        self.crystal_sprites.draw(self.canvas,*hud_layout.CRYSTAL,animation_time,bob=False)
+        self.text(f'{len(self.taken):02} / {len(self.gems)}',hud_layout.CRYSTAL_COUNT,23,GOLD,max_width=76,outlined=True)
+        self.medallion_sprites.draw(self.canvas,*hud_layout.MEDALLION,animation_time,hud=True)
+        self.text(f'{self.medallions.count} / 3',hud_layout.MEDALLION_COUNT,20,GOLD,max_width=62,outlined=True)
+        if self.extra_life_notice>0:self.text('VIE +1 OBTENUE',hud_layout.EXTRA_LIFE,10,GOLD,center=True,max_width=290,outlined=True)
         self.draw_solar_gauge(alpha)
         if self.state=='play' and self.hero.x<1000 and (self.level_id!=4 or self.hero.y>tower_level.BASE_Y-180):
             self.canvas.blit(self.help_panel,((VIEW_W-self.help_panel.get_width())//2,665))
             self.text('Stick / ← →  Bouger    A / Espace  Saut    Bas / S  Accroupir    RT / B / F  Tir    Maintenir A  Planer',(VIEW_W/2,682),16,center=True,max_width=1040)
 
-    def draw_solar_gauge(self,alpha=1.):
-        x,y,width,height=515,30,250,13
-        low=self.energy.value<RAY_COST
+    def draw_solar_gauge(self,alpha=1.,low=None):
+        if low is None:low=self.energy.value<RAY_COST
         color=(247,144,65) if low else GOLD
-        label='ÉNERGIE SOLAIRE' if self.energy.value>0 else 'ÉNERGIE SOLAIRE ÉPUISÉE'
-        self.text(label,(x,10),10,color)
-        draw.rect(self.canvas,(15,28,33),(x-2,y-2,width+4,height+4))
-        draw.rect(self.canvas,(123,110,72),(x-2,y-2,width+4,height+4),1)
-        draw.rect(self.canvas,(46,58,57),(x,y,width,height))
-        filled=width*self.energy.fraction(alpha)
-        if filled>0:
-            draw.rect(self.canvas,color,(x,y,filled,height))
-            draw.rect(self.canvas,(255,235,165),(x,y,filled,3))
-        for threshold in (RAY_COST,2*RAY_COST,3*RAY_COST):
-            marker=x+width*threshold/MAX_ENERGY
-            draw.line(self.canvas,(104,92,60),(marker,y+height-3),(marker,y+height),1)
-        draw.circle(self.canvas,color,(x-15,y+height/2),5)
-        for angle in range(0,360,60):
-            a=math.radians(angle)
-            draw.line(self.canvas,color,(x-15+math.cos(a)*8,y+height/2+math.sin(a)*8),
-                      (x-15+math.cos(a)*10,y+height/2+math.sin(a)*10),1)
-        if self.energy.warning>0:self.text('ÉNERGIE INSUFFISANTE',(x,y+height+5),10,(255,160,91))
+        animation_time=self.previous_elapsed+(self.elapsed-self.previous_elapsed)*max(0.,min(1.,alpha))
+        self.solar_gauge.draw(self.canvas,self.energy.fraction(alpha),animation_time,low)
+        if self.energy.value<=0:self.text('ÉPUISÉE',hud_layout.ENERGY_WARNING,10,color,center=True,max_width=200,outlined=True)
+        elif self.energy.warning>0:self.text('ÉNERGIE INSUFFISANTE',hud_layout.ENERGY_WARNING,10,(255,160,91),center=True,max_width=200,outlined=True)
 
     def title(self):
         self.menu.draw(self,'title')
@@ -1315,6 +1626,7 @@ class Game:
         self.state='play';self.acc=0.
         self.pending_jump=self.pending_drop=self.pending_fire=self.pending_activity=False
         self.menu_gameplay_blocked=True
+        self.rumble_death_animation()
         self.update_cursor(time.perf_counter())
 
     def menu_action(self,action):
@@ -1412,7 +1724,7 @@ class Game:
         elif key in (pg.K_RIGHT,pg.K_d):self.menu_action('right')
         elif key in (pg.K_RETURN,pg.K_SPACE):self.menu_action('activate')
         elif key==pg.K_ESCAPE:self.menu_action('back')
-        elif key==pg.K_r and self.state=='pause':self.restart_level();self.state='play'
+        elif key==pg.K_r and self.state=='pause' and not (self.hero_death.active or self.resurrection.active):self.restart_level();self.state='play'
 
     def menu_pointer(self,position):
         if self.display_flags & pg.SCALED:return position[0]/SCALE,position[1]/SCALE
@@ -1429,6 +1741,26 @@ class Game:
         self.overlay(title,subtitle,helptext)
         self.text(f'{len(self.taken)} / {len(self.gems)} éclats solaires   ·   {int(self.elapsed)//60:02}:{int(self.elapsed)%60:02}   ·   {self.deaths} morts',
                   (VIEW_W/2,405),16,center=True,max_width=VIEW_W-100)
+        bonus=sample_life_bonus(self.time-self.victory_started,self.victory_lives) if self.victory_started is not None else None
+        pending=self.victory_lives*100-bonus.points if bonus else 0
+        self.text(f'Score total : {self.score-pending:,}'.replace(',',' '),
+                  (VIEW_W/2,445),22,GOLD,center=True,max_width=VIEW_W-100)
+        self.text(f'Points du niveau : {self.level_score-pending:,}'.replace(',',' '),
+                  (VIEW_W/2,480),18,center=True,max_width=VIEW_W-100)
+        if bonus:
+            self.text('VIES',(VIEW_W/2-170,520),14,GOLD)
+            self.text(str(bonus.remaining),(VIEW_W/2-125,520),14,GOLD)
+            icons=min(6,bonus.remaining-int(bonus.flying))
+            for index in range(icons):
+                self.canvas.blit_native(self.life_symbol,(VIEW_W/2-95+index*34,520))
+            if bonus.flying:
+                p=min(1.,bonus.progress/.8);p=p*p*(3-2*p)
+                x=VIEW_W/2-95+min(5,bonus.remaining-1)*34
+                x+=(VIEW_W/2-210-x)*p
+                y=520-75*p-math.sin(p*math.pi)*24
+                width,height=self.life_symbol.get_size();zoom=1+.55*math.sin(p*math.pi)
+                self.native_canvas.blit(self.life_symbol,(pixel(x*SCALE),pixel(y*SCALE),pixel(width*zoom),pixel(height*zoom)))
+            self.text(f'× 100    +{bonus.points}',(VIEW_W/2,565),18,GOLD,center=True)
 
     def game_over_results(self):
         shards=self.run_totals['shards']+len(self.taken)
@@ -1444,13 +1776,14 @@ class Game:
         self.text(f'{translate("Niveau",self.settings.language)} {self.level_id:02}',(VIEW_W/2,379),18,GOLD,center=True)
         self.text(self.game_over_results(),
                   (VIEW_W/2,420),22,center=True,max_width=VIEW_W-100)
+        self.text(f'SCORE  {self.score:,}'.replace(',',' '),(VIEW_W/2,461),24,GOLD,center=True,max_width=VIEW_W-100)
         self.text('Entrée, Start ou A pour une nouvelle partie',(VIEW_W/2,505),18,center=True,max_width=VIEW_W-100)
 
     def overlay(self,title,sub,helptext):
         self.canvas.blit(self.overlay_shade,(0,0))
         self.text(title,(VIEW_W/2,280),44,GOLD,True,True,max_width=VIEW_W-100)
         self.text(sub,(VIEW_W/2,365),24,center=True,max_width=VIEW_W-100)
-        self.text(helptext,(VIEW_W/2,442),18,center=True,max_width=VIEW_W-100)
+        self.text(helptext,(VIEW_W/2,605),18,center=True,max_width=VIEW_W-100)
 
     def handle_pad(self, pad):
         lost=pad.disconnected or (self.pad.connected and not pad.connected)
@@ -1470,7 +1803,7 @@ class Game:
         if self.state=='play' and pad.fire_pressed and not (pad.start_pressed or pad.back_pressed):
             self.pending_fire=True
         if pad.sound_pressed:self.toggle_sound()
-        if pad.back_pressed and not pad.start_pressed and self.state in ('play','pause'):
+        if pad.back_pressed and not pad.start_pressed and self.state in ('play','pause') and not (self.hero_death.active or self.resurrection.active):
             self.restart_level();self.state='play'
             return
         if self.state in MENU_PAGES:
@@ -1528,7 +1861,7 @@ class Game:
                         self.acc=0
                     elif e.key==pg.K_RETURN and self.state in ('win','game_over'):
                         self.continue_or_restart()
-                    elif e.key==pg.K_r and self.state in ('play','pause'):
+                    elif e.key==pg.K_r and self.state in ('play','pause') and not (self.hero_death.active or self.resurrection.active):
                         self.restart_level();self.state='play'
                     elif e.key in (pg.K_SPACE,pg.K_UP,pg.K_z,pg.K_w) and self.state=='play':
                         self.pending_jump=True
@@ -1548,9 +1881,11 @@ class Game:
             if self.state=='play':
                 self.acc+=dt
                 while self.acc>=STEP:
+                    was_dying=self.hero_death.active or self.resurrection.active
                     self.update(STEP,axis,held,self.pending_jump,self.pending_drop,self.pending_fire,
                                 self.pending_activity or any(keys) or self.pad.activity,down=down)
                     self.pending_jump=False;self.pending_drop=False;self.pending_fire=False;self.pending_activity=False;self.acc-=STEP
+                    if was_dying and not (self.hero_death.active or self.resurrection.active):self.acc=0.;break
                     if self.state!='play':break
             self.update_cursor(time.perf_counter())
             self.draw(self.acc/STEP if self.state=='play' else 1)

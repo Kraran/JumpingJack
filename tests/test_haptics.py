@@ -87,10 +87,10 @@ class RumbleGameTests(unittest.TestCase):
     def test_pit_death_uses_stronger_effect_once(self):
         self.g.hero=Hero(100,900)
         self.g.update(STEP,0,False,False)
-        self.rumble.assert_called_once_with('death')
+        self.rumble.assert_called_once_with('death',duration=750)
         self.assertEqual(self.g.deaths,1)
         self.g.update(STEP,0,False,False)
-        self.rumble.assert_called_once_with('death')
+        self.rumble.assert_called_once_with('death',duration=750)
         low,high,duration=RUMBLE_EFFECTS['death']
         landing=RUMBLE_EFFECTS['land_heavy']
         self.assertGreater(low,landing[0]);self.assertGreater(high,landing[1])

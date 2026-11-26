@@ -51,8 +51,8 @@ class TempleArt:
         self.gate.blit(stairs,(310,272))
         self.stone=pg.transform.smoothscale(pg.image.load(str(assets/'sandstone.png')).convert(),(256,256))
         self.stone.fill((165,151,126),special_flags=pg.BLEND_RGB_MULT)
-        self.pit=pg.Surface((512,180),pg.SRCALPHA).convert_alpha()
-        for y in range(180):pg.draw.line(self.pit,(8,12,14,min(255,170+y)),(0,y),(511,y))
+        self.pit_walls={pixel((b-a)*SCALE):self.make_pit_wall(self.stone,pixel((b-a)*SCALE))
+                       for (_,a),(b,_) in zip(FLOORS,FLOORS[1:])}
         sheet=pg.image.load(str(assets/'temple-flames-v2.png')).convert_alpha()
         authored=[]
         for i in range(24):
@@ -78,13 +78,46 @@ class TempleArt:
             self.flame_masks.append(mask)
             bounds=mask.get_bounding_rects()
             self.flame_bounds.append(bounds[0].unionall(bounds) if bounds else pg.Rect(0,0,0,0))
-        self.images=[far,middle,near,self.brazier,self.gate,self.flames,self.stone,self.pit,self.ceiling]
+        self.images=[far,middle,near,self.brazier,self.gate,self.flames,self.stone,self.ceiling,*self.pit_walls.values()]
+
+    @staticmethod
+    def make_pit_wall(stone,width):
+        """Recessed masonry and converging side faces, using the floor stone."""
+        height=pixel(100*SCALE)
+        wall=pg.Surface((width,height),pg.SRCALPHA).convert_alpha();wall.fill((35,29,23))
+        row=0;y=0
+        while y<height:
+            depth=y/height;bh=round(26-depth*8);bw=round(78-depth*22)
+            for col,x in enumerate(range(-bw if row%2 else 0,width,bw)):
+                sx=(row*43+col*61)%(stone.get_width()-96)
+                sy=(row*37+col*19)%(stone.get_height()-48)
+                brick=pg.transform.smoothscale(stone.subsurface((sx,sy,96,48)),(bw-2,bh-2))
+                brick.fill((190,180,163),special_flags=pg.BLEND_RGB_MULT)
+                wall.blit(brick,(x+1,y+1))
+                pg.draw.line(wall,(85,69,47),(x+2,y+1),(x+bw-2,y+1))
+            y+=bh;row+=1
+        # Side walls widen into the opening with depth; these angled seams
+        # separate the foreground cut from the smaller rear masonry courses.
+        side=stone.copy();side.fill((133,129,118),special_flags=pg.BLEND_RGB_MULT)
+        for y in range(height):
+            inset=round(9+y*.17)
+            for x in range(inset):
+                color=side.get_at(((x*3+y//3)%256,(y*2)%256))
+                wall.set_at((x,y),color);wall.set_at((width-1-x,y),color)
+            if y%29<2:
+                pg.draw.line(wall,(30,25,20),(0,y),(inset-1,y))
+                pg.draw.line(wall,(30,25,20),(width-inset,y),(width-1,y))
+        pg.draw.line(wall,(107,83,52),(9,0),(round(9+height*.17),height-1))
+        pg.draw.line(wall,(74,57,37),(width-10,0),(width-round(10+height*.17),height-1))
+        return wall
 
     def background(self,canvas,camera,time):
         for layer in self.layers:layer.draw(canvas.native,camera*SCALE)
-        for (_,end),(start,_) in zip(FLOORS,FLOORS[1:]):
-            left=pixel((end-camera)*SCALE);width=pixel((start-end)*SCALE)
-            if left<1920 and left+width>0:canvas.native.blit(self.pit,(left,930),(0,0,width,180))
+        for (_,left),(right,_) in zip(FLOORS,FLOORS[1:]):
+            image=self.pit_walls[pixel((right-left)*SCALE)]
+            x=pixel((left-camera)*SCALE)
+            if x<1920 and x+image.get_width()>0:
+                canvas.native.blit(image,(x,pixel(620*SCALE)))
         frame=self.flame_frame(time)
         fw,fh=FLAME_SIZE
         for x in TORCH_X:
@@ -106,6 +139,9 @@ class TempleArt:
     def flame_frame(time):return int((time/FLAME_PERIOD%1)*FLAME_FRAMES)
 
     def flame_hits(self,hero,time,positions=None):
+        return self.flame_source(hero,time,positions) is not None
+
+    def flame_source(self,hero,time,positions=None):
         index=self.flame_frame(time);mask=self.flame_masks[index]
         height=max(hero.body_height,round(54-22*hero.previous_crouch))
         width=pixel(30*SCALE);height=pixel(height*SCALE)
@@ -122,8 +158,8 @@ class TempleArt:
                 t=step/steps
                 hx=pixel(old[0]+(end[0]-old[0])*t-15*SCALE)
                 hy=pixel(old[1]+(end[1]-old[1])*t-height)
-                if mask.overlap(body,(hx-left,hy-top)) is not None:return True
-        return False
+                if mask.overlap(body,(hx-left,hy-top)) is not None:return (x,y)
+        return None
 
     def floor(self,canvas,platform,camera):
         x=platform.x-camera

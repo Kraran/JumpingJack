@@ -13,6 +13,11 @@ AXIS_MAX = 32767
 RUMBLE_EFFECTS = {
     'land_heavy': (0.55, 0.25, 170),
     'death': (1.0, 1.0, 400),
+    'laser_fall': (.30, .18, 250),
+    'water_entry': (.65, .35, 550),
+    'fire_burn': (.75, .48, 120),
+    'fire_flicker': (.45, .28, 120),
+    'fire_embers': (.20, .10, 120),
     'game_over': (1.0, 1.0, 1000),
     'head_bump': (0.35, 0.60, 110),
 }
@@ -285,9 +290,10 @@ class Gamepads:
         self._held.update(jump=jump, start=start, back=back, sound=sound, fire=fire,confirm=confirm,cancel=cancel)
         return snapshot
 
-    def rumble(self, event):
+    def rumble(self, event, duration=None):
         if not self.rumble_enabled:return False
         effect = RUMBLE_EFFECTS[event]
+        if duration is not None:effect=(*effect[:2],max(1,int(duration)))
         played = False
         for device in self.devices.values():
             try:

@@ -1,0 +1,27 @@
+{
+  "gpu": true,
+  "new_death_texture_uploads": 0,
+  "sections": [
+    {
+      "cause": "right",
+      "lives": 2,
+      "deaths": 1,
+      "state": "play",
+      "duration": 0.7499999999999998
+    },
+    {
+      "cause": "left",
+      "lives": 2,
+      "deaths": 1,
+      "state": "play",
+      "duration": 0.7499999999999998
+    },
+    {
+      "cause": "game-over",
+      "lives": 0,
+      "deaths": 1,
+      "state": "game_over",
+      "duration": 0.7499999999999998
+    }
+  ]
+}

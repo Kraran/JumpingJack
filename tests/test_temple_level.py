@@ -55,11 +55,13 @@ class TempleLevelTests(unittest.TestCase):
         self.assertTrue(bumped)
 
     def test_two_checkpoints_update_respawn_and_survive_death(self):
+        from support import finish_respawn
         g=self.g
         for index,x in enumerate(temple.CHECKPOINTS,1):
             g.hero=Hero(x,620);g.hero.grounded=True;g.update(STEP,0,False,False)
             self.assertEqual(g.check_index,index);self.assertEqual(g.checkpoint,(x-60,620))
         g.hero.y=900;g.update(STEP,0,False,False)
+        finish_respawn(g)
         self.assertEqual((g.hero.x,g.hero.y),(9540,620))
         self.assertTrue(all(o.active for o in g.obelisks))
 

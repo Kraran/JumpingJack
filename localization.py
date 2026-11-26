@@ -122,6 +122,32 @@ def _upper(text,language):
 def translate(text,language='fr'):
     if language not in CODES or language=='fr':return text
     c=CORE[language];s=SENTENCES[language]
+    if text=='ÉPUISÉE':
+        return {'en':'DEPLETED','de':'LEER','es':'AGOTADA','it':'ESAURITA','pt':'ESGOTADA',
+                'nl':'LEEG','pl':'WYCZERPANA','cs':'VYČERPÁNA','ro':'EPUIZATĂ','hu':'ELFOGYOTT',
+                'tr':'TÜKENDİ','sv':'SLUT','da':'OPBRUGT','nb':'OPPBRUKT','fi':'LOPUSSA',
+                'is':'UPPURIN','ru':'ИСЧЕРПАНА','bg':'ИЗЧЕРПАНА','sr':'ИСЦРПЉЕНА'}[language]
+    for index,prefix in enumerate(('Score total : ','Points du niveau : ')):
+        if text.startswith(prefix):
+            labels={
+                'en':('Total score','Level points'),'de':('Gesamtpunktzahl','Punkte im Level'),
+                'es':('Puntuación total','Puntos del nivel'),'it':('Punteggio totale','Punti del livello'),
+                'pt':('Pontuação total','Pontos do nível'),'nl':('Totale score','Levelpunten'),
+                'pl':('Wynik łączny','Punkty za poziom'),'cs':('Celkové skóre','Body za úroveň'),
+                'ro':('Scor total','Puncte în nivel'),'hu':('Összpontszám','Pályán szerzett pontok'),
+                'tr':('Toplam puan','Bölüm puanı'),'sv':('Totalpoäng','Banpoäng'),
+                'da':('Samlet score','Banepoint'),'nb':('Samlet poengsum','Banepoeng'),
+                'fi':('Kokonaispisteet','Tason pisteet'),'is':('Heildarstig','Stig á borði'),
+                'ru':('Общий счёт','Очки за уровень'),'bg':('Общ резултат','Точки за нивото'),
+                'sr':('Укупан резултат','Поени на нивоу'),
+            }
+            return labels[language][index]+' : '+text[len(prefix):]
+    if text.startswith('SCORE  '):
+        label={'en':'Score','de':'Punkte','es':'Puntos','it':'Punteggio','pt':'Pontos','nl':'Score',
+               'pl':'Punkty','cs':'Skóre','ro':'Scor','hu':'Pontszám','tr':'Puan',
+               'sv':'Poäng','da':'Point','nb':'Poeng','fi':'Pisteet','is':'Stig',
+               'ru':'Счёт','bg':'Точки','sr':'Поени'}[language]
+        return _upper(label,language)+text[5:]
     tower,summit,ending,ascent=TOWER_ROWS[language]
     if text in ('NIVEAU 04  /  LA TOUR','NIVEAU 04 · LA TOUR'):
         separator='  /  ' if '/' in text else ' · '

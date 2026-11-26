@@ -45,11 +45,13 @@ class ObeliskGameTests(unittest.TestCase):
             self.assertEqual(self.g.check_index,0);self.assertFalse(self.g.obelisk.active)
 
     def test_death_preserves_activation_but_restart_resets_it(self):
+        from support import finish_respawn
         self.g.hero=Hero(CHECKPOINT_X,GROUND_Y)
         self.g.update(STEP,0,False,False)
         self.assertTrue(self.g.obelisk.active)
         self.g.obelisk.clock=ACTIVATION_TIME+2
         self.g.hero.y=900;self.g.update(STEP,0,False,False)
+        finish_respawn(self.g)
         self.assertEqual((self.g.hero.x,self.g.hero.y),RESPAWN)
         self.assertTrue(self.g.obelisk.active)
         self.assertGreater(self.g.obelisk.clock,ACTIVATION_TIME)

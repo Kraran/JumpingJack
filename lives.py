@@ -1,5 +1,6 @@
 """HUD emblem taken directly from the hero's golden chest insignia."""
 import pygame as pg
+from hud_layout import life_position
 
 STARTING_LIVES=3
 
@@ -19,7 +20,7 @@ def game_over_tune(rate,channels):
     return data
 
 
-def load_life_symbol(path):
+def load_life_symbol(path,size=(36,30)):
     # The frontal hovering pose exposes both wings of the original insignia.
     source=pg.image.load(str(path)).convert_alpha().subsurface((1093,477,54,39))
     mask=pg.mask.Mask(source.get_size())
@@ -35,5 +36,5 @@ def load_life_symbol(path):
     bounds=image.get_bounding_rect()
     if not bounds.w:raise ValueError('Symbole de poitrine du héros introuvable')
     image=image.subsurface(bounds)
-    scale=min(36/image.get_width(),30/image.get_height())
+    scale=min(size[0]/image.get_width(),size[1]/image.get_height())
     return pg.transform.smoothscale(image,(round(image.get_width()*scale),round(image.get_height()*scale)))
