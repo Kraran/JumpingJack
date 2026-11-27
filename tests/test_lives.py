@@ -98,6 +98,56 @@ class LivesTests(unittest.TestCase):
             g.run(frames=1)
         self.assertEqual((g.state,g.lives),('play',3))
 
+    def test_level_transition_replaces_old_checkpoint_and_death_stays_in_new_level(self):
+        g=self.g
+        for target in range(2,9):
+            with self.subTest(level=target):
+                g.new_game();g.start_level(target-1)
+                g.checkpoint=(g.obelisks[-1].x-60,g.obelisks[-1].y)
+                g.check_index=len(g.obelisks);g.obelisks[-1].active=True
+                g.state='win';g.continue_or_restart()
+                entrance=(g.hero.x,g.hero.y)
+                self.assertEqual(g.checkpoint,entrance)
+                self.assertEqual(g.check_index,0)
+                self.assertFalse(any(obelisk.active for obelisk in g.obelisks))
+                g.hero.x+=800;g.kill_hero();finish_respawn(g)
+                self.assertEqual((g.level_id,g.lives,g.state),(target,2,'play'))
+                self.assertEqual((g.hero.x,g.hero.y),entrance)
+
+    def test_game_over_restarts_campaign_at_level_one_for_keyboard_and_controller(self):
+        import pygame as pg
+        g=self.g
+        for target in range(1,9):
+            for controller in (False,True):
+                with self.subTest(level=target,controller=controller):
+                    g.new_game();g.start_level(target);g.state='play';g.lives=1
+                    entrance=(Hero().x,Hero().y)
+                    g.checkpoint=(g.obelisks[-1].x-60,g.obelisks[-1].y)
+                    g.check_index=len(g.obelisks)
+                    g.kill_hero();self.assertEqual(g.state,'game_over')
+                    if controller:g.handle_pad(PadSnapshot(start_pressed=True))
+                    else:
+                        pg.event.post(pg.event.Event(pg.KEYDOWN,key=pg.K_RETURN))
+                        with patch.object(g,'close'),patch.object(g.pacer,'wait'):
+                            g.run(frames=1)
+                    self.assertEqual((g.state,g.level_id,g.lives),('play',1,3))
+                    self.assertEqual((g.hero.x,g.hero.y),entrance)
+                    self.assertEqual(g.checkpoint,entrance);self.assertEqual(g.check_index,0)
+                    self.assertFalse(g.pending_jump)
+
+    def test_save_before_first_obelisk_retains_level_entrance_after_loading_and_death(self):
+        from savegame import capture,restore
+        g=self.g
+        for target in range(2,9):
+            with self.subTest(level=target):
+                g.new_game();g.start_level(target);g.state='play'
+                entrance=(g.hero.x,g.hero.y)
+                g.hero.x+=100
+                data=capture(g)
+                g.new_game();restore(g,data);g.state='play'
+                g.kill_hero();finish_respawn(g)
+                self.assertEqual(g.level_id,target)
+                self.assertEqual((g.hero.x,g.hero.y),entrance)
     def test_all_three_enemy_types_stay_dead_between_lives_until_level_or_game_restart(self):
         from beetle import BeetleDeath
         g=self.g

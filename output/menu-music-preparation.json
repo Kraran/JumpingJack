@@ -1,0 +1,16 @@
+{
+  "source": "JumpingJack - The Lone Flyer.m4a",
+  "source_sha256": "cc49785894afc25af087d0c97a922e78648b39439db43e74b42c429ff4399897",
+  "source_seconds": 101.6135,
+  "loop_seconds": 100.1135,
+  "crossfade_seconds": 1.5,
+  "sample_rate": 48000,
+  "channels": 2,
+  "normalization": "two-pass linear loudness normalization; dynamics preserved",
+  "target_lufs": -20,
+  "measured_lufs": -20.07,
+  "measured_true_peak_db": -8.01,
+  "output": "assets/audio/menu-the-lone-flyer.ogg",
+  "output_bytes": 1854460,
+  "source_unchanged": true
+}

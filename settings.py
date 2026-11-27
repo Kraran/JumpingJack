@@ -6,6 +6,7 @@ import os
 from dataclasses import asdict,dataclass
 from pathlib import Path
 from localization import CODES
+from bezel_catalog import MODES as BEZEL_MODES
 
 
 def system_locale():
@@ -47,6 +48,10 @@ class Settings:
     rumble:bool=True
     show_fps:bool=False
     language:str='fr'
+    music:bool=True
+    sound_volume:int=100
+    music_volume:int=100
+    bezel:str='auto'
 
     @classmethod
     def load(cls,path):
@@ -55,7 +60,12 @@ class Settings:
             values=json.loads(Path(path).read_text(encoding='utf-8'))
             if not isinstance(values,dict):return cls(language='en')
             options={key:value for key,value in values.items()
-                     if key in cls.__dataclass_fields__ and key!='language' and type(value) is bool}
+                     if key in ('fullscreen','sound','rumble','show_fps','music') and type(value) is bool}
+            for key in ('sound_volume','music_volume'):
+                value=values.get(key)
+                if type(value) is int:options[key]=max(0,min(100,value))
+            bezel=values.get('bezel')
+            if isinstance(bezel,str) and bezel in BEZEL_MODES:options['bezel']=bezel
             if 'language' not in values:return detected_settings(**options)
             options['language']=values['language'] if isinstance(values['language'],str) and values['language'] in CODES else 'en'
             return cls(**options)

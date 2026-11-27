@@ -1,0 +1,43 @@
+[
+  {
+    "level": 7,
+    "state": "game_over",
+    "frames": 4262,
+    "deaths": 3,
+    "lives": 0,
+    "energy": 20.0,
+    "fire_requests": 52,
+    "crystals": 22,
+    "score": 1220,
+    "checkpoint": 1,
+    "hero": [
+      6225.9,
+      620
+    ],
+    "hoplites": 4,
+    "hoplites_defeated": 2,
+    "death_events": [
+      {
+        "kind": "beetle",
+        "x": 3282.33,
+        "y": 620,
+        "energy": 29.9
+      },
+      {
+        "kind": "blade",
+        "x": 5032.57,
+        "y": 620,
+        "energy": 19.83
+      },
+      {
+        "kind": "scorpion",
+        "x": 6225.9,
+        "y": 581.01,
+        "energy": 20.0
+      }
+    ],
+    "enemies_active": true,
+    "initial_protection": false,
+    "glide_used": true
+  }
+]

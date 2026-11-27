@@ -19,6 +19,8 @@ class NativeCanvas:
         self.scaled_images=OrderedDict()
         self.uploads=0
         self.draw_calls=0
+        self.bezel_art=None
+        self.bezel_theme=None
         if window is not None:
             from pygame._sdl2.video import Renderer, Texture
             self.renderer=Renderer.from_window(window)
@@ -50,8 +52,8 @@ class NativeCanvas:
             entry=(image,Texture.from_surface(self.renderer,image))
             self.uploads+=1
         self.textures[key]=entry
-        # Keep the hero/enemy poses and the prewarmed menu/HUD text resident.
-        if len(self.textures)>2048:self.textures.popitem(last=False)
+        # Eight levels add scenery and HUD counts to the resident animation bank.
+        if len(self.textures)>3072:self.textures.popitem(last=False)
         return entry[1]
 
     def preload(self, images):
@@ -143,20 +145,36 @@ class NativeCanvas:
         if len(self.primitives)>256:self.primitives.popitem(last=False)
         self.blit(image,position)
 
-    def present(self,screen):
+    def present(self,screen,capture=False):
+        captured=None
         if self.gpu:
             self.renderer.target=None
-            self.renderer.logical_size=FULL_HD
-            self.renderer.draw_color=(10,17,22,255)
-            self.renderer.clear()
-            self.framebuffer.draw(dstrect=(0,0,*FULL_HD))
-            self.renderer.present()
+            # Fill the real drawable, outside SDL's centered logical viewport.
+            self.renderer.logical_size=(0,0)
+            try:
+                output=self.renderer.get_viewport().size
+                size,pos=integer_viewport(output,FULL_HD)
+                viewport=pg.Rect(pos,size)
+                self.renderer.draw_color=(10,17,22,255)
+                self.renderer.clear()
+                if self.bezel_art is not None:
+                    for image,source,dest in self.bezel_art.pieces(self.bezel_theme,output,viewport):
+                        self.texture(image).draw(source,dest)
+                self.framebuffer.draw(dstrect=viewport)
+                if capture:captured=self.renderer.to_surface()
+                self.renderer.present()
+            finally:
+                # Retain SDL's SCALED mouse-coordinate mapping between frames.
+                self.renderer.logical_size=FULL_HD
         else:
             size,pos=integer_viewport(screen.get_size(),FULL_HD)
             screen.fill((10,17,22))
+            if self.bezel_art is not None:self.bezel_art.draw_software(screen,self.bezel_theme,pg.Rect(pos,size))
             image=self.surface if size==FULL_HD else pg.transform.scale(self.surface,size)
             screen.blit(image,pos)
+            if capture:captured=screen.copy()
             pg.display.flip()
+        return captured
 
     def capture(self):
         """Readback is restricted to explicit screenshots, never the game loop."""

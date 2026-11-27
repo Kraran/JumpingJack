@@ -1,0 +1,11 @@
+Les dieux n’ont aucune pitié. À vous de leur tenir tête.
+
+Découvrez JumpingJack, un jeu de plateformes 2D qui vous entraîne des sables de l’Égypte antique aux temples de la Grèce. Sautez, planez et libérez la puissance du rayon solaire à travers huit niveaux répartis dans deux mondes.
+
+Crocodiles, hoplites squelettes, flammes et tirs laser : les dangers vous attendent à chaque détour. Ce trailer de 30 secondes vous donne un aperçu de l’aventure… et des nombreuses façons d’y laisser vos plumes.
+
+Projet et code source : https://github.com/Kraran/JumpingJack
+
+Musique : « JumpingJack – The Lone Flyer », créée avec Suno.
+
+#JumpingJack #JeuIndé #Platformer

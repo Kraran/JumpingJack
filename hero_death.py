@@ -11,6 +11,10 @@ FRAMES=64
 BEETLE_DURATION=1.2
 BEETLE_STUN=.16
 BLADE_DURATION=1.2
+SWORD_DURATION=1.65
+SWORD_IMPACT=.10
+SWORD_LAND=.28
+SWORD_COLLAPSE=.85
 LASER_DURATION=1.4
 LASER_IMPACT=.18
 LASER_COLLAPSE=.5
@@ -51,6 +55,9 @@ class HeroDeath:
     def duration(self):
         if self.kind=='pit':return PIT_DURATION
         if self.kind=='water':return WATER_DURATION
+        if self.kind=='sword':
+            return min(LASER_LIMIT,max(SWORD_DURATION,(self.landed_at or 0)+SWORD_COLLAPSE,
+                                      self.elapsed+.2 if self.landed_at is None and self.elapsed>=1.5 else 0))
         if self.kind=='fire':
             return min(LASER_LIMIT,max(FIRE_DURATION,(self.landed_at or 0)+FIRE_COLLAPSE+FIRE_EXTINGUISH,
                                       self.elapsed+1. if self.landed_at is None and self.elapsed>=.6 else 0))
@@ -94,6 +101,16 @@ class HeroDeath:
         self.hero_x=hero.x;self.hero_y=hero.y
         self.facing=self.source_face=self.hero_face=hero.face
 
+    def begin_sword(self,index,enemy,hero):
+        self.begin(index,enemy,hero)
+        self.kind='sword'
+        self.facing=1 if hero.x>enemy.x else -1 if hero.x<enemy.x else enemy.facing
+        self.hero_face=-self.facing
+        self.x=hero.x-self.facing*12;self.y=hero.y-min(40,hero.body_height*.65)
+        hero.face=self.hero_face
+        hero.vx=self.facing*160.;hero.vy=min(60.,max(-90.,hero.vy))
+        hero.grounded=False;hero.recovery=0.
+
     def begin_laser(self,bolt,hero):
         self.active=True;self.elapsed=self.previous_elapsed=0.;self.landed_at=None
         self.kind='laser';self.index=0;self.x=bolt.x;self.y=bolt.y
@@ -126,7 +143,7 @@ class HeroDeath:
 
     def update(self,dt):
         self.previous_elapsed=self.elapsed
-        if self.kind in ('laser','fire'):
+        if self.kind in ('laser','fire','sword'):
             self.elapsed=min(LASER_LIMIT,self.elapsed+dt)
             return False  # Completion follows the corpse's actual landing.
         self.elapsed=min(self.duration,self.elapsed+dt)

@@ -1,0 +1,31 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "audio_format": [
+    44100,
+    -16,
+    2
+  ],
+  "stream_starts": 1,
+  "playing_during_loading": true,
+  "sound_volume": 90,
+  "music_volume": 90,
+  "gameplay_fade_seconds": 2.0,
+  "loading_fade_seconds": 1.2,
+  "menu_pages": [
+    "title",
+    "settings",
+    "controls",
+    "pause",
+    "save",
+    "load",
+    "overwrite",
+    "languages"
+  ],
+  "ogg_wrap": true,
+  "gameplay_pause_and_menu_resume": true,
+  "independent_setting_persisted": true,
+  "render_warmup_preserves_music": true,
+  "error": null,
+  "user_settings_and_saves": "temporary files only"
+}

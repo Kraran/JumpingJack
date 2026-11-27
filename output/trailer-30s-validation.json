@@ -1,0 +1,109 @@
+{
+  "file": "JumpingJack-Trailer-30s.mp4",
+  "seconds": 30,
+  "size_bytes": 12542119,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "fps": 60,
+  "video": "H.264",
+  "audio": "AAC stereo, The Lone Flyer, fades in/out",
+  "footage": "Fresh native GPU captures, current solar FX and real enemy damage; no invulnerability",
+  "solar_speed": 0.5,
+  "death_montage": [
+    "crocodile",
+    "fire",
+    "sword",
+    "laser",
+    "water"
+  ],
+  "shots": [
+    {
+      "source": "output\\trailer-work-v2\\egypt-1.mp4",
+      "start": 0,
+      "duration": 2.5,
+      "caption": "JUMPING JACK"
+    },
+    {
+      "source": "output\\trailer-work-v2\\egypt-2.mp4",
+      "start": 0,
+      "duration": 2.5,
+      "caption": "DES SABLES D’ÉGYPTE…"
+    },
+    {
+      "source": "output\\trailer-work-v2\\egypt-3.mp4",
+      "start": 0,
+      "duration": 2.0,
+      "caption": "TRAVERSEZ LES TEMPLES OUBLIÉS"
+    },
+    {
+      "source": "output\\trailer-work-v2\\tower.mp4",
+      "start": 0,
+      "duration": 1.5,
+      "caption": "PRENEZ DE LA HAUTEUR"
+    },
+    {
+      "source": "output\\trailer-work-v2\\greece-5.mp4",
+      "start": 0,
+      "duration": 2.0,
+      "caption": "…AUX RIVAGES DE LA GRÈCE"
+    },
+    {
+      "source": "output\\trailer-work-v2\\greece-6.mp4",
+      "start": 0,
+      "duration": 1.5,
+      "caption": "DEUX MONDES · HUIT NIVEAUX"
+    },
+    {
+      "source": "output\\trailer-work-v2\\greece-7.mp4",
+      "start": 0,
+      "duration": 1.5,
+      "caption": "BRAVEZ LES GALERIES ANTIQUES"
+    },
+    {
+      "source": "output\\trailer-work-v2\\solar.mp4",
+      "start": 0,
+      "duration": 3.5,
+      "caption": "LIBÉREZ LA PUISSANCE DU SOLEIL"
+    },
+    {
+      "source": "output\\trailer-work-v2\\crocodile.mp4",
+      "start": 0,
+      "duration": 2.0,
+      "caption": "VOUS ALLEZ MOURIR"
+    },
+    {
+      "source": "output\\trailer-work-v2\\fire.mp4",
+      "start": 0,
+      "duration": 2.0,
+      "caption": "VOUS ALLEZ MOURIR"
+    },
+    {
+      "source": "output\\trailer-work-v2\\sword.mp4",
+      "start": 0,
+      "duration": 2.0,
+      "caption": "VOUS ALLEZ MOURIR"
+    },
+    {
+      "source": "output\\trailer-work-v2\\laser.mp4",
+      "start": 0,
+      "duration": 2.0,
+      "caption": "VOUS ALLEZ MOURIR"
+    },
+    {
+      "source": "output\\trailer-work-v2\\water.mp4",
+      "start": 0,
+      "duration": 2.0,
+      "caption": "VOUS ALLEZ MOURIR"
+    },
+    {
+      "source": "output\\trailer-work-v2\\acropolis.mp4",
+      "start": 0,
+      "duration": 3.0,
+      "caption": "JUMPING JACK"
+    }
+  ],
+  "full_decode": "passed",
+  "user_settings_and_saves": "temporary files only"
+}

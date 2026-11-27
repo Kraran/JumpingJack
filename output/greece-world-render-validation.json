@@ -1,0 +1,41 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "frames": 720,
+  "resident_textures": 2469,
+  "scope": "Controlled gameplay shots with enemy protection; not a full combat replay.",
+  "levels": [
+    {
+      "level": 5,
+      "title": "LES RIVAGES D’HÉLIOS",
+      "platforms": 30,
+      "crystals": 70,
+      "deaths": 0,
+      "new_texture_uploads": 0
+    },
+    {
+      "level": 6,
+      "title": "LA VOIE DES STATUES",
+      "platforms": 40,
+      "crystals": 90,
+      "deaths": 0,
+      "new_texture_uploads": 0
+    },
+    {
+      "level": 7,
+      "title": "LES GALERIES DU MARBRE",
+      "platforms": 49,
+      "crystals": 103,
+      "deaths": 0,
+      "new_texture_uploads": 0
+    },
+    {
+      "level": 8,
+      "title": "L’ACROPOLE DU SOLEIL",
+      "platforms": 38,
+      "crystals": 84,
+      "deaths": 0,
+      "new_texture_uploads": 0
+    }
+  ]
+}

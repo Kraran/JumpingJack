@@ -17,11 +17,21 @@ Thumbs.db
 /MightyBombJack.mp4
 /HollowKnight.mp4
 /reference/
+/captures/
+/JumpingJack - The Lone Flyer.m4a
 /assets/crocodile-reference.webp
 
 # Conserver seulement les mesures et les aperçus documentés.
 /output/*
 !/output/*.json
+!/output/JumpingJack-Trailer-30s.mp4
+!/output/JumpingJack-Trailer-30s-cover.jpg
+!/output/JumpingJack-YouTube-vignette-v2.jpg
+!/output/JumpingJack-YouTube-description.txt
+!/output/bezel-selection-menu.png
+!/output/bezel-egypt-3840.png
+!/output/bezel-greece-3840.png
+!/output/bezel-solar-3840.png
 !/output/hero-animation-game.png
 !/output/hero-course-compare.mp4
 !/output/hero-turn-demo.mp4
@@ -182,6 +192,33 @@ Thumbs.db
 !/output/gyrosphere-level3-2.png
 
 # Essais intermédiaires conservés localement ; publier le rendu final documenté.
+!/output/greece-study-coast.png
+!/output/greece-study-athena.png
+!/output/greece-study-acropolis.png
+!/output/greece-study-demo.mp4
+!/output/greece-study-validation.json
+!/output/greece-level05.png
+!/output/greece-level06.png
+!/output/greece-level07.png
+!/output/greece-level08.png
+!/output/greece-world-demo.mp4
+!/output/greece-world-render-validation.json
+!/output/greece-layout-validation.json
+!/output/greece-gameplay-validation.json
+!/output/hoplite-demo.mp4
+!/output/hoplite-patrol.png
+!/output/hoplite-pursuit.png
+!/output/hoplite-attack.png
+!/output/hoplite-defeated.png
+!/output/hoplite-validation.json
+!/output/hero-sword-death-demo.mp4
+!/output/hero-sword-death-validation.json
+!/output/hero-sword-impact.png
+!/output/hero-sword-collapse.png
+!/output/hero-sword-fallen.png
+!/output/hero-sword-reverse.png
+!/output/hero-sword-air.png
+!/output/hero-sword-game-over.png
 /output/crocodile-revival-before.json
 /output/crocodile-revival-after.json
 /output/hero-fire-*

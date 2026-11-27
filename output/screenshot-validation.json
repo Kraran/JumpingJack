@@ -1,0 +1,28 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "trigger": "Actual F12 key events",
+  "captures": [
+    {
+      "state": "play",
+      "size": [
+        2560,
+        1080
+      ],
+      "file": "JumpingJack_2026-11-27_01-49-41_373126.png",
+      "bytes": 3050286
+    },
+    {
+      "state": "title",
+      "size": [
+        3840,
+        1080
+      ],
+      "file": "JumpingJack_2026-11-27_01-49-42_681033.png",
+      "bytes": 4502641
+    }
+  ],
+  "png_reopened": true,
+  "async_writes_completed_before_close": true,
+  "user_preferences_and_saves": "temporary data only"
+}

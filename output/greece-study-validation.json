@@ -1,0 +1,42 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "frames": 720,
+  "simulation_hz": 120,
+  "video_fps": 60,
+  "new_texture_uploads_during_draw": 0,
+  "ground_composited_with_scenery": {
+    "middle": 0.24,
+    "near": 0.48
+  },
+  "deaths": 0,
+  "score": 100,
+  "crystals_collected": 10,
+  "shots": [
+    {
+      "shot": "coast",
+      "camera": 0.0,
+      "hero": [
+        429.87,
+        425.11
+      ]
+    },
+    {
+      "shot": "athena",
+      "camera": 1237.64,
+      "hero": [
+        1731.91,
+        620
+      ]
+    },
+    {
+      "shot": "acropolis",
+      "camera": 3272.71,
+      "hero": [
+        3765,
+        490.4
+      ]
+    }
+  ],
+  "scope": "Visual study; controlled movement with real physics and animation. No enemies, no campaign or save-format integration. GPU readbacks occur only for screenshots/video export."
+}

@@ -143,7 +143,7 @@ class TowerTests(unittest.TestCase):
         self.assertEqual((g.level_id,g.state),(4,'play'))
         g.hero=Hero(*tower.SUMMIT);g.hero.grounded=True;g.invuln=100;g.update(STEP,0,False,False)
         self.assertEqual(g.state,'win');g.draw(1,present=False)
-        g.continue_or_restart();self.assertEqual(g.level_id,1)
+        g.continue_or_restart();self.assertEqual(g.level_id,5)
 
     def test_tower_ui_is_translated_in_all_supported_languages(self):
         self.assertEqual(set(TOWER_ROWS),set(CODES))

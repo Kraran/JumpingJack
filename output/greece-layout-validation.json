@@ -1,0 +1,966 @@
+[
+  {
+    "level": 5,
+    "length": 12000,
+    "supports": 30,
+    "reachable": 30,
+    "missing": [],
+    "medallion_reachable": true,
+    "glide_used": false,
+    "energy_used": 0,
+    "scope": "Geometry only; real physics with running approaches, enemies excluded.",
+    "jumps": {
+      "6": {
+        "from": 0,
+        "start": 150,
+        "direction": 1,
+        "ticks": 97
+      },
+      "8": {
+        "from": 0,
+        "start": 990,
+        "direction": 1,
+        "ticks": 88
+      },
+      "7": {
+        "from": 6,
+        "start": 550.0,
+        "direction": 1,
+        "ticks": 94
+      },
+      "9": {
+        "from": 8,
+        "start": 1310,
+        "direction": 1,
+        "ticks": 125
+      },
+      "1": {
+        "from": 8,
+        "start": 1550,
+        "direction": 1,
+        "ticks": 143
+      },
+      "10": {
+        "from": 9,
+        "start": 1770,
+        "direction": 1,
+        "ticks": 119
+      },
+      "12": {
+        "from": 1,
+        "start": 2685.0,
+        "direction": 1,
+        "ticks": 86
+      },
+      "13": {
+        "from": 1,
+        "start": 3270,
+        "direction": 1,
+        "ticks": 94
+      },
+      "11": {
+        "from": 10,
+        "start": 2260.0,
+        "direction": 1,
+        "ticks": 95
+      },
+      "2": {
+        "from": 12,
+        "start": 3270,
+        "direction": 1,
+        "ticks": 144
+      },
+      "14": {
+        "from": 13,
+        "start": 3550,
+        "direction": 1,
+        "ticks": 121
+      },
+      "16": {
+        "from": 2,
+        "start": 4560,
+        "direction": 1,
+        "ticks": 88
+      },
+      "17": {
+        "from": 2,
+        "start": 5160,
+        "direction": 1,
+        "ticks": 94
+      },
+      "15": {
+        "from": 14,
+        "start": 4050,
+        "direction": 1,
+        "ticks": 94
+      },
+      "3": {
+        "from": 17,
+        "start": 5380,
+        "direction": 1,
+        "ticks": 141
+      },
+      "18": {
+        "from": 3,
+        "start": 5690,
+        "direction": 1,
+        "ticks": 91
+      },
+      "20": {
+        "from": 3,
+        "start": 6510.0,
+        "direction": 1,
+        "ticks": 86
+      },
+      "21": {
+        "from": 3,
+        "start": 7080,
+        "direction": 1,
+        "ticks": 94
+      },
+      "19": {
+        "from": 18,
+        "start": 6050.0,
+        "direction": 1,
+        "ticks": 93
+      },
+      "4": {
+        "from": 21,
+        "start": 7280,
+        "direction": 1,
+        "ticks": 141
+      },
+      "22": {
+        "from": 4,
+        "start": 7610,
+        "direction": 1,
+        "ticks": 91
+      },
+      "24": {
+        "from": 4,
+        "start": 8460,
+        "direction": 1,
+        "ticks": 84
+      },
+      "25": {
+        "from": 4,
+        "start": 9060,
+        "direction": 1,
+        "ticks": 94
+      },
+      "23": {
+        "from": 22,
+        "start": 7970,
+        "direction": 1,
+        "ticks": 94
+      },
+      "5": {
+        "from": 25,
+        "start": 9290,
+        "direction": 1,
+        "ticks": 141
+      },
+      "26": {
+        "from": 5,
+        "start": 9610,
+        "direction": 1,
+        "ticks": 89
+      },
+      "28": {
+        "from": 5,
+        "start": 10460,
+        "direction": 1,
+        "ticks": 84
+      },
+      "27": {
+        "from": 26,
+        "start": 10000.0,
+        "direction": 1,
+        "ticks": 94
+      },
+      "29": {
+        "from": 28,
+        "start": 10970,
+        "direction": 1,
+        "ticks": 95
+      }
+    }
+  },
+  {
+    "level": 6,
+    "length": 14400,
+    "supports": 40,
+    "reachable": 40,
+    "missing": [],
+    "medallion_reachable": true,
+    "glide_used": false,
+    "energy_used": 0,
+    "scope": "Geometry only; real physics with running approaches, enemies excluded.",
+    "jumps": {
+      "8": {
+        "from": 0,
+        "start": 150,
+        "direction": 1,
+        "ticks": 94
+      },
+      "10": {
+        "from": 0,
+        "start": 930,
+        "direction": 1,
+        "ticks": 86
+      },
+      "9": {
+        "from": 8,
+        "start": 500.0,
+        "direction": 1,
+        "ticks": 91
+      },
+      "11": {
+        "from": 10,
+        "start": 1180,
+        "direction": 1,
+        "ticks": 126
+      },
+      "1": {
+        "from": 10,
+        "start": 1420,
+        "direction": 1,
+        "ticks": 144
+      },
+      "12": {
+        "from": 1,
+        "start": 1860,
+        "direction": 1,
+        "ticks": 88
+      },
+      "14": {
+        "from": 1,
+        "start": 2590,
+        "direction": 1,
+        "ticks": 86
+      },
+      "13": {
+        "from": 12,
+        "start": 2220.0,
+        "direction": 1,
+        "ticks": 91
+      },
+      "15": {
+        "from": 14,
+        "start": 2870,
+        "direction": 1,
+        "ticks": 125
+      },
+      "2": {
+        "from": 14,
+        "start": 3050,
+        "direction": 1,
+        "ticks": 144
+      },
+      "16": {
+        "from": 2,
+        "start": 3480,
+        "direction": 1,
+        "ticks": 88
+      },
+      "18": {
+        "from": 2,
+        "start": 4210,
+        "direction": 1,
+        "ticks": 86
+      },
+      "17": {
+        "from": 16,
+        "start": 3790.0,
+        "direction": 1,
+        "ticks": 93
+      },
+      "19": {
+        "from": 18,
+        "start": 4480,
+        "direction": 1,
+        "ticks": 126
+      },
+      "3": {
+        "from": 18,
+        "start": 4780,
+        "direction": 1,
+        "ticks": 144
+      },
+      "20": {
+        "from": 3,
+        "start": 5180,
+        "direction": 1,
+        "ticks": 84
+      },
+      "22": {
+        "from": 3,
+        "start": 5970,
+        "direction": 1,
+        "ticks": 86
+      },
+      "21": {
+        "from": 20,
+        "start": 5540.0,
+        "direction": 1,
+        "ticks": 93
+      },
+      "23": {
+        "from": 22,
+        "start": 6230,
+        "direction": 1,
+        "ticks": 126
+      },
+      "4": {
+        "from": 22,
+        "start": 6470,
+        "direction": 1,
+        "ticks": 144
+      },
+      "24": {
+        "from": 4,
+        "start": 6880,
+        "direction": 1,
+        "ticks": 88
+      },
+      "26": {
+        "from": 4,
+        "start": 7670,
+        "direction": 1,
+        "ticks": 86
+      },
+      "27": {
+        "from": 4,
+        "start": 8150,
+        "direction": 1,
+        "ticks": 94
+      },
+      "25": {
+        "from": 24,
+        "start": 7220.0,
+        "direction": 1,
+        "ticks": 91
+      },
+      "5": {
+        "from": 26,
+        "start": 8140,
+        "direction": 1,
+        "ticks": 144
+      },
+      "28": {
+        "from": 5,
+        "start": 8580,
+        "direction": 1,
+        "ticks": 86
+      },
+      "30": {
+        "from": 5,
+        "start": 9370,
+        "direction": 1,
+        "ticks": 84
+      },
+      "29": {
+        "from": 28,
+        "start": 8960.0,
+        "direction": 1,
+        "ticks": 89
+      },
+      "31": {
+        "from": 30,
+        "start": 9650,
+        "direction": 1,
+        "ticks": 126
+      },
+      "6": {
+        "from": 30,
+        "start": 9890,
+        "direction": 1,
+        "ticks": 144
+      },
+      "32": {
+        "from": 6,
+        "start": 10280,
+        "direction": 1,
+        "ticks": 88
+      },
+      "34": {
+        "from": 6,
+        "start": 11070,
+        "direction": 1,
+        "ticks": 86
+      },
+      "33": {
+        "from": 32,
+        "start": 10620.0,
+        "direction": 1,
+        "ticks": 91
+      },
+      "35": {
+        "from": 34,
+        "start": 11310,
+        "direction": 1,
+        "ticks": 126
+      },
+      "7": {
+        "from": 34,
+        "start": 11550,
+        "direction": 1,
+        "ticks": 144
+      },
+      "36": {
+        "from": 7,
+        "start": 11980,
+        "direction": 1,
+        "ticks": 84
+      },
+      "38": {
+        "from": 7,
+        "start": 12770,
+        "direction": 1,
+        "ticks": 84
+      },
+      "37": {
+        "from": 36,
+        "start": 12350.0,
+        "direction": 1,
+        "ticks": 91
+      },
+      "39": {
+        "from": 38,
+        "start": 13270,
+        "direction": 1,
+        "ticks": 94
+      }
+    }
+  },
+  {
+    "level": 7,
+    "length": 14400,
+    "supports": 48,
+    "reachable": 48,
+    "missing": [],
+    "medallion_reachable": true,
+    "glide_used": false,
+    "energy_used": 0,
+    "scope": "Geometry only; real physics with running approaches, enemies excluded.",
+    "jumps": {
+      "11": {
+        "from": 0,
+        "start": 90,
+        "direction": 1,
+        "ticks": 93
+      },
+      "13": {
+        "from": 0,
+        "start": 930,
+        "direction": 1,
+        "ticks": 88
+      },
+      "12": {
+        "from": 11,
+        "start": 510.0,
+        "direction": 1,
+        "ticks": 89
+      },
+      "14": {
+        "from": 13,
+        "start": 1180,
+        "direction": 1,
+        "ticks": 125
+      },
+      "1": {
+        "from": 13,
+        "start": 1250,
+        "direction": 1,
+        "ticks": 143
+      },
+      "15": {
+        "from": 14,
+        "start": 1520,
+        "direction": 1,
+        "ticks": 118
+      },
+      "17": {
+        "from": 1,
+        "start": 2330,
+        "direction": 1,
+        "ticks": 86
+      },
+      "16": {
+        "from": 15,
+        "start": 1960.0,
+        "direction": 1,
+        "ticks": 91
+      },
+      "18": {
+        "from": 17,
+        "start": 2600,
+        "direction": 1,
+        "ticks": 126
+      },
+      "2": {
+        "from": 17,
+        "start": 2670,
+        "direction": 1,
+        "ticks": 144
+      },
+      "19": {
+        "from": 18,
+        "start": 2920,
+        "direction": 1,
+        "ticks": 119
+      },
+      "21": {
+        "from": 2,
+        "start": 3790,
+        "direction": 1,
+        "ticks": 86
+      },
+      "20": {
+        "from": 19,
+        "start": 3400.0,
+        "direction": 1,
+        "ticks": 91
+      },
+      "22": {
+        "from": 21,
+        "start": 4010,
+        "direction": 1,
+        "ticks": 126
+      },
+      "3": {
+        "from": 21,
+        "start": 4140.0,
+        "direction": 1,
+        "ticks": 144
+      },
+      "23": {
+        "from": 22,
+        "start": 4420,
+        "direction": 1,
+        "ticks": 117
+      },
+      "25": {
+        "from": 3,
+        "start": 5290,
+        "direction": 1,
+        "ticks": 84
+      },
+      "24": {
+        "from": 23,
+        "start": 4880.0,
+        "direction": 1,
+        "ticks": 91
+      },
+      "26": {
+        "from": 25,
+        "start": 5540,
+        "direction": 1,
+        "ticks": 126
+      },
+      "4": {
+        "from": 25,
+        "start": 5670.0,
+        "direction": 1,
+        "ticks": 144
+      },
+      "27": {
+        "from": 26,
+        "start": 5920,
+        "direction": 1,
+        "ticks": 119
+      },
+      "29": {
+        "from": 4,
+        "start": 6790,
+        "direction": 1,
+        "ticks": 86
+      },
+      "28": {
+        "from": 27,
+        "start": 6410.0,
+        "direction": 1,
+        "ticks": 91
+      },
+      "30": {
+        "from": 29,
+        "start": 7020,
+        "direction": 1,
+        "ticks": 126
+      },
+      "5": {
+        "from": 29,
+        "start": 7150.0,
+        "direction": 1,
+        "ticks": 144
+      },
+      "31": {
+        "from": 30,
+        "start": 7420,
+        "direction": 1,
+        "ticks": 118
+      },
+      "33": {
+        "from": 5,
+        "start": 8290,
+        "direction": 1,
+        "ticks": 86
+      },
+      "32": {
+        "from": 31,
+        "start": 7870.0,
+        "direction": 1,
+        "ticks": 89
+      },
+      "34": {
+        "from": 33,
+        "start": 8520,
+        "direction": 1,
+        "ticks": 126
+      },
+      "6": {
+        "from": 33,
+        "start": 8650.0,
+        "direction": 1,
+        "ticks": 144
+      },
+      "35": {
+        "from": 34,
+        "start": 8920,
+        "direction": 1,
+        "ticks": 117
+      },
+      "37": {
+        "from": 6,
+        "start": 9790,
+        "direction": 1,
+        "ticks": 86
+      },
+      "36": {
+        "from": 35,
+        "start": 9410.0,
+        "direction": 1,
+        "ticks": 93
+      },
+      "38": {
+        "from": 37,
+        "start": 10040,
+        "direction": 1,
+        "ticks": 126
+      },
+      "7": {
+        "from": 37,
+        "start": 10170.0,
+        "direction": 1,
+        "ticks": 144
+      },
+      "39": {
+        "from": 38,
+        "start": 10420,
+        "direction": 1,
+        "ticks": 118
+      },
+      "41": {
+        "from": 7,
+        "start": 11290,
+        "direction": 1,
+        "ticks": 86
+      },
+      "40": {
+        "from": 39,
+        "start": 10860.0,
+        "direction": 1,
+        "ticks": 89
+      },
+      "42": {
+        "from": 41,
+        "start": 11520,
+        "direction": 1,
+        "ticks": 126
+      },
+      "8": {
+        "from": 41,
+        "start": 11650.0,
+        "direction": 1,
+        "ticks": 144
+      },
+      "43": {
+        "from": 42,
+        "start": 11920,
+        "direction": 1,
+        "ticks": 117
+      },
+      "45": {
+        "from": 8,
+        "start": 12790,
+        "direction": 1,
+        "ticks": 86
+      },
+      "44": {
+        "from": 43,
+        "start": 12390.0,
+        "direction": 1,
+        "ticks": 91
+      },
+      "9": {
+        "from": 45,
+        "start": 13020,
+        "direction": 1,
+        "ticks": 144
+      },
+      "47": {
+        "from": 45,
+        "start": 13280,
+        "direction": 1,
+        "ticks": 122
+      },
+      "46": {
+        "from": 9,
+        "start": 13590,
+        "direction": -1,
+        "ticks": 94
+      },
+      "48": {
+        "from": 47,
+        "start": 13730,
+        "direction": 1,
+        "ticks": 94
+      }
+    }
+  },
+  {
+    "level": 8,
+    "length": 14400,
+    "supports": 38,
+    "reachable": 38,
+    "missing": [],
+    "medallion_reachable": true,
+    "glide_used": false,
+    "energy_used": 0,
+    "scope": "Geometry only; real physics with running approaches, enemies excluded.",
+    "jumps": {
+      "8": {
+        "from": 0,
+        "start": 150,
+        "direction": 1,
+        "ticks": 94
+      },
+      "10": {
+        "from": 0,
+        "start": 990,
+        "direction": 1,
+        "ticks": 86
+      },
+      "11": {
+        "from": 0,
+        "start": 1590,
+        "direction": 1,
+        "ticks": 94
+      },
+      "9": {
+        "from": 8,
+        "start": 530.0,
+        "direction": 1,
+        "ticks": 91
+      },
+      "1": {
+        "from": 10,
+        "start": 1530,
+        "direction": 1,
+        "ticks": 144
+      },
+      "12": {
+        "from": 1,
+        "start": 1960,
+        "direction": 1,
+        "ticks": 88
+      },
+      "14": {
+        "from": 1,
+        "start": 2750,
+        "direction": 1,
+        "ticks": 84
+      },
+      "15": {
+        "from": 1,
+        "start": 3350,
+        "direction": 1,
+        "ticks": 91
+      },
+      "13": {
+        "from": 12,
+        "start": 2330,
+        "direction": 1,
+        "ticks": 89
+      },
+      "2": {
+        "from": 15,
+        "start": 3480,
+        "direction": 1,
+        "ticks": 134
+      },
+      "16": {
+        "from": 2,
+        "start": 3760,
+        "direction": 1,
+        "ticks": 91
+      },
+      "18": {
+        "from": 2,
+        "start": 4610,
+        "direction": 1,
+        "ticks": 88
+      },
+      "19": {
+        "from": 2,
+        "start": 5210,
+        "direction": 1,
+        "ticks": 94
+      },
+      "17": {
+        "from": 16,
+        "start": 4130.0,
+        "direction": 1,
+        "ticks": 94
+      },
+      "3": {
+        "from": 18,
+        "start": 5150,
+        "direction": 1,
+        "ticks": 136
+      },
+      "20": {
+        "from": 3,
+        "start": 5560,
+        "direction": 1,
+        "ticks": 91
+      },
+      "22": {
+        "from": 3,
+        "start": 6320.0,
+        "direction": 1,
+        "ticks": 89
+      },
+      "23": {
+        "from": 3,
+        "start": 6950,
+        "direction": 1,
+        "ticks": 94
+      },
+      "21": {
+        "from": 20,
+        "start": 5870,
+        "direction": 1,
+        "ticks": 106
+      },
+      "4": {
+        "from": 23,
+        "start": 7080,
+        "direction": 1,
+        "ticks": 141
+      },
+      "24": {
+        "from": 4,
+        "start": 7360,
+        "direction": 1,
+        "ticks": 91
+      },
+      "26": {
+        "from": 4,
+        "start": 8120.0,
+        "direction": 1,
+        "ticks": 89
+      },
+      "27": {
+        "from": 4,
+        "start": 8750,
+        "direction": 1,
+        "ticks": 94
+      },
+      "25": {
+        "from": 24,
+        "start": 7730.0,
+        "direction": 1,
+        "ticks": 106
+      },
+      "5": {
+        "from": 27,
+        "start": 8880,
+        "direction": 1,
+        "ticks": 133
+      },
+      "28": {
+        "from": 5,
+        "start": 9160,
+        "direction": 1,
+        "ticks": 91
+      },
+      "29": {
+        "from": 5,
+        "start": 9650,
+        "direction": 1,
+        "ticks": 79
+      },
+      "30": {
+        "from": 5,
+        "start": 9920.0,
+        "direction": 1,
+        "ticks": 89
+      },
+      "31": {
+        "from": 5,
+        "start": 10550,
+        "direction": 1,
+        "ticks": 94
+      },
+      "6": {
+        "from": 31,
+        "start": 10680,
+        "direction": 1,
+        "ticks": 133
+      },
+      "32": {
+        "from": 6,
+        "start": 10960,
+        "direction": 1,
+        "ticks": 99
+      },
+      "33": {
+        "from": 6,
+        "start": 11510,
+        "direction": 1,
+        "ticks": 99
+      },
+      "34": {
+        "from": 6,
+        "start": 11810,
+        "direction": 1,
+        "ticks": 99
+      },
+      "35": {
+        "from": 6,
+        "start": 12350,
+        "direction": 1,
+        "ticks": 99
+      },
+      "7": {
+        "from": 35,
+        "start": 12480,
+        "direction": 1,
+        "ticks": 138
+      },
+      "36": {
+        "from": 35,
+        "start": 12620,
+        "direction": 1,
+        "ticks": 122
+      },
+      "37": {
+        "from": 7,
+        "start": 13310,
+        "direction": 1,
+        "ticks": 99
+      }
+    }
+  }
+]

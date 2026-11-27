@@ -101,20 +101,20 @@ class MenuTests(unittest.TestCase):
         g.handle_pad(PadSnapshot());g.handle_pad(PadSnapshot(menu_axis=-1))
         self.assertEqual(g.menu.selected['title'],3)
 
-    def test_holding_horizontal_changes_boolean_setting_only_once(self):
+    def test_holding_horizontal_changes_volume_only_once_until_released(self):
         g=self.g;g.enter_menu('settings');g.menu.selected['settings']=1
         for now in (0,.1,.5,1.):
-            g.time=now;g.handle_pad(PadSnapshot(axis=1))
-            self.assertFalse(g.sound_on)
-        g.handle_pad(PadSnapshot());g.handle_pad(PadSnapshot(axis=1))
-        self.assertTrue(g.sound_on)
+            g.time=now;g.handle_pad(PadSnapshot(axis=-1))
+            self.assertEqual(g.settings.sound_volume,90)
+        g.handle_pad(PadSnapshot());g.handle_pad(PadSnapshot(axis=-1))
+        self.assertEqual(g.settings.sound_volume,80)
 
     def test_options_apply_and_save_sound_vibration_fps_and_display(self):
         g=self.g;g.enter_menu('settings')
         with tempfile.TemporaryDirectory() as directory:
             g.settings_path=Path(directory)/'settings.json'
             for index in (1,2,3):
-                g.menu.selected['settings']=index;g.menu_action('right')
+                g.menu.selected['settings']=index;g.menu_action('activate' if index==1 else 'right')
             loaded=Settings.load(g.settings_path)
             self.assertFalse(g.sound_on);self.assertFalse(g.gamepads.rumble_enabled)
             self.assertTrue(g.show_fps);self.assertEqual((loaded.sound,loaded.rumble,loaded.show_fps),(False,False,True))
@@ -127,6 +127,31 @@ class MenuTests(unittest.TestCase):
             toggle.assert_called_once()
             with patch.object(g.settings,'save',return_value=False):g.save_settings()
             self.assertTrue(g.menu.save_failed)
+        g.settings_path=None
+
+    def test_audio_volumes_apply_immediately_clamp_and_persist_independently(self):
+        g=self.g;g.enter_menu('settings')
+        with tempfile.TemporaryDirectory() as directory:
+            g.settings_path=Path(directory)/'settings.json'
+            g.menu.selected['settings']=1;g.menu_action('left')
+            self.assertEqual(g.settings.sound_volume,90)
+            self.assertAlmostEqual(g.sounds['jump'].get_volume(),.9,delta=.01)
+            g.menu.selected['settings']=6;g.menu_action('left')
+            self.assertEqual(g.settings.music_volume,90)
+            for _ in range(12):g.menu_action('left')
+            self.assertEqual(g.settings.music_volume,0);self.assertFalse(g.settings.music)
+            self.assertEqual(g.settings.sound_volume,90);self.assertTrue(g.sound_on)
+            g.menu_action('right')
+            self.assertEqual(g.settings.music_volume,10);self.assertTrue(g.settings.music)
+            loaded=Settings.load(g.settings_path)
+            self.assertEqual((loaded.sound_volume,loaded.music_volume),(90,10))
+            g.adjust_volume('music',-1);g.toggle_music()
+            self.assertEqual(g.settings.music_volume,100);self.assertTrue(g.settings.music)
+            g.menu.selected['settings']=1
+            for _ in range(10):g.menu_action('left')
+            self.assertFalse(g.sound_on)
+            g.toggle_sound()
+            self.assertTrue(g.sound_on);self.assertEqual(g.settings.sound_volume,100)
         g.settings_path=None
 
     def test_pause_configuration_preserves_run_then_resumes_without_jump(self):
@@ -196,6 +221,75 @@ class MenuTests(unittest.TestCase):
             self.run_events([pg.event.Event(pg.MOUSEBUTTONDOWN,pos=position,button=1)])
             self.assertEqual(g.state,expected)
         self.assertTrue(g.quit_requested)
+
+    def test_clicking_each_volume_gauge_sets_exact_position_and_saves(self):
+        g=self.g;g.enter_menu('settings')
+        with tempfile.TemporaryDirectory() as directory:
+            g.settings_path=Path(directory)/'settings.json'
+            for index,kind in ((1,'sound'),(6,'music')):
+                gauge=g.menu.volume_gauge(index)
+                other='music' if kind=='sound' else 'sound'
+                previous=getattr(g.settings,other+'_volume')
+                for percent in (25,0,100,50,75):
+                    with self.subTest(kind=kind,percent=percent):
+                        position=(round((gauge.x+gauge.width*percent/100)*1.5),round(gauge.centery*1.5))
+                        self.run_events([pg.event.Event(pg.MOUSEBUTTONDOWN,pos=position,button=1)])
+                        self.assertEqual(getattr(g.settings,kind+'_volume'),percent)
+                        self.assertEqual(getattr(Settings.load(g.settings_path),kind+'_volume'),percent)
+                        self.assertEqual(getattr(g.settings,other+'_volume'),previous)
+                        self.assertEqual(g.sound_on if kind=='sound' else g.settings.music,percent>0)
+                        if kind=='sound':self.assertAlmostEqual(g.sounds['jump'].get_volume(),percent/100,delta=.01)
+                        self.assertEqual(g.state,'settings')
+        g.settings_path=None
+
+    def test_gauge_hover_and_right_click_do_not_change_volume(self):
+        g=self.g;g.enter_menu('settings');g.set_volume('sound',40)
+        gauge=g.menu.volume_gauge(1)
+        position=(round(gauge.centerx*1.5),round(gauge.centery*1.5))
+        for event in (pg.event.Event(pg.MOUSEMOTION,pos=position,rel=(1,0)),
+                      pg.event.Event(pg.MOUSEBUTTONDOWN,pos=position,button=3)):
+            self.run_events([event]);self.assertEqual(g.settings.sound_volume,40)
+
+    def test_volume_drag_tracks_original_gauge_clamps_and_saves_on_release(self):
+        g=self.g
+        with tempfile.TemporaryDirectory() as directory:
+            g.settings_path=Path(directory)/'settings.json'
+            for index,kind in ((1,'sound'),(6,'music')):
+                g.enter_menu('settings');gauge=g.menu.volume_gauge(index)
+                def position(x,y=gauge.centery):return (round(x*1.5),round(y*1.5))
+                self.run_events([pg.event.Event(pg.MOUSEBUTTONDOWN,button=1,pos=position(gauge.x+24))])
+                self.assertEqual(g.menu.volume_drag,index)
+                self.run_events([pg.event.Event(pg.MOUSEMOTION,pos=position(gauge.right+50,280),rel=(10,0),buttons=(1,0,0))])
+                self.assertEqual(getattr(g.settings,kind+'_volume'),100)
+                self.assertEqual(g.menu.selected['settings'],index)
+                self.run_events([pg.event.Event(pg.MOUSEMOTION,pos=position(gauge.left-50),rel=(-10,0),buttons=(1,0,0))])
+                self.assertEqual(getattr(g.settings,kind+'_volume'),0)
+                self.assertEqual(getattr(Settings.load(g.settings_path),kind+'_volume'),25)
+                self.run_events([pg.event.Event(pg.MOUSEBUTTONUP,button=1,pos=position(gauge.centerx))])
+                self.assertIsNone(g.menu.volume_drag)
+                self.assertEqual(getattr(Settings.load(g.settings_path),kind+'_volume'),50)
+                self.run_events([pg.event.Event(pg.MOUSEMOTION,pos=position(gauge.right),rel=(10,0),buttons=(0,0,0))])
+                self.assertEqual(getattr(g.settings,kind+'_volume'),50)
+        g.settings_path=None
+
+    def test_focus_loss_stops_volume_drag(self):
+        g=self.g;g.enter_menu('settings');gauge=g.menu.volume_gauge(1)
+        g.menu.click_volume(g,gauge.center)
+        self.assertIsNotNone(g.menu.volume_drag)
+        self.run_events([pg.event.Event(pg.WINDOWFOCUSLOST)])
+        self.assertIsNone(g.menu.volume_drag)
+
+    def test_pause_music_is_thirty_percent_quieter_without_changing_preference(self):
+        g=self.g;g.settings.music_volume=80
+        for origin in ('title','pause'):
+            g.menu.origin=origin
+            for page in ('title','pause','save','overwrite','settings','controls','languages','load'):
+                with self.subTest(origin=origin,page=page):
+                    g.state=page
+                    paused=page in ('pause','save','overwrite') or origin=='pause' and page in ('settings','controls','languages')
+                    with patch.object(g.menu_music,'update') as update:g.sync_menu_music()
+                    self.assertAlmostEqual(update.call_args.kwargs['volume'],.8*(.7 if paused else 1.))
+                    self.assertEqual(g.settings.music_volume,80)
 
     def test_cursor_requires_motion_and_hides_after_three_real_seconds_in_all_menus(self):
         g=self.g

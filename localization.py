@@ -76,7 +76,7 @@ for code,row in SENTENCE_ROWS.items():
 SOURCES={value:('core',key) for key,value in CORE['fr'].items()}
 SOURCES.update({value:('sentence',key) for key,value in SENTENCES['fr'].items()})
 SOURCES.update({value.upper():target for value,target in list(SOURCES.items())})
-SOURCES.update({'Activées':('core','on'),'Coupées':('core','off'),'SAUVEGARDER':('core','save'),
+SOURCES.update({'Activées':('core','on'),'Coupées':('core','off'),'Activée':('core','on'),'Coupée':('core','off'),'SAUVEGARDER':('core','save'),
                 'CHARGER UNE PARTIE':('core','load'),'COMMANDES':('core','controls'),
                 'CONFIGURATION':('core','settings')})
 LOADING_CATEGORIES={
@@ -118,10 +118,53 @@ def _upper(text,language):
     return text.upper()
 
 
+GREEK_ROWS = {
+    'en':('The Shores of Helios','The Way of Statues','The Marble Galleries','The Sunlit Acropolis','The Heights of Helios','Level complete'),
+    'de':('Die Küsten des Helios','Der Weg der Statuen','Die Marmorgalerien','Die Akropolis der Sonne','Die Höhen des Helios','Level abgeschlossen'),
+    'es':('Las costas de Helios','La vía de las estatuas','Las galerías de mármol','La Acrópolis del Sol','Las alturas de Helios','Nivel completado'),
+    'it':('Le rive di Elio','La via delle statue','Le gallerie di marmo','L’Acropoli del Sole','Le alture di Elio','Livello completato'),
+    'pt':('As margens de Hélio','A via das estátuas','As galerias de mármore','A Acrópole do Sol','As alturas de Hélio','Nível concluído'),
+    'nl':('De kusten van Helios','De weg der standbeelden','De marmeren galerijen','De Akropolis van de zon','De hoogten van Helios','Level voltooid'),
+    'pl':('Wybrzeża Heliosa','Droga posągów','Marmurowe galerie','Akropol Słońca','Wzgórza Heliosa','Poziom ukończony'),
+    'cs':('Héliovy břehy','Cesta soch','Mramorové galerie','Sluneční Akropole','Héliovy výšiny','Úroveň dokončena'),
+    'ro':('Țărmurile lui Helios','Calea statuilor','Galeriile de marmură','Acropola Soarelui','Înălțimile lui Helios','Nivel terminat'),
+    'hu':('Héliosz partjai','A szobrok útja','A márványgalériák','A Nap Akropolisza','Héliosz magaslatai','Pálya teljesítve'),
+    'tr':('Helios kıyıları','Heykeller yolu','Mermer galeriler','Güneş Akropolisi','Helios tepeleri','Bölüm tamamlandı'),
+    'sv':('Helios stränder','Statyernas väg','Marmorgallerierna','Solens Akropolis','Helios höjder','Banan avklarad'),
+    'da':('Helios’ kyster','Statuernes vej','Marmorgallerierne','Solens Akropolis','Helios’ højder','Banen gennemført'),
+    'nb':('Helios’ strender','Statuenes vei','Marmorgalleriene','Solens Akropolis','Helios’ høyder','Banen fullført'),
+    'fi':('Helioksen rannat','Patsaiden tie','Marmorigalleriat','Auringon Akropolis','Helioksen kukkulat','Taso suoritettu'),
+    'is':('Strendur Helíosar','Styttuvegurinn','Marmaragöngin','Sólarkastalinn','Hæðir Helíosar','Borði lokið'),
+    'ru':('Берега Гелиоса','Путь статуй','Мраморные галереи','Акрополь Солнца','Высоты Гелиоса','Уровень пройден'),
+    'bg':('Бреговете на Хелиос','Пътят на статуите','Мраморните галерии','Акрополът на Слънцето','Височините на Хелиос','Нивото е завършено'),
+    'sr':('Хелиосове обале','Пут статуа','Мермерне галерије','Акропољ Сунца','Хелиосове висине','Ниво је завршен'),
+}
+
+
 @lru_cache(maxsize=8192)
 def translate(text,language='fr'):
     if language not in CODES or language=='fr':return text
+    from screenshots_catalog import TEXTS as CAPTURE_TEXTS,ROWS as CAPTURE_ROWS
+    if text in CAPTURE_TEXTS:return CAPTURE_ROWS[language][CAPTURE_TEXTS.index(text)]
+    from bezel_catalog import TEXTS,ROWS
+    if text in TEXTS:return ROWS[language][TEXTS.index(text)]
+    if text=='CADRE D’ÉCRAN':return ROWS[language][0].upper()
+    if text=='Musique des menus':
+        return {'en':'Menu music','de':'Menümusik','es':'Música de los menús','it':'Musica dei menu',
+                'pt':'Música dos menus','nl':'Menumuziek','pl':'Muzyka menu','cs':'Hudba v menu',
+                'ro':'Muzica meniului','hu':'Menüzene','tr':'Menü müziği','sv':'Menymusik',
+                'da':'Menumusik','nb':'Menymusikk','fi':'Valikkomusiikki','is':'Valmyndatónlist',
+                'ru':'Музыка меню','bg':'Музика в менюто','sr':'Музика менија'}[language]
     c=CORE[language];s=SENTENCES[language]
+    greek=GREEK_ROWS[language]
+    greek_titles=('LES RIVAGES D’HÉLIOS','LA VOIE DES STATUES','LES GALERIES DU MARBRE','L’ACROPOLE DU SOLEIL')
+    for index,title in enumerate(greek_titles,5):
+        if text in (f'NIVEAU {index:02}  /  {title}',f'NIVEAU {index:02} · {title}'):
+            separator='  /  ' if '/' in text else ' · '
+            return _upper(f'{c["level"]} {index:02}{separator}{greek[index-5]}',language)
+    if text=='LES HAUTEURS D’HÉLIOS':return _upper(greek[4],language)
+    if text in ('LE RIVAGE EST FRANCHI','LA VOIE EST FRANCHIE','LES GALERIES SONT FRANCHIES','L’ACROPOLE EST ATTEINTE'):
+        return _upper(greek[5],language)
     if text=='ÉPUISÉE':
         return {'en':'DEPLETED','de':'LEER','es':'AGOTADA','it':'ESAURITA','pt':'ESGOTADA',
                 'nl':'LEEG','pl':'WYCZERPANA','cs':'VYČERPÁNA','ro':'EPUIZATĂ','hu':'ELFOGYOTT',
@@ -180,7 +223,7 @@ def translate(text,language='fr'):
         return f'↑ ↓ / Stick  {c["choose"]}     Enter / A  {c["confirm"]}     Esc / B  {translate(back,language)}'
     if text.startswith('Stick / ← →  Bouger'):
         return f'← →  {c["move"]}    A / {c["space"]}  {c["jump"]}    ↓ / S  {c["crouch"]}    RT / B / F  {c["shoot"]}    A  {c["glide"]}'
-    if text.startswith('R / View  Recommencer'):return f'R / View  {c["restart"]}     M / RB  {c["sound"]}     F11  {c["display"]}'
+    if text.startswith('R / View  Recommencer'):return f'R / View  {c["restart"]}     M / RB  {c["sound"]}     F11  {c["display"]}     F12  {translate("Capture d’écran",language)}'
     controls={'Stick gauche / croix':f'{c["left_stick"]} / {c["dpad"]}',
               'A / croix haut':f'A / {c["dpad"]} ↑','Bas + saut':f'{c["down"]} + {c["jump"]}',
               'Bas + A':f'{c["down"]} + A','Bas / S':f'{c["down"]} / S',

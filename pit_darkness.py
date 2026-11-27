@@ -7,7 +7,7 @@ from rendering import pixel
 
 def pit_regions(platforms,level_id):
     if level_id==4:return ()
-    excluded={'temple_ceiling','tower_ceiling','tower_wall'}
+    excluded={'temple_ceiling','tower_ceiling','tower_wall','greek_ceiling'}
     spans=sorted((p.x,p.x+p.w) for p in platforms if p.ground and p.kind not in excluded)
     gaps=[];end=None
     for left,right in spans:
@@ -37,8 +37,11 @@ class PitDarkness:
             self.images.append(image)
 
     def draw(self,canvas,regions,level_id,camera):
-        if level_id not in (1,2,3):return
-        image=self.images[level_id-1];top=pixel(620*SCALE)
+        if level_id==4:return
+        image=self.images[level_id-1 if level_id<=3 else 2];top=pixel(620*SCALE)
         for left,right in regions:
+            if level_id>=5:
+                from greece_levels import LEVELS
+                top=pixel(LEVELS[level_id].floor_height(left-1)*SCALE)
             x=max(0,pixel((left-camera)*SCALE));end=min(FULL_HD[0],pixel((right-camera)*SCALE))
             if end>x:canvas.native.blit(image,(x,top),(0,0,end-x,image.get_height()))

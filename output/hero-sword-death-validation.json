@@ -1,0 +1,64 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "authored_poses": 16,
+  "prepared_poses_per_facing": 64,
+  "sprite_atlases": 1,
+  "new_death_texture_uploads": 0,
+  "observed_pose_samples": 110,
+  "cases": [
+    {
+      "case": "impact",
+      "level": 5,
+      "lives": 2,
+      "deaths": 1,
+      "state": "play",
+      "impact": [
+        1035.0,
+        620
+      ],
+      "landed_at": 0.2833333333333334,
+      "corpse_kind": "sword"
+    },
+    {
+      "case": "reverse",
+      "level": 7,
+      "lives": 2,
+      "deaths": 1,
+      "state": "play",
+      "impact": [
+        2215.0,
+        620
+      ],
+      "landed_at": 0.2833333333333334,
+      "corpse_kind": "sword"
+    },
+    {
+      "case": "air",
+      "level": 5,
+      "lives": 2,
+      "deaths": 1,
+      "state": "play",
+      "impact": [
+        1065.0,
+        575.6076388888889
+      ],
+      "landed_at": 0.30833333333333346,
+      "corpse_kind": "sword"
+    },
+    {
+      "case": "game-over",
+      "level": 8,
+      "lives": 0,
+      "deaths": 1,
+      "state": "game_over",
+      "impact": [
+        13635.0,
+        380
+      ],
+      "landed_at": 0.2833333333333334,
+      "corpse_kind": "sword"
+    }
+  ],
+  "scope": "Real sword/body contacts with no invulnerability; temporary settings and saves; both facings, real falling, resurrection and last-life Game Over."
+}

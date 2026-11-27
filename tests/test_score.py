@@ -45,7 +45,7 @@ class ScoreTests(unittest.TestCase):
 
     def test_completion_bonus_and_level_transition_do_not_duplicate_points(self):
         g=self.g
-        for level in range(1,5):
+        for level in range(1,9):
             for lives in (1,3,4):
                 g.new_game();g.start_level(level);g.lives=lives;g.award_points(50)
                 expected=50+level*1000+lives*100
@@ -54,7 +54,7 @@ class ScoreTests(unittest.TestCase):
                 g.update(STEP,0,False,False);self.assertEqual(g.score,expected)
                 g.continue_or_restart()
                 self.assertEqual(g.level_score,0)
-                self.assertEqual(g.score,expected if level<4 else 0)
+                self.assertEqual(g.score,expected if level<8 else 0)
                 self.assertFalse(g.level_bonus_awarded)
 
     def test_real_level_end_triggers_bonus(self):

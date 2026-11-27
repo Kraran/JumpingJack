@@ -1,0 +1,129 @@
+[
+  {
+    "level": 5,
+    "state": "win",
+    "frames": 4659,
+    "deaths": 0,
+    "lives": 3,
+    "energy": 100.0,
+    "fire_requests": 6,
+    "crystals": 29,
+    "score": 5990,
+    "checkpoint": 2,
+    "hero": [
+      12097.21,
+      620
+    ],
+    "hoplites": 3,
+    "hoplites_defeated": 3,
+    "death_events": [],
+    "enemies_active": true,
+    "initial_protection": false,
+    "glide_used": false
+  },
+  {
+    "level": 6,
+    "state": "win",
+    "frames": 8321,
+    "deaths": 2,
+    "lives": 1,
+    "energy": 60.0,
+    "fire_requests": 124,
+    "crystals": 39,
+    "score": 8090,
+    "checkpoint": 2,
+    "hero": [
+      14497.9,
+      620
+    ],
+    "hoplites": 4,
+    "hoplites_defeated": 3,
+    "death_events": [
+      {
+        "kind": "laser",
+        "x": 8854.88,
+        "y": 620,
+        "energy": 10.0
+      },
+      {
+        "kind": "beetle",
+        "x": 9515.04,
+        "y": 565.59,
+        "energy": 40.0
+      }
+    ],
+    "enemies_active": true,
+    "initial_protection": false,
+    "glide_used": false
+  },
+  {
+    "level": 7,
+    "state": "game_over",
+    "frames": 4771,
+    "deaths": 3,
+    "lives": 0,
+    "energy": 29.97,
+    "fire_requests": 8,
+    "crystals": 16,
+    "score": 360,
+    "checkpoint": 0,
+    "hero": [
+      3868.07,
+      620
+    ],
+    "hoplites": 4,
+    "hoplites_defeated": 1,
+    "death_events": [
+      {
+        "kind": "beetle",
+        "x": 3786.67,
+        "y": 314.81,
+        "energy": 29.97
+      },
+      {
+        "kind": "pit",
+        "x": 4329.9,
+        "y": 622.26,
+        "energy": 39.93
+      },
+      {
+        "kind": "beetle",
+        "x": 3868.07,
+        "y": 457.9,
+        "energy": 29.97
+      }
+    ],
+    "enemies_active": true,
+    "initial_protection": false,
+    "glide_used": true
+  },
+  {
+    "level": 8,
+    "state": "win",
+    "frames": 5960,
+    "deaths": 1,
+    "lives": 2,
+    "energy": 50.0,
+    "fire_requests": 11,
+    "crystals": 34,
+    "score": 9240,
+    "checkpoint": 2,
+    "hero": [
+      14498.4,
+      380
+    ],
+    "hoplites": 4,
+    "hoplites_defeated": 3,
+    "death_events": [
+      {
+        "kind": "beetle",
+        "x": 10033.74,
+        "y": 440,
+        "energy": 20.0
+      }
+    ],
+    "enemies_active": true,
+    "initial_protection": false,
+    "glide_used": false
+  }
+]

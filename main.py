@@ -14,6 +14,7 @@ import pygame as pg
 from gpu_render import NativeCanvas, DesignCanvas, DESIGN, SCALE, draw
 from hero_animation import load_bank, HeroAnimator, landing_clip, LAND_DURATIONS, DROP_TIME, DROP_RELEASE,CROUCH_TIME
 from crocodile import Crocodile,CrocodileSprites, create_crocodiles
+from hoplite import Hoplite,HopliteSprites,DEATH_TIME as HOPLITE_DEATH_TIME,ATTACK_TIME as HOPLITE_ATTACK_TIME
 from gamepad import Gamepads, PadSnapshot, merge_axis
 from solar import SolarRay
 from rest import RestPose
@@ -28,6 +29,8 @@ from crystal import SolarCrystals
 import desert_level
 import temple_level
 import tower_level
+import greece_levels
+from greece_art import GreekWorldArt
 from tower_art import TowerArt,VerticalCanvas
 from desert_art import DesertArt
 from vase import Vase,VaseSprites,SPAWNS as VASE_SPAWNS
@@ -36,6 +39,8 @@ from temple_exit import TempleExit,TempleExitSprites,APPROACH
 from hero_death import HeroDeath,CrocodileDeathSprites,CAPTURE as DEATH_CAPTURE,BEETLE_STUN,LASER_IMPACT,LASER_DURATION,LASER_LIMIT,smooth as death_smooth
 from beetle_death import BeetleDeathSprites
 from blade_death import BladeDeathSprites
+from sword_death import SwordDeathSprites
+from hero_death import SWORD_DURATION,SWORD_IMPACT,SWORD_LAND
 from laser_death import LaserDeathSprites
 from fire_death import FireDeathSprites
 from water_death import WaterDeathSprites,water_position
@@ -47,6 +52,10 @@ from gyrosphere import Gyrosphere,GyrosphereSprites,DEATH_TIME as GYRO_DEATH_TIM
 from terrain import DuneGround,sand_height
 from settings import Settings
 from menu import StartMenu,PAGES as MENU_PAGES
+from menu_music import MenuMusic
+from bezel import BezelArt
+from bezel_catalog import MODES as BEZEL_MODES,theme_for
+from screenshots import Screenshots
 from loading import LoadingScreen,LoadingCancelled
 from localization import translate,CODES
 from savegame import SaveSlots,capture as capture_save,restore as restore_save
@@ -85,6 +94,7 @@ class Platform:
 
 
 def level(level_id=1):
+    if level_id in greece_levels.LEVELS:return greece_levels.LEVELS[level_id].build(Platform,EXIT_MARGIN)
     if level_id==2:return desert_level.build(Platform,EXIT_MARGIN)
     if level_id==3:return temple_level.build(Platform,EXIT_MARGIN)
     if level_id==4:return tower_level.build(Platform,EXIT_MARGIN)
@@ -319,6 +329,7 @@ class Game:
             initial_settings_saved=self.settings.save(self.settings_path)
         self.saves=SaveSlots(saves_path if saves_path is not None else (None if headless else ROOT/'saves'))
         self.quit_requested=False
+        self.screenshots=Screenshots(ROOT/'captures')
         if headless:
             os.environ['SDL_VIDEODRIVER']='dummy'
             os.environ['SDL_AUDIODRIVER']='dummy'
@@ -337,6 +348,9 @@ class Game:
         pg.mouse.set_visible(False)
         self.loading=LoadingScreen(enabled=not headless,language=self.settings.language)
         self.loading_stage(0.,'Ouverture du temple…')
+        self.music_ready=False
+        self.menu_music=MenuMusic(ROOT/'assets'/'audio'/'menu-the-lone-flyer.ogg',enabled=not headless)
+        if self.settings.music:self.menu_music.start_loading(self.settings.music_volume/100)
         self.pacer=FramePacer()
         self.frame_intervals=deque(maxlen=240)
         self.submission_times=deque(maxlen=240)
@@ -363,6 +377,7 @@ class Game:
         self.loading_stage(.28,'Préparation de l’intérieur du temple…')
         self.temple_art=TempleArt.load(ROOT/'assets')
         self.tower_art=TowerArt.load(ROOT/'assets')
+        self.greece_art=GreekWorldArt(ROOT/'assets')
         self.vase_sprites=VaseSprites.load(ROOT/'assets')
         self.loading_stage(.35,'Assemblage du monde…')
         self.tiles = [self.make_tile(128,128,i) for i in range(4)]
@@ -396,9 +411,11 @@ class Game:
         self.rest=RestPose()
         self.loading_stage(.52,'Préparation des crocodiles…')
         self.crocodile_sprites=CrocodileSprites.load(ROOT/'assets')
+        self.hoplite_sprites=HopliteSprites.load(ROOT/'assets')
         self.hero_death_sprites=CrocodileDeathSprites.load(ROOT/'assets')
         self.beetle_death_sprites=BeetleDeathSprites.load(ROOT/'assets')
         self.blade_death_sprites=BladeDeathSprites.load(ROOT/'assets')
+        self.sword_death_sprites=SwordDeathSprites.load(ROOT/'assets')
         self.laser_death_sprites=LaserDeathSprites.load(ROOT/'assets')
         self.fire_death_sprites=FireDeathSprites.load(ROOT/'assets')
         self.water_death_sprites=WaterDeathSprites.load(ROOT/'assets')
@@ -430,6 +447,7 @@ class Game:
         self.sound_on = self.settings.sound
         self.sounds = {}
         self.make_sounds()
+        self.apply_sound_volume()
         self.gamepads = Gamepads()
         self.gamepads.rumble_enabled=self.settings.rumble
         self.pad = PadSnapshot()
@@ -454,6 +472,8 @@ class Game:
         gc.collect()  # Finish allocations from asset preparation before play.
         self.loading_stage(1.,'Prêt pour l’aventure')
         self.loading.release(self.native_canvas)
+        self.music_ready=True
+        self.sync_menu_music()
 
     def loading_stage(self,progress,label):
         try:self.loading.show(self.native_canvas,self.screen,progress,label)
@@ -462,11 +482,23 @@ class Game:
             raise
 
     def install_canvas(self):
+        if not hasattr(self,'bezel_art'):self.bezel_art=BezelArt(ROOT/'assets'/'bezels')
         try:
             self.native_canvas=NativeCanvas(self.sdl_window if self.presentation.accelerated else None)
         except pg.error:
             self.native_canvas=NativeCanvas()
         self.canvas=DesignCanvas(self.native_canvas)
+        self.native_canvas.bezel_art=self.bezel_art
+        self.native_canvas.preload(self.bezel_art.images.values())
+        self.sync_bezel()
+
+    def sync_bezel(self):
+        self.native_canvas.bezel_theme=theme_for(self.settings.bezel,getattr(self,'level_id',1))
+
+    def set_bezel(self,mode):
+        if mode not in BEZEL_MODES:return
+        self.settings.bezel=mode
+        self.sync_bezel();self.save_settings()
 
     def preload_textures(self):
         if not hasattr(self,'background_layers'):return
@@ -474,17 +506,20 @@ class Game:
         images += self.desert_art.images
         images += self.temple_art.images
         images += self.tower_art.images
+        images += self.greece_art.images
         images += self.vase_sprites.images
         images += [self.desert_sign]
         images += self.temple_exit_sprites.images
         images += self.hero_death_sprites.images
         images += self.beetle_death_sprites.images
         images += self.blade_death_sprites.images
+        images += self.sword_death_sprites.images
         images += self.laser_death_sprites.images
         images += [image for pair in self.hero_sprites for image in pair]
         if self.animation_bank:images += self.animation_bank.images
         if self.solar.effect:images += self.solar.effect.images
         if self.crocodile_sprites:images += self.crocodile_sprites.images
+        images += self.hoplite_sprites.images
         if self.beetle_sprites:images += self.beetle_sprites.images
         images += self.scorpion_sprites.images
         images += self.gyrosphere_sprites.images
@@ -514,11 +549,16 @@ class Game:
     def prepare_rendering(self):
         """Warm the real scene, HUD and common effects without advancing play."""
         state=self.state
+        music_ready=self.music_ready
+        self.music_ready=False
         try:
-            for level_id in (1,2,3,4):
+            for level_id in range(1,9):
                 gem_count=len(level(level_id)[1])
                 for count in range(gem_count+1):self.cache_text(f'{count:02} / {gem_count}',23,GOLD,outlined=True)
             for label in ('NIVEAU 01  /  LE SEUIL DU DÉSERT','NIVEAU 02  /  LE DÉSERT','NIVEAU 03  /  LE TEMPLE','NIVEAU 04  /  LA TOUR'):
+                self.cache_text(label,11,(198,209,199),outlined=True)
+            self.cache_text('LES HAUTEURS D’HÉLIOS',18,outlined=True)
+            for label in greece_levels.HUD_LABELS.values():
                 self.cache_text(label,11,(198,209,199),outlined=True)
             self.cache_text('LE SEUIL EST FRANCHI',44,GOLD,True)
             self.cache_text('NIVEAU 02 · LE DÉSERT',24)
@@ -540,6 +580,8 @@ class Game:
             self.cache_text('ÉPUISÉE',10,(247,144,65),outlined=True)
             self.cache_text('VIES',9,GOLD)
             self.cache_text('GAME OVER',44,GOLD,True)
+            for label in ('Capture enregistrée dans captures/.','Échec de la capture d’écran.'):
+                self.cache_text(label,14,GOLD,outlined=True)
             self.cache_text('Vous avez perdu toutes vos vies.',24)
             self.cache_text('Entrée, Start ou A pour une nouvelle partie',18)
             self.native_canvas.begin()
@@ -567,12 +609,16 @@ class Game:
             self.native_canvas.preload(list(self.text_cache.values()))
         finally:
             self.state=state
+            self.music_ready=music_ready
             # Submit the offscreen work; no screen swap or GPU readback.
             if self.native_canvas.gpu:self.native_canvas.renderer.target=None
 
     def capture(self):return self.native_canvas.capture()
 
     def close(self):
+        self.screenshots.close()
+        if hasattr(self,'menu'):self.menu.end_volume_drag(self)
+        if hasattr(self,'menu_music'):self.menu_music.close()
         self.native_canvas.release()
         if hasattr(self, 'gamepads'):
             self.gamepads.close()
@@ -673,12 +719,12 @@ class Game:
         self.reset()
 
     def start_level(self,level_id,preserve_energy=False):
-        if level_id not in (1,2,3,4):raise ValueError(f'Niveau inconnu : {level_id}')
+        if level_id not in range(1,9):raise ValueError(f'Niveau inconnu : {level_id}')
         self.level_id=level_id
         self.reset(preserve_energy=preserve_energy)
 
     def continue_or_restart(self):
-        if self.state=='win' and self.level_id in (1,2,3):
+        if self.state=='win' and self.level_id in range(1,8):
             self.bank_run_stats()
             self.start_level(self.level_id+1,preserve_energy=True)
             self.resume_from_menu()
@@ -704,7 +750,7 @@ class Game:
         self.rest.reset()
         self.wake_blocked=False
         self.dead_beetles=set()
-        config={2:desert_level,3:temple_level,4:tower_level}.get(self.level_id)
+        config={2:desert_level,3:temple_level,4:tower_level,**greece_levels.LEVELS}.get(self.level_id)
         self.world_length=config.LENGTH if config else WORLD
         self.world_height=tower_level.HEIGHT if self.level_id==4 else VIEW_H
         self.beetle_spawns=config.BEETLES if config else SPAWNS
@@ -713,7 +759,8 @@ class Game:
         self.beetle_motions=[BeetleMotion(i,spawns=self.beetle_spawns) for i in range(len(self.beetle_spawns))]
         self.vultures=[Vulture(i,self.vulture_spawns) for i in range(len(self.vulture_spawns))]
         self.scorpions=([Scorpion(i,tower_level.SCORPIONS) for i in range(3)] if self.level_id==4 else
-                        [Scorpion(i) for i in range(len(temple_level.SCORPIONS))] if self.level_id==3 else [])
+                        [Scorpion(i) for i in range(len(temple_level.SCORPIONS))] if self.level_id==3 else
+                        [Scorpion(i,config.SCORPIONS) for i in range(len(config.SCORPIONS))] if self.level_id>=5 else [])
         self.laser_bolts=[]
         gyro_spawns=getattr(config,'GYROSPHERES',())
         self.gyrospheres=[Gyrosphere(i,gyro_spawns) for i in range(len(gyro_spawns))]
@@ -727,17 +774,19 @@ class Game:
         self.pit_regions=pit_regions(self.platforms,self.level_id)
         self.taken=set()
         self.hero=(Hero(*tower_level.START) if self.level_id==4 else
+                   Hero(*config.START) if self.level_id>=5 else
                    Hero(160,sand_height(160)) if self.level_id==2 else Hero())
         self.hero.grounded=True
         self.hero_animation.reset()
         self.crocodiles=[Crocodile(*spawn) for spawn in config.CROCODILES] if config else create_crocodiles()
+        self.hoplites=[Hoplite(*spawn) for spawn in getattr(config,'HOPLITES',())]
         self.cam=self.prev_cam=0.
         self.cam_y=self.prev_cam_y=tower_level.HEIGHT-VIEW_H if self.level_id==4 else 0.
-        self.checkpoint=(160,sand_height(160)-60) if self.level_id==2 else (160,560)
-        if self.level_id==4:self.checkpoint=tower_level.START
+        # Every level entrance is the initial checkpoint, before any obelisk.
+        self.checkpoint=(self.hero.x,self.hero.y)
         self.check_index=0
         points=config.CHECKPOINTS if config else (CHECKPOINT_X,)
-        self.obelisks=([Obelisk(x,y) for x,y in points] if self.level_id==4 else
+        self.obelisks=([Obelisk(x,y) for x,y in points] if self.level_id>=4 else
                        [Obelisk(x,sand_height(x) if self.level_id==2 else GROUND_Y) for x in points])
         self.obelisk=self.obelisks[0]
         self.deaths=0
@@ -863,6 +912,9 @@ class Game:
     def sound(self,name):
         if self.sound_on and name in self.sounds: self.sounds[name].play()
 
+    def apply_sound_volume(self):
+        for sound in self.sounds.values():sound.set_volume(self.settings.sound_volume/100)
+
     def burst(self,x,y,color,n=16):
         for _ in range(n):
             a=self.rng.random()*math.tau; v=self.rng.uniform(35,170)
@@ -894,22 +946,32 @@ class Game:
                 self.hero.x,self.hero.y=water_position(self.hero_death,self.hero,self.hero_death.elapsed)
                 for boundary in (.55,1.35):
                     if self.hero_death.previous_elapsed<boundary<=self.hero_death.elapsed:self.rumble_death_animation()
-            if self.hero_death.electrical or self.hero_death.kind in ('blade','laser','fire'):
+            if self.hero_death.electrical or self.hero_death.kind in ('blade','laser','fire','sword'):
                 if self.hero_death.electrical:
                     enemy={'beetle':self.beetle_motions,'vulture':self.vultures,
                            'scorpion':self.scorpions,'gyrosphere':self.gyrospheres}[self.hero_death.kind][self.hero_death.index]
                     enemy.previous_clock=enemy.clock;enemy.clock+=dt
                     if self.hero_death.kind=='vulture':enemy.previous_timer=enemy.timer;enemy.timer+=dt
-                fall_dt=dt if self.hero_death.kind in ('laser','fire') else max(0.,min(dt,self.hero_death.elapsed-BEETLE_STUN))
-                if fall_dt:self.hero.update(fall_dt,0,False,False,self.collision_platforms(),allow_glide=False)
+                sword=self.hero_death.kind=='sword'
+                if sword:
+                    attacker=self.hoplites[self.hero_death.index]
+                    attacker.previous_state=attacker.state;attacker.previous_timer=attacker.timer
+                    if attacker.state=='attack':
+                        attacker.timer=min(HOPLITE_ATTACK_TIME,attacker.timer+dt)
+                        if attacker.timer>=HOPLITE_ATTACK_TIME:attacker.change('alert')
+                fall_dt=dt if self.hero_death.kind in ('laser','fire') else max(0.,min(dt,self.hero_death.elapsed-(SWORD_IMPACT if sword else BEETLE_STUN)))
+                if fall_dt:
+                    if sword and self.hero_death.elapsed<.38:
+                        self.hero.vx=self.hero_death.facing*160*max(0.,1-(self.hero_death.elapsed-SWORD_IMPACT)/.28)
+                    self.hero.update(fall_dt,0,False,False,self.collision_platforms(),allow_glide=False)
                 else:self.hero.px,self.hero.py=self.hero.x,self.hero.y
-                if self.hero_death.kind in ('laser','fire'):
+                if self.hero_death.kind in ('laser','fire','sword'):
                     death=self.hero_death
-                    fire=death.kind=='fire';reaction=FIRE_REACTION if fire else .28
+                    fire=death.kind=='fire';reaction=FIRE_REACTION if fire else SWORD_LAND if sword else .28
                     if self.hero.grounded and death.elapsed>=reaction and death.landed_at is None:death.landed_at=death.elapsed
                     lost=self.hero.y>(tower_level.HEIGHT+160 if self.level_id==4 else 850)
                     finished=(death.elapsed>=LASER_LIMIT or
-                              death.elapsed>=(FIRE_DURATION if fire else LASER_DURATION)-1e-9 and
+                              death.elapsed>=(FIRE_DURATION if fire else SWORD_DURATION if sword else LASER_DURATION)-1e-9 and
                               (lost or death.landed_at is not None and death.elapsed>=death.duration-1e-9))
                     if fire and finished and death.landed_at is None:
                         death.landed_at=max(FIRE_REACTION,death.elapsed-1.)
@@ -1008,6 +1070,10 @@ class Game:
         else:
             target=max(0,min(self.world_length-VIEW_W,self.hero.x-VIEW_W*.40+self.hero.vx*.24))
             self.cam+=(target-self.cam)*(1-math.exp(-5.8*dt))
+            if self.level_id==8:
+                self.prev_cam_y=self.cam_y
+                target_y=greece_levels.LEVELS[8].floor_height(self.hero.x)-GROUND_Y
+                self.cam_y+=(target_y-self.cam_y)*(1-math.exp(-5.8*dt))
         self.invuln=max(0,self.invuln-dt)
         for enemy in self.gyrospheres:enemy.update(dt,self.hero,solids,self.cam_y,self.cam)
         self.notice=max(0,self.notice-dt)
@@ -1015,6 +1081,7 @@ class Game:
             event=enemy.update(dt,self.hero,can_attack=self.invuln<=0)
             if event=='warning':self.sound('crocodile')
             elif event=='lunge':self.burst(enemy.x+enemy.facing*35,enemy.y-4,(199,165,108),10)
+        for enemy in self.hoplites:enemy.update(dt,self.hero,solids,can_attack=self.invuln<=0)
         self.solar_hits()
         for index,obelisk in enumerate(self.obelisks,1):
             if obelisk.update(dt,self.hero) and index>self.check_index:
@@ -1057,8 +1124,11 @@ class Game:
         gyro_hit=next((enemy for enemy in self.gyrospheres if enemy.hits(self.hero)),None) if self.invuln<=0 else None
         gyro_killer=gyro_hit if not hit else None
         if gyro_hit is not None:hit=True
+        hoplite_hit=next((enemy for enemy in self.hoplites if enemy.hits(self.hero)),None) if self.invuln<=0 else None
+        hoplite_killer=hoplite_hit if not hit else None
+        if hoplite_hit is not None:hit=True
         if hit:
-            self.kill_hero(killer,beetle_hit,vulture_killer,laser_killer,scorpion_killer,fire_killer,water_hit,pit_hit,gyro_killer)
+            self.kill_hero(killer,beetle_hit,vulture_killer,laser_killer,scorpion_killer,fire_killer,water_hit,pit_hit,gyro_killer,hoplite_killer)
             if self.hero_death.active or self.resurrection.active or self.state=='game_over':return
         elif self.hero.head_bump:
             self.gamepads.rumble('head_bump')
@@ -1069,7 +1139,7 @@ class Game:
             self.laser_bolts.clear()
         finished=(desert_level.temple_entered(self.hero) if self.level_id==2 else
                   tower_level.completed(self.hero) if self.level_id==4 else
-                  self.level_id==1 and self.hero.x>=self.world_length+EXIT_MARGIN)
+                  self.level_id in (1,5,6,7,8) and self.hero.x>=self.world_length+EXIT_MARGIN)
         if self.state=='play' and finished:
             self.complete_level()
         self.update_particles(dt)
@@ -1092,13 +1162,19 @@ class Game:
             p[0]+=p[2]*dt;p[1]+=p[3]*dt;p[3]+=100*dt;p[4]-=dt
         self.particles=[p for p in self.particles if p[4]>0]
 
-    def kill_hero(self,crocodile=None,beetle=None,vulture=None,laser=None,scorpion=None,fire=None,water=False,pit=False,gyrosphere=None):
+    def kill_hero(self,crocodile=None,beetle=None,vulture=None,laser=None,scorpion=None,fire=None,water=False,pit=False,gyrosphere=None,hoplite=None):
         self.laser_bolts.clear();self.beetle_deaths.clear();self.particles.clear()
         self.hero_death=HeroDeath()
         self.deaths+=1;self.lives=max(0,self.lives-1)
-        if self.hero.spike_hit or pit or water or fire is not None or laser is not None or (crocodile is not None and self.crocodile_sprites) or beetle is not None or vulture is not None or scorpion is not None or gyrosphere is not None:
+        if self.hero.spike_hit or hoplite is not None or pit or water or fire is not None or laser is not None or (crocodile is not None and self.crocodile_sprites) or beetle is not None or vulture is not None or scorpion is not None or gyrosphere is not None:
             if self.hero.spike_hit:
                 self.hero_death.begin_blade(self.hero)
+                self.hero.coyote=self.hero.buffer=0.;self.hero.floating=False
+                self.hero.drop_elapsed=None;self.hero.drop_support=self.hero.ignored_platform=None
+            elif hoplite is not None:
+                self.hero_death.begin_sword(self.hoplites.index(hoplite),hoplite,self.hero)
+                hoplite.state=hoplite.previous_state='attack'
+                hoplite.timer=hoplite.previous_timer=.24;hoplite.px=hoplite.x
                 self.hero.coyote=self.hero.buffer=0.;self.hero.floating=False
                 self.hero.drop_elapsed=None;self.hero.drop_support=self.hero.ignored_platform=None
             elif pit:
@@ -1130,7 +1206,7 @@ class Game:
                 self.hero.drop_elapsed=None;self.hero.drop_support=self.hero.ignored_platform=None
             else:self.hero_death.begin(self.crocodiles.index(crocodile),crocodile,self.hero)
             self.rumble_death_animation()
-            if laser is None and fire is None and not water and not pit:self.hero.vx=self.hero.vy=0.
+            if laser is None and fire is None and not water and not pit and hoplite is None:self.hero.vx=self.hero.vy=0.
             self.hero.px=self.hero.x;self.hero.py=self.hero.y
             self.solar.reset();self.rest.reset();self.crouch_fire=False
             self.pending_jump=self.pending_drop=self.pending_fire=self.pending_activity=False
@@ -1189,8 +1265,12 @@ class Game:
         self.rest.reset();self.wake_blocked=False;self.crouch_fire=False
         for enemy in self.crocodiles:
             if enemy.alive:enemy.reset()
+        for enemy in self.hoplites:
+            if enemy.alive:enemy.reset()
+            else:enemy.previous_death_timer=enemy.death_timer=HOPLITE_DEATH_TIME
         self.cam=self.prev_cam=max(0,min(self.world_length-VIEW_W,self.hero.x-VIEW_W*.4))
         if self.level_id==4:self.cam_y=self.prev_cam_y=tower_level.camera_target(self.hero.y)
+        if self.level_id==8:self.cam_y=self.prev_cam_y=greece_levels.LEVELS[8].floor_height(self.hero.x)-GROUND_Y
         self.invuln=2.;self.sound('fall');self.burst(self.hero.x,self.hero.y-25,(130,224,227),24)
 
     def collision_platforms(self):
@@ -1216,6 +1296,9 @@ class Game:
             if enemy.alive and beam.colliderect(enemy.hurtbox):
                 enemy.ignite()
                 self.award_points(100)
+        for enemy in self.hoplites:
+            if enemy.alive and beam.colliderect(enemy.hurtbox):
+                enemy.ignite();self.award_points(100)
         for enemy in self.scorpions:
             if enemy.alive and beam.colliderect(enemy.hurtbox):
                 enemy.ignite();self.award_points(300)
@@ -1231,6 +1314,9 @@ class Game:
                 self.beetle_deaths.append(BeetleDeath(x,y,motion.facing,motion.vx,motion.vy))
 
     def background(self,cam):
+        if self.level_id>=5 and (self.state not in MENU_PAGES or self.state=='pause'):
+            self.greece_art.background(self.canvas,cam,self.level_id,self.prev_cam_y+(self.cam_y-self.prev_cam_y)*getattr(self,'render_alpha',1.))
+            return
         if self.level_id==3 and (self.state not in MENU_PAGES or self.state=='pause'):
             self.temple_art.background(self.canvas,cam,self.elapsed)
             return
@@ -1244,6 +1330,10 @@ class Game:
     def platform(self,p,cam):
         x=p.x-cam;y=int(p.y);w=int(p.w);h=int(p.h)
         if x>VIEW_W+60 or x+w<-60:return
+        if self.level_id>=5:
+            self.greece_art.platform(self.canvas,p,cam)
+            if p.spiked:self.spike_sprites.draw(self.canvas,p,cam)
+            return
         if self.level_id==3 and p.ground:
             self.temple_art.floor(self.canvas,p,cam);return
         if self.level_id==2:
@@ -1283,6 +1373,9 @@ class Game:
                 return
             if self.hero_death.kind=='blade':
                 self.blade_death_sprites.draw(self.canvas,self.hero_death,h,x,y,alpha)
+                return
+            if self.hero_death.kind=='sword':
+                self.sword_death_sprites.draw(self.canvas,self.hero_death,h,x,y,alpha)
                 return
             if self.hero_death.electrical:
                 self.beetle_death_sprites.draw(self.canvas,self.hero_death,h,x,y,alpha)
@@ -1427,6 +1520,8 @@ class Game:
 
     def draw(self,alpha=1,present=True):
         started=time.perf_counter()
+        self.sync_bezel()
+        self.sync_menu_music()
         self.native_canvas.begin()
         alpha=max(0.,min(1.,alpha))
         if self.state in MENU_PAGES and self.state!='pause':
@@ -1436,8 +1531,18 @@ class Game:
             return
         if self.level_id==4:
             self.draw_tower(alpha,started,present);return
+        original=self.canvas
+        try:self.draw_horizontal(alpha,started,present)
+        finally:self.canvas=original
+
+    def draw_horizontal(self,alpha,started,present):
         render_cam=self.prev_cam+(self.cam-self.prev_cam)*alpha
+        self.render_alpha=alpha
         self.background(render_cam)
+        original=self.canvas
+        if self.level_id==8:
+            render_y=self.prev_cam_y+(self.cam_y-self.prev_cam_y)*alpha
+            self.canvas=VerticalCanvas(self.native_canvas,render_y)
         # Snap once for the entire gameplay plane, independently of the layers.
         cam=pixel(render_cam*SCALE)/SCALE
         animation_time=self.previous_elapsed+(self.elapsed-self.previous_elapsed)*alpha
@@ -1478,6 +1583,8 @@ class Game:
         for vase in self.vases:
             if -100<vase.center-cam<VIEW_W+100:self.vase_sprites.draw(self.canvas,vase,cam,alpha)
         self.draw_crocodiles(cam,alpha)
+        hoplite_alpha=1. if self.hero_death.active or self.resurrection.active else alpha
+        for enemy in self.hoplites:self.hoplite_sprites.draw(self.canvas,enemy,cam,hoplite_alpha)
         for enemy in self.scorpions:
             if -200<enemy.x-cam<VIEW_W+200:self.scorpion_sprites.draw(self.canvas,enemy,cam,alpha)
         for enemy in self.gyrospheres:
@@ -1497,11 +1604,12 @@ class Game:
         for px,py,vx,vy,life,col in self.particles:
             draw.circle(self.canvas,col,(px-cam,py),max(1,int(life*5)))
         # Foreground sand follows the interpolated simulation clock, including pause.
-        for i in range(35):
+        for i in range(0 if self.level_id>=5 else 35):
             x=(i*173+animation_time*(17+i%7)-cam*.65)%(VIEW_W+40)-20
             y=160+(i*97)%520+math.sin(animation_time+i)*9
             draw.line(self.canvas,(231,202,146),(x,y),(x+3,y))
         self.pit_darkness.draw(self.canvas,self.pit_regions,self.level_id,cam)
+        self.canvas=original
         self.hud(alpha)
         self.resurrection_sprites.draw(self.canvas,self.resurrection,alpha)
         if self.state=='pause':self.menu.draw(self)
@@ -1517,8 +1625,19 @@ class Game:
         self.present_frame(started)
 
     def present_frame(self,started):
+        self.screenshots.poll()
+        capture=self.screenshots.requested
+        if self.screenshots.notice and not capture:
+            self.text(self.screenshots.notice,(VIEW_W/2,82),14,GOLD,center=True,outlined=True)
         self.submission_times.append(time.perf_counter()-started)
-        self.native_canvas.present(self.screen)
+        if capture:
+            try:
+                image=self.native_canvas.present(self.screen,capture=True)
+                self.screenshots.submit(image)
+            except (pg.error,OSError) as error:
+                self.screenshots.fail(error)
+                self.native_canvas.present(self.screen)
+        else:self.native_canvas.present(self.screen)
         presented=time.perf_counter()
         if self.last_present is not None:self.frame_intervals.append(presented-self.last_present)
         self.last_present=presented
@@ -1560,8 +1679,8 @@ class Game:
         for index in range(6):
             self.canvas.blit_native(self.life_symbol if index<visible else self.life_symbol_empty,life_position(index))
         if self.lives>6:self.text(f'× {self.lives}',(302,20),10,GOLD,max_width=36,outlined=True)
-        self.text('LES SABLES D’HORUS',hud_layout.TITLE,18,center=True,max_width=432,outlined=True)
-        label={1:'NIVEAU 01  /  LE SEUIL DU DÉSERT',2:'NIVEAU 02  /  LE DÉSERT',3:'NIVEAU 03  /  LE TEMPLE',4:'NIVEAU 04  /  LA TOUR'}[self.level_id]
+        self.text('LES HAUTEURS D’HÉLIOS' if self.level_id>=5 else 'LES SABLES D’HORUS',hud_layout.TITLE,18,center=True,max_width=432,outlined=True)
+        label={1:'NIVEAU 01  /  LE SEUIL DU DÉSERT',2:'NIVEAU 02  /  LE DÉSERT',3:'NIVEAU 03  /  LE TEMPLE',4:'NIVEAU 04  /  LA TOUR',**greece_levels.HUD_LABELS}[self.level_id]
         self.text(label,hud_layout.LEVEL,11,(198,209,199),center=True,max_width=432,outlined=True)
         shown_score=self.score
         if self.state=='win' and self.victory_started is not None:
@@ -1605,11 +1724,39 @@ class Game:
         self.menu.save_failed=not self.settings.save(self.settings_path)
 
     def toggle_sound(self):
-        self.sound_on=not self.sound_on;self.save_settings()
+        self.sound_on=not self.sound_on
+        if self.sound_on and self.settings.sound_volume==0:
+            self.settings.sound_volume=100;self.apply_sound_volume()
+        self.save_settings()
+
+    def sync_menu_music(self):
+        paused_menu=(self.state in ('pause','save','overwrite') or
+                     self.state in ('settings','controls','languages','bezels') and self.menu.origin=='pause')
+        if self.music_ready:self.menu_music.update(self.settings.music and self.state in MENU_PAGES,
+                                                  volume=self.settings.music_volume/100*(.7 if paused_menu else 1.))
+
+    def adjust_volume(self,kind,direction):
+        self.set_volume(kind,getattr(self.settings,kind+'_volume')+direction*10)
+
+    def set_volume(self,kind,value,persist=True):
+        key=kind+'_volume'
+        value=max(0,min(100,round(value)))
+        setattr(self.settings,key,value)
+        if kind=='sound':
+            self.sound_on=value>0;self.apply_sound_volume()
+        else:self.settings.music=value>0;self.sync_menu_music()
+        if persist:self.save_settings()
+
+    def toggle_music(self):
+        self.settings.music=not self.settings.music
+        if self.settings.music and self.settings.music_volume==0:self.settings.music_volume=100
+        self.save_settings();self.sync_menu_music()
 
     def enter_menu(self,page):
+        self.menu.end_volume_drag(self)
         self.gamepads.stop_rumble()
         self.state=page;self.acc=0.
+        self.sync_menu_music()
         self.pending_jump=self.pending_drop=self.pending_fire=self.pending_activity=False
         self.menu.enter(page)
         self.controller_lost=False
@@ -1624,6 +1771,7 @@ class Game:
     def resume_from_menu(self,new_game=False):
         if new_game:self.new_game()
         self.state='play';self.acc=0.
+        self.sync_menu_music()
         self.pending_jump=self.pending_drop=self.pending_fire=self.pending_activity=False
         self.menu_gameplay_blocked=True
         self.rumble_death_animation()
@@ -1641,10 +1789,20 @@ class Game:
             elif page=='load':self.enter_menu('title')
             elif page=='overwrite':self.enter_menu('save')
             elif page=='languages':self.enter_menu('settings')
+            elif page=='bezels':self.enter_menu('settings')
             elif page=='pause':self.resume_from_menu()
             else:self.quit_requested=True
             return
         index=self.menu.selected[page]
+        if page=='bezels':
+            if action=='activate':
+                if index==len(BEZEL_MODES):self.enter_menu('settings')
+                else:self.set_bezel(BEZEL_MODES[index])
+            elif action in ('left','right'):
+                offset=-1 if action=='left' else 1
+                self.set_bezel(BEZEL_MODES[(BEZEL_MODES.index(self.settings.bezel)+offset)%len(BEZEL_MODES)])
+                self.menu.selected['bezels']=BEZEL_MODES.index(self.settings.bezel)
+            return
         if page=='languages':
             if action in ('left','right') and index<len(CODES):self.menu.selected[page]=index^1
             elif action=='activate':
@@ -1666,7 +1824,9 @@ class Game:
             return
         if page=='settings':
             if index==0:self.toggle_fullscreen()
-            elif index==1:self.toggle_sound()
+            elif index==1:
+                if action=='activate':self.toggle_sound()
+                else:self.adjust_volume('sound',-1 if action=='left' else 1)
             elif index==2:
                 self.gamepads.rumble_enabled=not self.gamepads.rumble_enabled
                 if not self.gamepads.rumble_enabled:self.gamepads.stop_rumble()
@@ -1679,7 +1839,15 @@ class Game:
             elif action in ('left','right') and index==5:
                 offset=-1 if action=='left' else 1
                 self.set_language(CODES[(CODES.index(self.settings.language)+offset)%len(CODES)])
-            elif action=='activate' and index==6:self.enter_menu(self.menu.origin)
+            elif index==6:
+                if action=='activate':self.toggle_music()
+                else:self.adjust_volume('music',-1 if action=='left' else 1)
+            elif action=='activate' and index==7:
+                self.menu.selected['bezels']=BEZEL_MODES.index(self.settings.bezel);self.enter_menu('bezels')
+            elif action in ('left','right') and index==7:
+                offset=-1 if action=='left' else 1
+                self.set_bezel(BEZEL_MODES[(BEZEL_MODES.index(self.settings.bezel)+offset)%len(BEZEL_MODES)])
+            elif action=='activate' and index==8:self.enter_menu(self.menu.origin)
         elif action=='activate':
             if page=='controls':self.enter_menu('settings')
             elif index==0:self.resume_from_menu(new_game=page=='title')
@@ -1736,8 +1904,12 @@ class Game:
         title,subtitle=(('LE SEUIL EST FRANCHI','NIVEAU 02 · LE DÉSERT'),
                         ('LE TEMPLE EST ATTEINT','NIVEAU 03 · LE TEMPLE'),
                         ('LE SANCTUAIRE EST ATTEINT','NIVEAU 04 · LA TOUR'),
-                        ('LE SOMMET EST ATTEINT','L’ASCENSION EST TERMINÉE'))[self.level_id-1]
-        helptext='Entrée, Start ou A pour rejouer' if self.level_id==4 else 'Entrée, Start ou A pour continuer'
+                        ('LE SOMMET EST ATTEINT','NIVEAU 05 · LES RIVAGES D’HÉLIOS'),
+                        ('LE RIVAGE EST FRANCHI','NIVEAU 06 · LA VOIE DES STATUES'),
+                        ('LA VOIE EST FRANCHIE','NIVEAU 07 · LES GALERIES DU MARBRE'),
+                        ('LES GALERIES SONT FRANCHIES','NIVEAU 08 · L’ACROPOLE DU SOLEIL'),
+                        ('L’ACROPOLE EST ATTEINTE','L’ASCENSION EST TERMINÉE'))[self.level_id-1]
+        helptext='Entrée, Start ou A pour rejouer' if self.level_id==8 else 'Entrée, Start ou A pour continuer'
         self.overlay(title,subtitle,helptext)
         self.text(f'{len(self.taken)} / {len(self.gems)} éclats solaires   ·   {int(self.elapsed)//60:02}:{int(self.elapsed)%60:02}   ·   {self.deaths} morts',
                   (VIEW_W/2,405),16,center=True,max_width=VIEW_W-100)
@@ -1839,12 +2011,22 @@ class Game:
                     self.gamepads.refresh()
                 elif e.type in (pg.WINDOWMOVED,pg.WINDOWSIZECHANGED):self.refresh_display_status()
                 elif e.type==pg.WINDOWFOCUSLOST:
+                    self.menu.end_volume_drag(self)
                     self.gamepads.stop_rumble()
                     if self.state=='play':self.menu.selected['pause']=0;self.enter_menu('pause')
+                elif e.type==pg.MOUSEBUTTONUP and e.button==1:
+                    self.menu.drag_volume(self,self.menu_pointer(e.pos))
+                    self.menu.end_volume_drag(self)
+                elif e.type==pg.MOUSEMOTION and self.menu.drag_volume(self,self.menu_pointer(e.pos)):
+                    pass
                 elif e.type in (pg.MOUSEMOTION,pg.MOUSEBUTTONDOWN) and self.state in MENU_PAGES:
                     if self.menu.pointer(self.state,self.menu_pointer(e.pos)) and e.type==pg.MOUSEBUTTONDOWN and e.button==1:
-                        self.menu_action('activate')
+                        if not self.menu.click_volume(self,self.menu_pointer(e.pos)):
+                            self.menu_action('activate')
                 elif e.type==pg.KEYDOWN:
+                    if e.key==pg.K_F12:
+                        if not getattr(e,'repeat',False):self.screenshots.request()
+                        continue
                     self.pending_activity=True
                     if self.state=='play' and (self.rest.active or self.wake_blocked):continue
                     if e.key==pg.K_F11:
@@ -1897,7 +2079,7 @@ class Game:
 
 if __name__=='__main__':
     ap=argparse.ArgumentParser();ap.add_argument('--headless',action='store_true');ap.add_argument('--frames',type=int,default=0);ap.add_argument('--screenshot');ap.add_argument('--play',action='store_true');ap.add_argument('--windowed',action='store_true')
-    ap.add_argument('--level',type=int,choices=(1,2,3,4),default=1)
+    ap.add_argument('--level',type=int,choices=range(1,9),default=1)
     args=ap.parse_args()
     try:game=Game(args.headless,fullscreen=False if args.windowed or args.headless else None)
     except LoadingCancelled:sys.exit(0)

@@ -1,0 +1,68 @@
+{
+  "gpu": true,
+  "renderer": "direct3d11",
+  "pose_counts": {
+    "walk": 16,
+    "run": 16,
+    "turn": 8,
+    "attack": 8,
+    "death": 12
+  },
+  "sprite_atlases": 1,
+  "shots": [
+    {
+      "shot": "patrol",
+      "states": [
+        "patrol",
+        "turn"
+      ],
+      "distance": 134.9,
+      "alive": true,
+      "hero_deaths": 0,
+      "score": 0,
+      "energy": 60.0,
+      "new_texture_uploads": 0
+    },
+    {
+      "shot": "pursuit",
+      "states": [
+        "alert",
+        "chase"
+      ],
+      "distance": 1732.67,
+      "alive": true,
+      "hero_deaths": 0,
+      "score": 30,
+      "energy": 90.0,
+      "new_texture_uploads": 0
+    },
+    {
+      "shot": "attack",
+      "states": [
+        "alert",
+        "attack",
+        "chase"
+      ],
+      "distance": 0.0,
+      "alive": true,
+      "hero_deaths": 1,
+      "score": 0,
+      "energy": 60.0,
+      "new_texture_uploads": 0
+    },
+    {
+      "shot": "defeated",
+      "states": [
+        "alert",
+        "dead"
+      ],
+      "distance": 0.0,
+      "alive": false,
+      "hero_deaths": 0,
+      "score": 100,
+      "energy": 30.0,
+      "new_texture_uploads": 0
+    }
+  ],
+  "scope": "Controlled arena on real level 05 geometry; real AI and damage, no invulnerability, unrelated enemies omitted, no campaign save writes."
+}

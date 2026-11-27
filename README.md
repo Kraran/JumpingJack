@@ -60,7 +60,7 @@ Les fichiers personnels `saves/slot-1.json` à `saves/slot-5.json` sont exclus d
 
 ![Menu de démarrage](output/menu-title.png)
 
-[Aperçu des menus et des réglages](output/menu-demo.mp4), régénérable avec `python preview_menu.py --native-check`. La vérification GPU couvre aussi l’aller-retour plein écran/fenêtre, l’ouverture de la configuration depuis la pause et le retour au jeu, sans nouveau transfert de texture pendant le rendu. Le cache GPU garde jusqu’à 2048 textures pour conserver les poses des personnages et les textes des menus préchargés.
+[Aperçu des menus et des réglages](output/menu-demo.mp4), régénérable avec `python preview_menu.py --native-check`. La vérification GPU couvre aussi l’aller-retour plein écran/fenêtre, l’ouverture de la configuration depuis la pause et le retour au jeu, sans nouveau transfert de texture pendant le rendu. Le cache GPU garde jusqu’à 3072 textures pour conserver les poses des personnages, les textes des menus et les ressources des huit niveaux préchargés.
 
 | Touche | Action |
 | --- | --- |
@@ -71,10 +71,13 @@ Les fichiers personnels `saves/slot-1.json` à `saves/slot-5.json` sont exclus d
 | Échap | Pause / reprise ; quitter depuis l’accueil |
 | R | Recommencer le niveau |
 | F11 | Plein écran / fenêtre |
+| F12 | Capture PNG de l’écran, bezel compris, dans le dossier `captures/` du jeu |
 | F3 | FPS, cadence P95, écran, VSync et rapports des trois plans |
 | M | Activer / couper les effets sonores |
 | F | Tirer le rayon solaire |
 | Bas ou S maintenu | S’accroupir ; F tire plus bas dans cette position |
+
+**F12** fonctionne pendant le jeu, les animations et dans tous les menus. L’image enregistrée comprend toute la sortie affichée, avec le bezel éventuel. Le dossier `captures/` est créé automatiquement à la première capture ; les fichiers PNG portent un nom horodaté et ne remplacent jamais une capture précédente. Un bref message confirme l’enregistrement ou signale un échec d’écriture. L’encodage PNG s’effectue en arrière-plan et les captures restent locales, exclues de Git.
 
 Une manette reconnue par SDL (Xbox, PlayStation, Switch Pro et la plupart des manettes génériques) peut être branchée avant ou pendant la partie. Le stick gauche et la croix se combinent avec le clavier. Le bouton du bas suit le nom SDL **A** : A sur Xbox, Croix sur PlayStation.
 
@@ -100,6 +103,12 @@ Les manettes compatibles reçoivent une impulsion de **170 ms à la réception d
 Les vibrations s’arrêtent à la pause, à la perte de focus, lors d’un redémarrage, d’un débranchement ou de la fermeture du jeu. Elles sont indépendantes du réglage du son. Une manette sans vibrations continue de fonctionner normalement. Les valeurs sont réglables dans `RUMBLE_EFFECTS` de `gamepad.py`. API : [Pygame Controller.rumble](https://www.pygame.org/docs/ref/sdl2_controller.html#pygame._sdl2.controller.Controller.rumble) et [Joystick.rumble](https://www.pygame.org/docs/ref/joystick.html#pygame.joystick.Joystick.rumble).
 
 Les plateformes sont solides sur toutes leurs faces. Un choc de tête sous une plateforme produit un son métallique « bong » et une brève vibration de 110 ms (35 % grave, 60 % aigu). Les chocs latéraux sont silencieux et ne vibrent pas. Un choc de tête, ou un choc latéral pendant le vol plané, annule immédiatement le planage et force la chute normale ; maintenir, relâcher ou réappuyer sur le saut ne permet pas de planer ni de freiner en l’air avant le prochain atterrissage. Un même contact ne répète pas le son ni la vibration en boucle. Depuis une plateforme, maintenir le stick gauche ou la croix vers le bas puis appuyer sur le saut déclenche une descente volontaire. Au clavier : flèche bas ou S + saut. Le héros fléchit les genoux et pose une main pendant 0,18 seconde, puis passe vers le bas ; le geste complet compte douze poses sur 0,36 seconde. Le déplacement horizontal reprend dès le départ vers le bas. Seule la plateforme quittée est traversée, jusqu’à ce que le corps soit entièrement dégagé, pas les supports inférieurs ni le sol. Maintenir la combinaison ne fait pas traverser plusieurs plateformes successives et ne déclenche pas automatiquement le vol plané ; relâcher puis réappuyer sur le saut permet de freiner ou planer. Les réceptions et vibrations suivent ensuite la hauteur réellement descendue. La descente volontaire est indisponible sur le sol et pendant la récupération d’une réception lourde.
+
+## Cadres d’écran
+
+Les écrans larges peuvent afficher un décor fixe dans les marges via **Configuration → Cadre d’écran** : **Aucun**, **Automatique**, **Égyptien**, **Grec** ou **Éclipse solaire**. Le choix est appliqué immédiatement et mémorisé dans les préférences. Le mode automatique, proposé par défaut, utilise le cadre égyptien aux niveaux **01 à 04** et le cadre grec aux niveaux **05 à 08**. La sélection fonctionne au clavier, à la manette et à la souris, depuis l’accueil comme depuis la pause.
+
+Les images du cadre conservent leurs proportions : elles couvrent chaque marge par recadrage, en gardant le bord proche du jeu. Elles ne suivent pas le scrolling. Le cadre couvre aussi les éventuelles marges horizontales ; lorsque l’image du jeu remplit déjà l’écran, il reste invisible. La zone de jeu et sa mise à l’échelle entière restent identiques, ainsi que les coordonnées de souris. Les trois atlas sont dans `assets/bezels/`, et `python tools/verify_bezels.py` vérifie le rendu GPU, le recadrage, les coordonnées et l’enregistrement du choix avec des données temporaires.
 
 ## Premier niveau
 
@@ -169,15 +178,50 @@ Une **Gyrosphère** se trouve vers les trois quarts du niveau 02 (x = 10 800). D
 
 `python tools/verify_tower.py` atteint les **96 paliers principaux avec les vrais sauts, sans planage ni téléportation**. `python tools/verify_tower_gameplay.py` vérifie aussi une traversée complète avec ennemis et dangers actifs, énergie finie et sans protection : victoire sans mort avec les six Gyrosphères actives, 81 cristaux ramassés et 20 tirs, dont quatre Gyrosphères détruites. `python preview_tower.py --native-check` régénère la vidéo et les mesures GPU. La vidéo montre des passages sélectionnés avec protection contre les ennemis ; la preuve des combats figure dans `output/tower-gameplay-validation.json`.
 
+## Monde 2 — Les hauteurs d’Hélios · Niveaux 05 à 08
+
+La campagne se poursuit après la tour égyptienne vers la Grèce antique. Les trois plans de parallaxe associent mer Égée, temples doriques, statues et ruines. La terre sèche et les passages irrégulièrement pavés sont intégrés à chaque plan de bâtiments pour défiler ensemble. Les plateformes utilisent cinq largeurs de marbre sculpté ; la physique, les animations, les ennemis, le rayon solaire et le score gardent leurs règles.
+
+![Étude visuelle du monde grec](output/greece-study-athena.png)
+
+| Niveau | Parcours | Longueur |
+| --- | --- | ---: |
+| 05 · Les Rivages d’Hélios | Côte ouverte, oliviers et ruines, brèches côtières et premiers ennemis. | 12 000 |
+| 06 · La Voie des Statues | Portiques, statues monumentales, chemins en hauteur et gardes au sol. | 14 400 |
+| 07 · Les Galeries du Marbre | Galeries sous plafond, colonnes fissurées, scorpions et plateformes dangereuses. | 14 400 |
+| 08 · L’Acropole du Soleil | Montée extérieure par terrasses, caméra verticale amortie, arrivée devant le Parthénon. | 14 400 |
+
+Chaque niveau propose deux points de reprise et un fragment de Rê facultatif. L’énergie, les vies, l’inventaire et le score passent du 04 au 05 puis jusqu’au 08. Les bonus de fin prolongent le barème existant : 5 000, 6 000, 7 000 et 8 000 points, plus 100 par vie restante. Le bilan du 08 termine la campagne et propose de rejouer. Les cinq cases de sauvegarde prennent en charge les niveaux grecs, les ennemis éliminés, les points de reprise et la caméra des terrasses ; les sauvegardes égyptiennes restent lisibles.
+
+Taper **LV05**, **LV06**, **LV07** ou **LV08** à l’accueil, ou lancer `python main.py --level 5 --play --windowed` (remplacer 5 par 6, 7 ou 8). Les nouveaux titres et bilans sont traduits dans les vingt langues existantes.
+
+`python tools/verify_greece.py` vérifie l’accessibilité des supports et médaillons avec la vraie physique, sans planage ni énergie ; ce contrôle de géométrie ne simule pas les ennemis. `python tools/verify_greek_gameplay.py` effectue des traversées bornées avec ennemis actifs et énergie finie. `python preview_greek_world.py --native-check --video` produit quatre captures, le rapport de rendu GPU et la [vidéo du monde 2](output/greece-world-demo.mp4) ; ses prises de vues utilisent une protection contre les ennemis et des préférences/sauvegardes temporaires.
+
+[Niveau 05](output/greece-level05.png) · [Niveau 06](output/greece-level06.png) · [Niveau 07](output/greece-level07.png) · [Niveau 08](output/greece-level08.png) · [Direction et prompts imagegen](assets/GREECE-WORLD-PROMPTS.md). La première étude reste régénérable avec `python preview_greece.py --native-check --video`.
+
+### Gardien de bronze — Hoplite squelette
+
+Les niveaux 05 à 08 accueillent des hoplites squelettes : casque de bronze à crête rouge, bouclier solaire et épée courte. Ils patrouillent lentement (**36 unités/s**), se retournent sur place et observent devant eux. Un héros visible dans un rayon horizontal de **620 unités**, sans obstacle masquant la vue, déclenche une brève réaction puis une **poursuite à 460 unités/s**. Les gardiens restent sur leur segment de sol et ne traversent ni murs ni fosses. S’ils perdent le héros, ils reviennent vers leur zone de patrouille. À courte portée, ils attaquent à l’épée.
+
+Les animations comportent **16 poses de marche, 16 de course, 8 de retournement, 8 de garde/attaque et 12 d’effondrement**, avec leurs miroirs dans un atlas GPU préchargé. La cadence des pas suit le déplacement réel. Le rayon solaire les réduit à un tas d’os et rapporte **100 points**, une seule fois. Leur état et les gardiens détruits sont conservés dans les sauvegardes ; les anciennes cases ajoutent les gardiens en gardant la progression existante.
+
+[Démonstration animée](output/hoplite-demo.mp4) · [Patrouille](output/hoplite-patrol.png) · [Poursuite](output/hoplite-pursuit.png) · [Dessin et prompts](assets/HOPLITE-ANIMATION-PROMPTS.md). Régénérer avec `python preview_hoplite.py --native-check --video` ; les scènes utilisent des données temporaires et isolent ce nouvel ennemi avec sa vraie IA et ses dégâts.
+
+### Mort sous le coup d’épée
+
+Un coup létal du hoplite utilise une animation dédiée : impact au torse, recul, genoux qui cèdent puis effondrement sur le côté. Le squelette finit son geste d’épée ; la physique fait retomber le héros avant de dérouler la fin de la chute au sol. Les 16 poses dessinées sont préparées en 64 images par sens dans un atlas GPU unique. La séquence dure au moins 1,65 seconde, puis la résurrection ou le Game Over prend le relais. Une seule vie est retirée ; pause, sauvegarde et vibration de mort suivent l’état réel de l’animation.
+
+[Démonstration](output/hero-sword-death-demo.mp4) · [Impact](output/hero-sword-impact.png) · [Effondrement](output/hero-sword-collapse.png) · [Source et prompt](assets/HERO-SWORD-DEATH-PROMPT.md). Régénérer avec `python preview_sword_death.py --native-check`.
+
 ## Vies et Game Over
 
-Une nouvelle partie commence avec **trois vies**, représentées en haut à gauche par le **faucon doré de la poitrine du héros**, extrait du sprite frontal. Chaque mort par ennemi, chute ou pics retire exactement une vie et conserve la vibration de mort. Tant qu’il reste une vie, le héros reprend au point de réapparition habituel avec sa protection temporaire.
+Une nouvelle partie commence avec **trois vies**, représentées en haut à gauche par le **faucon doré de la poitrine du héros**, extrait du sprite frontal. Chaque mort par ennemi, chute ou pics retire exactement une vie et conserve la vibration de mort. Chaque entrée dans un nouveau niveau devient immédiatement le point de reprise initial : tant qu’il reste une vie, le héros y réapparaît avec sa protection temporaire, ou au dernier obélisque activé dans ce niveau.
 
 Avant chaque reprise, le **symbole de la vie consommée quitte son emplacement dans le HUD**, rejoint le centre de l’écran et devient géant. Un halo doré accompagne le zoom, puis un flash lumineux masque le retour au point de reprise : le héros apparaît au pic du flash, à **0,94 seconde**, et la lumière se dissipe. La séquence dure **1,28 seconde**. Après une mort par crocodile, elle attend la fin de la dévoration ; à zéro vie, seul le Game Over se déclenche. Les commandes et les collisions restent suspendues pendant la transition, puis attendent le relâchement des touches maintenues. La pause et les sauvegardes conservent la phase de la résurrection. Le zoom utilise une version haute définition fidèle au faucon du HUD et la mise à l’échelle du GPU, sans nouvelle texture pendant le clip. [Vidéo en jeu](output/hero-resurrection-demo.mp4) · [Emblème et prompt imagegen](assets/RESURRECTION-PROMPT.md). Régénérer avec `python preview_resurrection.py --native-check`.
 
 À zéro vie — donc à la **troisième mort sans bonus** — le monde se fige et un grand **GAME OVER** apparaît sur le décor assombri. La dernière mort déclenche une vibration d’une seconde et un motif sonore descendant de 1,29 seconde, une seule fois, en respectant les options de son et de vibrations. Le bilan affiche le niveau atteint, les éclats ramassés, le temps joué et les morts cumulés sur toute la partie. Ces totaux survivent aux changements de niveau, aux redémarrages du niveau et aux sauvegardes. Les anciennes sauvegardes restent compatibles ; leurs niveaux précédemment terminés n’ayant pas de totaux enregistrés, seuls les compteurs disponibles à la reprise peuvent être comptés.
 
-**Entrée, Start ou A** lancent une nouvelle partie avec trois vies, un niveau neuf, zéro médaillon et des compteurs remis à zéro. Recommencer le niveau par **R ou View** conserve les vies restantes et les médaillons : cela ne rend pas de vie. Continuer après les niveaux 01 à 03 conserve l’inventaire et cumule le bilan ; rejouer après le niveau 04 commence une nouvelle partie. Les quatre écrans de fin de niveau affichent aussi les éclats, le temps et les morts du niveau terminé. Trois médaillons accordent automatiquement une vie supplémentaire et sont consommés ; les niveaux déjà récompensés restent mémorisés pour empêcher un double ramassage.
+Après un Game Over, la partie est terminée : **Entrée, Start ou A** démarrent une **nouvelle campagne au niveau 01**, avec trois vies, zéro médaillon et des compteurs remis à zéro. Le retour au menu principal puis « Jouer » démarre une nouvelle campagne au niveau 01. Recommencer le niveau par **R ou View** conserve les vies restantes et les médaillons : cela ne rend pas de vie. Continuer après les niveaux 01 à 07 conserve l’inventaire et cumule le bilan ; rejouer après le niveau 08 commence une nouvelle partie. Les écrans de fin de niveau affichent aussi les éclats, le temps et les morts du niveau terminé. Trois médaillons accordent automatiquement une vie supplémentaire et sont consommés ; les niveaux déjà récompensés restent mémorisés pour empêcher un double ramassage.
 
 Les symboles et l’écran de Game Over sont préparés avant la partie pour éviter un chargement lors de la troisième mort. Un Game Over interrompt également l’animation de tir du héros ; le rendu accepte un rayon annulé entre la simulation et l’affichage, au sol, en l’air ou accroupi. [Démonstration des trois morts et du redémarrage](output/lives-demo.mp4), régénérable avec `python preview_lives.py --native-check`.
 
@@ -426,7 +470,7 @@ La descente volontaire est montrée dans [cet aperçu](output/hero-drop-demo.mp4
 
 `python -m unittest discover -s tests -v`
 
-Les 546 tests couvrent la physique, la collecte, les ennemis, les reprises, la victoire, les manettes, le plein écran et ses replis, les rapports de parallaxe, l’absence de dérive et de trous de raccord, l’interpolation commune, les coordonnées Full HD, la transparence des plans, l’agrandissement entier et la cadence à 60/75/120/144/165/240/360 Hz sans double limiteur. Ils vérifient aussi la réutilisation et le préchauffage hors écran des textures, l’absence de transfert d’image complète ou de lecture GPU dans la boucle de composition, le cycle complet de 24 poses à 60 Hz, la phase indépendante de la cadence de simulation, les transitions aériennes et les ancrages des sprites. La jauge solaire est vérifiée pour la consommation indépendante de la cadence, le coût unique du tir, les réserves insuffisantes, la recharge, la fluidité de la barre, la pause et les commandes de réveil. Pour les crocodiles : patrouille, déclenchement, charge engagée, limites de sol, récupération, collision continue, saut, protection de réapparition, placements, retournement stationnaire, abandon d’une attaque devenue hors de portée, contact pendant la rotation, combustion biologique, cendres persistantes et 56 poses graphiques.
+Les tests couvrent la physique, la collecte, les ennemis, les reprises, la victoire, les manettes, le plein écran et ses replis, les rapports de parallaxe, l’absence de dérive et de trous de raccord, l’interpolation commune, les coordonnées Full HD, la transparence des plans, l’agrandissement entier et la cadence à 60/75/120/144/165/240/360 Hz sans double limiteur. Ils vérifient aussi la réutilisation et le préchauffage hors écran des textures, l’absence de transfert d’image complète ou de lecture GPU dans la boucle de composition, le cycle complet de 24 poses à 60 Hz, la phase indépendante de la cadence de simulation, les transitions aériennes et les ancrages des sprites. La jauge solaire est vérifiée pour la consommation indépendante de la cadence, le coût unique du tir, les réserves insuffisantes, la recharge, la fluidité de la barre, la pause et les commandes de réveil. Pour les crocodiles : patrouille, déclenchement, charge engagée, limites de sol, récupération, collision continue, saut, protection de réapparition, placements, retournement stationnaire, abandon d’une attaque devenue hors de portée, contact pendant la rotation, combustion biologique, cendres persistantes et 56 poses graphiques.
 
 `python tools/profile_startup.py --output output/startup-profile.json` mesure les toutes premières images, sans retirer une période de chauffe. Le rapport distingue mise à jour, composition, présentation synchronisée, créations de textes, formes et transferts de textures ; il compare le premier parcours à une reprise identique. Les mesures de présentation dépendent aussi du système et ne constituent pas une mesure physique du balayage.
 
@@ -438,6 +482,8 @@ Pour une capture sans fenêtre : `python main.py --headless --play --frames 10 -
 
 ## Assets et références
 
+La musique **JumpingJack – The Lone Flyer**, créée avec Suno et fournie pour le projet, commence pendant le chargement avec un fondu de 1,2 seconde et accompagne les menus et la pause. Elle se poursuit entre les pages, s'efface sur 2 secondes au lancement du jeu et reprend à la même position au retour. Dans la configuration, **Effets sonores** et **Musique des menus** ont chacun un volume mémorisé de 0 à 100 %, réglable avec gauche/droite ; Entrée/A coupe ou rétablit le son. La source reste intacte ; l'adaptation et sa reconstruction sont documentées dans [assets/audio/README.md](assets/audio/README.md).
+
 Les vidéos et illustrations de référence fournies restent locales et ne sont pas distribuées dans le dépôt. Elles ne sont pas nécessaires au lancement. Les images du jeu et leurs sources générées sont enregistrées dans `assets/`. Les prompts et leur provenance figurent dans [assets/PROMPTS.md](assets/PROMPTS.md), [assets/PARALLAX-PROMPTS.md](assets/PARALLAX-PROMPTS.md), [assets/HERO-ANIMATION-PROMPTS.md](assets/HERO-ANIMATION-PROMPTS.md), [assets/CROCODILE-PROMPTS.md](assets/CROCODILE-PROMPTS.md) et [assets/HERO-TURN-PROMPTS.md](assets/HERO-TURN-PROMPTS.md).
 
 Références techniques : [Pygame — affichage et VSync](https://www.pygame.org/docs/ref/display.html), [Pygame 2.6.1 — textures et cibles du moteur SDL2](https://github.com/pygame/pygame/blob/2.6.1/src_c/cython/pygame/_sdl2/video.pyx), [SDL — indicateurs du moteur de rendu](https://wiki.libsdl.org/SDL2/SDL_RendererFlags), [SDL — fréquence du moniteur](https://wiki.libsdl.org/SDL2/SDL_GetCurrentDisplayMode).
@@ -446,4 +492,4 @@ Les scarabées utilisent désormais les animations robotiques décrites ci-dessu
 
 Les 21 tests des Exécuteurs couvrent les angles de tir, la visibilité, les collisions continues, les obstacles, la posture accroupie, la perte de vie avec vibration, la pause, les sauvegardes et la conservation des ennemis détruits. La galerie native est vérifiée sous Direct3D 11, avec 24 poses de marche, les orientations de 0 à 90 degrés, le retournement et aucun nouveau transfert de texture pendant le rendu.
 
-Les sauvegardes sont vérifiées sur les cinq cases, sur les trois niveaux, pendant une chute de plateforme, un tir et la pose assise ; les tests couvrent aussi les ennemis éliminés, les fichiers invalides, l’échec du remplacement atomique, l’annulation d’un écrasement et la consommation de la validation au chargement.
+Les sauvegardes sont vérifiées sur les cinq cases, sur les huit niveaux, pendant une chute de plateforme, un tir et la pose assise ; les tests couvrent aussi les ennemis éliminés, les fichiers invalides, l’échec du remplacement atomique, l’annulation d’un écrasement et la consommation de la validation au chargement.

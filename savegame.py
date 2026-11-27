@@ -5,6 +5,7 @@ import math
 import os
 import tempfile
 import tower_level
+import greece_levels
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -17,6 +18,7 @@ SKIP={
     'animation':{'solar','rest','hero'},'temple_exit':set(),'hero_death':set(),'resurrection':set(),
     'beetles':{'index','spawns'}, 'vultures':{'index','home'},
     'crocodiles':{'spawn_x','patrol_left','patrol_right','floor_left','floor_right','y','initial_facing'},
+    'hoplites':{'spawn_x','patrol_left','patrol_right','floor_left','floor_right','y','initial_facing'},
     'obelisks':{'x','y'},'vases':{'index','center','floor'},
     'scorpions':{'index','spawn','left','right','y'},'laser_bolts':set(),
     'gyrospheres':{'index','home','route','plan_timer'},
@@ -26,8 +28,9 @@ STATES={
     'beetles':{'state':{'patrol','chase','return'}},
     'vultures':{'state':{'patrol','warning','dive','pullup','return','death'}},
     'crocodiles':{key:{'patrol','turn','warning','lunge','recover','burn'} for key in ('state','previous_state','turn_next')},
+    'hoplites':{key:{'patrol','turn','alert','chase','return','attack','dead'} for key in ('state','previous_state','turn_next')},
     'rest':{'state':{'awake','sitting','seated','rising'}},
-    'hero_death':{'kind':{'crocodile','beetle','vulture','scorpion','gyrosphere','blade','laser','fire','water','pit'}},
+    'hero_death':{'kind':{'crocodile','beetle','vulture','scorpion','gyrosphere','blade','sword','laser','fire','water','pit'}},
     'scorpions':{key:{'patrol','turn','charge','recoil','dead'} for key in ('state','previous_state')},
     'gyrospheres':{'state':{'idle','chase','dead'}},
 }
@@ -81,7 +84,7 @@ def capture(game):
         **{kind:record(getattr(game,attr),kind) for kind,attr in
            (('hero','hero'),('energy','energy'),('solar','solar'),('rest','rest'),('animation','hero_animation'),('temple_exit','temple_exit'),('hero_death','hero_death'),('resurrection','resurrection'))},
         **{kind:[record(obj,kind) for obj in getattr(game,attr)] for kind,attr in
-           (('beetles','beetle_motions'),('vultures','vultures'),('crocodiles','crocodiles'),('obelisks','obelisks'),
+           (('beetles','beetle_motions'),('vultures','vultures'),('crocodiles','crocodiles'),('hoplites','hoplites'),('obelisks','obelisks'),
             ('scorpions','scorpions'),('gyrospheres','gyrospheres'),('laser_bolts','laser_bolts'),('vases','vases'))},
     }
 
@@ -131,6 +134,7 @@ def validate(data):
     from main import Hero,level,HeroAnimator,WORLD,EXIT_MARGIN
     from beetle import BeetleMotion,SPAWNS
     from crocodile import Crocodile,create_crocodiles
+    from hoplite import Hoplite,DEATH_TIME as HOPLITE_DEATH_TIME
     from vulture import Vulture,SPAWNS as VULTURES
     from obelisk import Obelisk,CHECKPOINT_X
     from solar import SolarRay
@@ -148,6 +152,19 @@ def validate(data):
     required={'level','lives','deaths','elapsed','camera','invuln','checkpoint','check_index','medallions',
               'taken','dead_beetles','platform_refs','camera_y','tower_layout','run_totals',
               'score','level_score','level_bonus_awarded',*SKIP}
+    if isinstance(data,dict) and 'hoplites' not in data:
+        data=copy.deepcopy(data)
+        config=greece_levels.LEVELS.get(data.get('level'))
+        data['hoplites']=[record(Hoplite(*spawn),'hoplites') for spawn in getattr(config,'HOPLITES',())]
+        # An older Greek slot may resume exactly where a newly added guard
+        # spawns. Give that overlap the normal two-second reappearance grace.
+        hero=data.get('hero',{})
+        if (isinstance(hero,dict) and type(hero.get('x')) in (int,float)
+                and type(hero.get('y')) in (int,float) and type(data.get('invuln')) in (int,float)
+                and 0<=data['invuln']<=100):
+            if any(abs(hero['x']-spawn[0])<80 and abs(hero['y']-spawn[5])<100
+                   for spawn in getattr(config,'HOPLITES',())):
+                data['invuln']=max(data['invuln'],2.)
     if isinstance(data,dict) and 'gyrospheres' not in data:
         data=copy.deepcopy(data)
         spawns=getattr({2:desert,3:temple,4:tower}.get(data.get('level')),'GYROSPHERES',())
@@ -190,7 +207,7 @@ def validate(data):
     if data['level']==3 and isinstance(data['vases'],list) and len(data['vases'])==4:
         data=copy.deepcopy(data)
         data['vases'] += [record(Vase(i),'vases') for i in range(4,len(VASE_SPAWNS))]
-    number(data['level'],1,4,integer=True);level_id=data['level']
+    number(data['level'],1,8,integer=True);level_id=data['level']
     number(data['tower_layout'],1 if level_id==4 else 0,tower.LAYOUT_VERSION if level_id==4 else 0,integer=True)
     if level_id==4 and data['tower_layout']<tower.LAYOUT_VERSION:
         data=copy.deepcopy(data)
@@ -239,10 +256,10 @@ def validate(data):
     if not isinstance(totals,dict) or totals.keys()!={'shards','elapsed','deaths'}:raise ValueError('Bilan invalide')
     number(totals['shards'],0,100000,integer=True);number(totals['deaths'],0,100000,integer=True)
     number(totals['elapsed'],0)
-    config={2:desert,3:temple,4:tower}.get(level_id)
+    config={2:desert,3:temple,4:tower,**greece_levels.LEVELS}.get(level_id)
     length=config.LENGTH if config else WORLD
     number(data['camera'],0,0 if level_id==4 else length)
-    number(data['camera_y'],0,tower.HEIGHT-720 if level_id==4 else 0)
+    number(data['camera_y'],-240 if level_id==8 else 0,tower.HEIGHT-720 if level_id==4 else 0)
     platforms,gems=level(level_id)
     homes=config.BEETLES if config else SPAWNS
     birds=config.VULTURES if config else VULTURES
@@ -252,10 +269,12 @@ def validate(data):
             'vultures':[Vulture(i,birds) for i in range(len(birds))],
             'gyrospheres':[Gyrosphere(i,gyro_spawns) for i in range(len(gyro_spawns))],
             'crocodiles':[Crocodile(*spawn) for spawn in config.CROCODILES] if config else create_crocodiles(),
-            'obelisks':([Obelisk(x,y) for x,y in tower.CHECKPOINTS] if level_id==4 else
+            'hoplites':[Hoplite(*spawn) for spawn in getattr(config,'HOPLITES',())],
+            'obelisks':([Obelisk(x,y) for x,y in config.CHECKPOINTS] if level_id>=4 else
                         [Obelisk(x) for x in (config.CHECKPOINTS if config else (CHECKPOINT_X,))]),
             'scorpions':([Scorpion(i,tower.SCORPIONS) for i in range(3)] if level_id==4 else
-                         [Scorpion(i) for i in range(len(SCORPION_SPAWNS))] if level_id==3 else []),
+                         [Scorpion(i) for i in range(len(SCORPION_SPAWNS))] if level_id==3 else
+                         [Scorpion(i,config.SCORPIONS) for i in range(len(config.SCORPIONS))] if level_id>=5 else []),
             'vases':([Vase(i,tower.VASES) for i in range(len(tower.VASES))] if level_id==4 else
                      [Vase(i) for i in range(len(VASE_SPAWNS))] if level_id==3 else [])}
     for kind,model in models.items():
@@ -272,7 +291,7 @@ def validate(data):
         if revival['spawned']!=(revival['elapsed']>=REAPPEAR-1e-9):raise ValueError('Résurrection incohérente')
     death=data['hero_death']
     electrical=death['kind'] in ('beetle','vulture','scorpion','gyrosphere')
-    number(death['elapsed'],0,PIT_DURATION if death['kind']=='pit' else WATER_DURATION if death['kind']=='water' else LASER_LIMIT if death['kind'] in ('laser','fire') else BLADE_DURATION if death['kind']=='blade' else BEETLE_DURATION if electrical else DEATH_DURATION)
+    number(death['elapsed'],0,PIT_DURATION if death['kind']=='pit' else WATER_DURATION if death['kind']=='water' else LASER_LIMIT if death['kind'] in ('laser','fire','sword') else BLADE_DURATION if death['kind']=='blade' else BEETLE_DURATION if electrical else DEATH_DURATION)
     number(death['previous_elapsed'],0,death['elapsed'])
     for key in ('facing','source_face','hero_face'):
         if death[key] not in (-1,1):raise ValueError('Orientation de mort invalide')
@@ -280,13 +299,14 @@ def validate(data):
     for key in ('y','hero_y'):number(death[key],-2000,15000)
     if death['landed_at'] is not None:
         number(death['landed_at'],FIRE_REACTION if death['kind']=='fire' else .28,death['elapsed'])
-        if death['kind'] not in ('laser','fire'):raise ValueError('Atterrissage de mort invalide')
+        if death['kind'] not in ('laser','fire','sword'):raise ValueError('Atterrissage de mort invalide')
     if death['kind']=='water':
         if level_id!=2 or not desert.RIVER[0]<=death['x']<=desert.RIVER[1] or death['y']!=desert.WATER_Y:raise ValueError('Noyade invalide')
     maximum=(0 if death['kind'] in ('blade','laser','fire','water','pit') else len(models['beetles'])-1 if death['kind']=='beetle' else
              len(models['vultures'])-1 if death['kind']=='vulture' else
              len(models['scorpions'])-1 if death['kind']=='scorpion' else
              len(models['gyrospheres'])-1 if death['kind']=='gyrosphere' else 2)
+    if death['kind']=='sword':maximum=len(models['hoplites'])-1
     number(death['index'],0,maximum,integer=True)
     if death['active']:
         if death['kind']=='beetle':
@@ -298,10 +318,18 @@ def validate(data):
             if not data['scorpions'][death['index']]['alive']:raise ValueError('Scorpion invalide')
         elif death['kind']=='gyrosphere':
             if not data['gyrospheres'][death['index']]['alive']:raise ValueError('Gyrosphère invalide')
+        elif death['kind']=='sword':
+            if not data['hoplites'][death['index']]['alive']:raise ValueError('Hoplite invalide')
         elif death['kind']=='crocodile' and (death['index']>=len(models['crocodiles']) or not data['crocodiles'][death['index']]['alive']):raise ValueError('Crocodile invalide')
         if data['lives']==0 and data['deaths']==0:raise ValueError('Mort invalide')
     for vase in data['vases']:
         for key in ('age','previous_age'):number(vase[key],0,BREAK_TIME)
+    for guard,spawn in zip(data['hoplites'],getattr(config,'HOPLITES',())):
+        for key in ('x','px'):number(guard[key],spawn[3]+32,spawn[4]-32)
+        for key in ('death_timer','previous_death_timer'):number(guard[key],0,HOPLITE_DEATH_TIME)
+        number(guard['timer'],0);number(guard['previous_timer'],0)
+        number(guard['lost'],0);number(guard['distance'],0);number(guard['previous_distance'],0)
+        if guard['alive']!=(guard['state']!='dead'):raise ValueError('Hoplite incohérent')
     for orb in data['gyrospheres']:
         for key in ('x','px'):number(orb[key],50 if level_id==4 else -100,1230 if level_id==4 else length+100)
         for key in ('y','py'):number(orb[key],-100,tower.HEIGHT+100 if level_id==4 else 900)
@@ -315,7 +343,7 @@ def validate(data):
     number(ending['start_x'],0,14600);number(ending['start_y'],-2000,1000)
     if ending['active'] and level_id!=3:raise ValueError('Fin de temple invalide')
     bolts=data['laser_bolts']
-    if not isinstance(bolts,list) or len(bolts)>64 or (level_id not in (3,4) and bolts):raise ValueError('Projectiles invalides')
+    if not isinstance(bolts,list) or len(bolts)>64 or (level_id not in (3,4,6,7,8) and bolts):raise ValueError('Projectiles invalides')
     for bolt in bolts:
         validate_record(bolt,LaserBolt(0.,0.,1.,0.),'laser_bolts')
         number(bolt['age'],0,2.5);number(bolt['vy'],-2000,0)
@@ -326,7 +354,7 @@ def validate(data):
         if data['animation'][key] not in allowed:raise ValueError('Animation inconnue')
     for key in ('rise','previous_rise','turn','previous_turn'):number(data['animation'][key],0,1)
     number(data['hero']['x'],-100,length+EXIT_MARGIN+100)
-    falling_death=(death['active'] or revival['active'] and not revival['spawned']) and (electrical or death['kind'] in ('blade','laser','fire','pit'))
+    falling_death=(death['active'] or revival['active'] and not revival['spawned']) and (electrical or death['kind'] in ('blade','sword','laser','fire','pit'))
     number(data['hero']['y'],-2000,(tower.HEIGHT if level_id==4 else 0)+(2000 if falling_death else 1000))
     number(data['energy']['value'],0,100)
     for key in ('crouch','previous_crouch'):number(data['hero'][key],0,1)
@@ -334,7 +362,7 @@ def validate(data):
     indices(data['taken'],len(gems));indices(data['dead_beetles'],len(homes))
     medals=data['medallions']
     if not isinstance(medals,dict) or medals.keys()!={'count','claimed'}:raise ValueError('Inventaire invalide')
-    number(medals['count'],0,3,integer=True);indices(medals['claimed'],5)
+    number(medals['count'],0,3,integer=True);indices(medals['claimed'],9)
     if 0 in medals['claimed']:raise ValueError('Niveau invalide')
     number(data['check_index'],0,len(models['obelisks']),integer=True)
     checkpoint=data['checkpoint']
@@ -352,7 +380,7 @@ def restore(game,data):
     game.start_level(data['level'])
     for kind,attr in (('hero','hero'),('energy','energy'),('solar','solar'),('rest','rest'),('animation','hero_animation'),('temple_exit','temple_exit'),('hero_death','hero_death'),('resurrection','resurrection')):
         vars(getattr(game,attr)).update(copy.deepcopy(data[kind]))
-    for kind,attr in (('beetles','beetle_motions'),('vultures','vultures'),('crocodiles','crocodiles'),('obelisks','obelisks'),('scorpions','scorpions'),('gyrospheres','gyrospheres'),('vases','vases')):
+    for kind,attr in (('beetles','beetle_motions'),('vultures','vultures'),('crocodiles','crocodiles'),('hoplites','hoplites'),('obelisks','obelisks'),('scorpions','scorpions'),('gyrospheres','gyrospheres'),('vases','vases')):
         for obj,values in zip(getattr(game,attr),data[kind]):vars(obj).update(copy.deepcopy(values))
     game.laser_bolts=[LaserBolt(**values) for values in data['laser_bolts']]
     for name,reference in data['platform_refs'].items():

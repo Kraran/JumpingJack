@@ -1,0 +1,71 @@
+{
+  "file": "JumpingJack-Trailer-20s.mp4",
+  "seconds": 20,
+  "size_bytes": 13827111,
+  "resolution": [
+    1920,
+    1080
+  ],
+  "fps": 60,
+  "video": "H.264",
+  "audio": "AAC stereo, The Lone Flyer, fades in/out",
+  "footage": "Native GPU captures plus existing in-game demonstration recordings",
+  "shots": [
+    {
+      "source": "output\\trailer-work\\egypt-1.mp4",
+      "start": 0,
+      "duration": 2.5,
+      "caption": "JUMPING JACK"
+    },
+    {
+      "source": "output\\trailer-work\\egypt-2.mp4",
+      "start": 0,
+      "duration": 2.5,
+      "caption": "DES SABLES D’ÉGYPTE…"
+    },
+    {
+      "source": "output\\trailer-work\\egypt-3.mp4",
+      "start": 0,
+      "duration": 2.0,
+      "caption": "TRAVERSEZ LES TEMPLES OUBLIÉS"
+    },
+    {
+      "source": "output\\tower-level-demo.mp4",
+      "start": 7.2,
+      "duration": 2.0,
+      "caption": "PRENEZ DE LA HAUTEUR"
+    },
+    {
+      "source": "output\\greece-world-demo.mp4",
+      "start": 0.3,
+      "duration": 2.0,
+      "caption": "…AUX RIVAGES DE LA GRÈCE"
+    },
+    {
+      "source": "output\\greece-world-demo.mp4",
+      "start": 3.3,
+      "duration": 2.0,
+      "caption": "DEUX MONDES · HUIT NIVEAUX"
+    },
+    {
+      "source": "output\\greece-world-demo.mp4",
+      "start": 6.4,
+      "duration": 2.0,
+      "caption": "BRAVEZ LES GALERIES ANTIQUES"
+    },
+    {
+      "source": "output\\hoplite-demo.mp4",
+      "start": 10.0,
+      "duration": 2.2,
+      "caption": "LIBÉREZ LA PUISSANCE DU SOLEIL"
+    },
+    {
+      "source": "output\\greece-world-demo.mp4",
+      "start": 9.1,
+      "duration": 2.8,
+      "caption": "JUMPING JACK"
+    }
+  ],
+  "full_decode": "passed",
+  "user_settings_and_saves": "temporary files only"
+}

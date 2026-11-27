@@ -1,0 +1,329 @@
+{
+  "renderer": "direct3d11",
+  "gpu": true,
+  "cases": [
+    {
+      "output": [
+        2560,
+        1080
+      ],
+      "mode": "egypt",
+      "game_viewport": [
+        320,
+        0,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        2560,
+        1080
+      ],
+      "mode": "greece",
+      "game_viewport": [
+        320,
+        0,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        2560,
+        1080
+      ],
+      "mode": "solar",
+      "game_viewport": [
+        320,
+        0,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        2560,
+        1080
+      ],
+      "mode": "none",
+      "game_viewport": [
+        320,
+        0,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        3840,
+        1080
+      ],
+      "mode": "egypt",
+      "game_viewport": [
+        960,
+        0,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        3840,
+        1080
+      ],
+      "mode": "greece",
+      "game_viewport": [
+        960,
+        0,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        3840,
+        1080
+      ],
+      "mode": "solar",
+      "game_viewport": [
+        960,
+        0,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        3840,
+        1080
+      ],
+      "mode": "none",
+      "game_viewport": [
+        960,
+        0,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        3440,
+        1440
+      ],
+      "mode": "egypt",
+      "game_viewport": [
+        760,
+        180,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        3440,
+        1440
+      ],
+      "mode": "greece",
+      "game_viewport": [
+        760,
+        180,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        3440,
+        1440
+      ],
+      "mode": "solar",
+      "game_viewport": [
+        760,
+        180,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        3440,
+        1440
+      ],
+      "mode": "none",
+      "game_viewport": [
+        760,
+        180,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        1920,
+        1200
+      ],
+      "mode": "egypt",
+      "game_viewport": [
+        0,
+        60,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        1920,
+        1200
+      ],
+      "mode": "greece",
+      "game_viewport": [
+        0,
+        60,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        1920,
+        1200
+      ],
+      "mode": "solar",
+      "game_viewport": [
+        0,
+        60,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        1920,
+        1200
+      ],
+      "mode": "none",
+      "game_viewport": [
+        0,
+        60,
+        1920,
+        1080
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        3840,
+        2160
+      ],
+      "mode": "egypt",
+      "game_viewport": [
+        0,
+        0,
+        3840,
+        2160
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        3840,
+        2160
+      ],
+      "mode": "greece",
+      "game_viewport": [
+        0,
+        0,
+        3840,
+        2160
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        3840,
+        2160
+      ],
+      "mode": "solar",
+      "game_viewport": [
+        0,
+        0,
+        3840,
+        2160
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    },
+    {
+      "output": [
+        3840,
+        2160
+      ],
+      "mode": "none",
+      "game_viewport": [
+        0,
+        0,
+        3840,
+        2160
+      ],
+      "game_pixels_identical": true,
+      "late_texture_uploads": 0,
+      "mouse_mapping_correct": true
+    }
+  ],
+  "auto_worlds_1_to_8": true,
+  "selection_saved": true,
+  "user_data": "temporary preferences and saves only"
+}

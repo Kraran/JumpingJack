@@ -23,6 +23,7 @@ class GpuCompositionTests(unittest.TestCase):
 
     def test_static_texture_is_uploaded_once_and_frames_stay_on_gpu(self):
         renderer=MagicMock()
+        renderer.get_viewport.return_value=pg.Rect(0,0,*FULL_HD)
         with patch('pygame._sdl2.video.Renderer') as renderer_type, patch('pygame._sdl2.video.Texture') as texture_type:
             renderer_type.from_window.return_value=renderer
             canvas=NativeCanvas(window=object())
@@ -42,6 +43,23 @@ class GpuCompositionTests(unittest.TestCase):
             canvas.release()
             self.assertFalse(canvas.gpu)
             self.assertEqual(len(canvas.textures),0)
+
+    def test_bezel_present_reuses_gpu_texture_outside_game_and_restores_mouse_mapping(self):
+        renderer=MagicMock();renderer.get_viewport.return_value=pg.Rect(0,0,3840,1080)
+        with patch('pygame._sdl2.video.Renderer') as renderer_type,patch('pygame._sdl2.video.Texture') as texture_type:
+            renderer_type.from_window.return_value=renderer
+            canvas=NativeCanvas(window=object());image=pg.Surface((1774,887))
+            art=MagicMock();art.pieces.return_value=[
+                (image,pg.Rect(0,0,887,887),pg.Rect(0,0,960,1080)),
+                (image,pg.Rect(887,0,887,887),pg.Rect(2880,0,960,1080))]
+            canvas.bezel_art=art;canvas.bezel_theme='solar'
+            for _ in range(3):canvas.begin();canvas.present(None)
+            art.pieces.assert_called_with('solar',(3840,1080),pg.Rect(960,0,1920,1080))
+            texture_type.from_surface.assert_called_once_with(renderer,image)
+            texture_type.return_value.draw.assert_called_with(dstrect=pg.Rect(960,0,1920,1080))
+            self.assertEqual(renderer.logical_size,FULL_HD)
+            renderer.to_surface.assert_not_called();self.assertEqual(canvas.uploads,1)
+            canvas.release()
 
     def test_native_text_and_sprites_keep_native_sizes(self):
         native=MagicMock()
